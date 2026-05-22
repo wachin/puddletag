@@ -345,10 +345,13 @@ def help_menu(parent):
     about_qt = QAction(translate("Menus", 'About Qt'), parent)
     connect(about_qt, QApplication.aboutQt)
 
+    logs = QAction(translate("Menus", 'View Logs'), parent)
+    connect(logs, partial(mainfuncs.show_logs, parent))
+
     sep = QAction(parent)
     sep.setSeparator(True)
     list(map(menu.addAction, (doc_link, forum_link, issue_link, sep,
-                              about, about_qt)))
+                              logs, about, about_qt)))
 
     return menu
 

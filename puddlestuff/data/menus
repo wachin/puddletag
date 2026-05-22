@@ -65,12 +65,13 @@
       "&Go to parent folder",
       "&Actions", 
       "&QuickActions", 
-      "&Functions", 
-      "separator"
+      "&Functions"
     ], 
     "&Tools": [
       "Autonumbering &Wizard...", 
       "&Import Music Library...", 
+      "Library Statistics",
+      "Find Duplicates",
       "Replace...", 
       "Sort &By"
     ], 

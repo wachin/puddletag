@@ -2,6 +2,27 @@
   "info": {
     "version": "33"
   },
+  "shortcut63": {
+    "name": "Find Duplicates", 
+    "command": "show_dupe_finder", 
+    "control": "mainwin", 
+    "enabled": "filesloaded",
+    "tooltip": "Find and manage duplicate tracks"
+  },
+  "shortcut62": {
+    "name": "View Logs", 
+    "command": "show_logs", 
+    "control": "mainwin", 
+    "enabled": "always",
+    "tooltip": "View application logs"
+  },
+  "shortcut61": {
+    "name": "Library Statistics", 
+    "command": "show_statistics", 
+    "control": "mainwin", 
+    "enabled": "filesloaded",
+    "tooltip": "Show statistics about the current library"
+  },
   "shortcut60": {
     "name": "&Export...", 
     "command": "export_tags", 

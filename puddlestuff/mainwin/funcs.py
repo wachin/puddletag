@@ -193,6 +193,25 @@ def display_tag(tag):
     return "".join([s % (z, tostr(v)) for z, v in tag.items()])[:-2]
 
 
+def show_dupe_finder(parent=None):
+    from .dupes import show_dupe_finder as show_d
+    tracks = status['alltags']
+    show_d(parent, tracks)
+
+
+def show_logs(parent=None):
+    from .logwin import show_logs as show_l
+    show_l(parent)
+
+
+def show_statistics(parent=None):
+    from .statistics import show_statistics as show_stats
+    tracks = status['selectedfiles']
+    if not tracks:
+        tracks = status['alltags']
+    show_stats(parent, tracks)
+
+
 def export_tags(parent=None):
     from ..export import ExportDialog
     tracks = status['selectedfiles']
