@@ -15,6 +15,16 @@ try:
 except ImportError:
     DSF = None
 
+try:
+    from mutagen.wave import WAVE
+except ImportError:
+    WAVE = None
+
+try:
+    from mutagen.aac import AAC
+except ImportError:
+    AAC = None
+
 from mutagen.id3 import (APIC, PairedTextFrame, TextFrame, TimeStampTextFrame,
                          UrlFrame)
 
@@ -792,6 +802,26 @@ if DSF is not None:
         def load(self, filename, **kwargs):
             return DSF.load(self, filename, **kwargs)
 
+if WAVE is not None:
+    class WAVEFileType(WAVE):
+        """See ID3 class."""
+
+        def add_tags(self):
+            WAVE.add_tags(self)
+
+        def load(self, filename, **kwargs):
+            return WAVE.load(self, filename, **kwargs)
+
+if AAC is not None:
+    class AACFileType(AAC):
+        """See ID3 class."""
+
+        def add_tags(self):
+            AAC.add_tags(self)
+
+        def load(self, filename, **kwargs):
+            return AAC.load(self, filename, **kwargs)
+
 
 def tag_factory(id3_filetype):
     class Tag(TagBase):
@@ -1164,3 +1194,9 @@ if AIFF is not None:
 
 if DSF is not None:
     filetypes.append((DSFFileType, tag_factory(DSFFileType), 'DSF', ['dsf', 'dff']))
+
+if WAVE is not None:
+    filetypes.append((WAVEFileType, tag_factory(WAVEFileType), 'WAVE', 'wav'))
+
+if AAC is not None:
+    filetypes.append((AACFileType, tag_factory(AACFileType), 'AAC', 'aac'))

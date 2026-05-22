@@ -5,6 +5,21 @@ from mutagen.monkeysaudio import MonkeysAudio, MonkeysAudioHeaderError
 from mutagen.musepack import Musepack, MusepackHeaderError
 from mutagen.wavpack import WavPack, WavPackHeaderError
 
+try:
+    from mutagen.optimfrog import OptimFROG, OptimFROGHeaderError
+except ImportError:
+    OptimFROG = None
+
+try:
+    from mutagen.tak import TAK, TAKHeaderError
+except ImportError:
+    TAK = None
+
+try:
+    from mutagen.trueaudio import TrueAudio, TrueAudioHeaderError
+except ImportError:
+    TrueAudio = None
+
 from . import util
 from .util import (CaselessDict, FILENAME, MockTag, PATH,
                    cover_info, del_deco, fn_hash, get_mime, get_total,
@@ -316,6 +331,64 @@ class WavPackTag(wv_base):
         return [('File', fileinfo), ("WavPack Info", wpinfo)]
 
 
+if OptimFROG:
+    ofr_base = get_class(OptimFROG, 'OptimFROG',
+                         ATTRIBUTES + ['frequency', 'bitrate', 'channels'],
+                         OptimFROGHeaderError)
+
+    class OptimFROGTag(ofr_base):
+        @property
+        def info(self):
+            info = self.mut_obj.info
+            fileinfo = [('Path', self[PATH]),
+                        ('Size', str_filesize(int(self.size))),
+                        ('Filename', self[FILENAME]),
+                        ('Modified', self.modified)]
+            ofrinfo = [('Bitrate', 'Lossless'),
+                       ('Frequency', self.frequency),
+                       ('Channels', str(info.channels)),
+                       ('Length', self.length)]
+            return [('File', fileinfo), ("OptimFROG Info", ofrinfo)]
+
+if TAK:
+    tak_base = get_class(TAK, 'TAK',
+                         ATTRIBUTES + ['frequency', 'bitrate', 'channels'],
+                         TAKHeaderError)
+
+    class TAKTag(tak_base):
+        @property
+        def info(self):
+            info = self.mut_obj.info
+            fileinfo = [('Path', self[PATH]),
+                        ('Size', str_filesize(int(self.size))),
+                        ('Filename', self[FILENAME]),
+                        ('Modified', self.modified)]
+            takinfo = [('Bitrate', 'Lossless'),
+                       ('Frequency', self.frequency),
+                       ('Channels', str(info.channels)),
+                       ('Length', self.length)]
+            return [('File', fileinfo), ("TAK Info", takinfo)]
+
+if TrueAudio:
+    tta_base = get_class(TrueAudio, 'TrueAudio',
+                         ATTRIBUTES + ['frequency', 'bitrate', 'channels'],
+                         TrueAudioHeaderError)
+
+    class TrueAudioTag(tta_base):
+        @property
+        def info(self):
+            info = self.mut_obj.info
+            fileinfo = [('Path', self[PATH]),
+                        ('Size', str_filesize(int(self.size))),
+                        ('Filename', self[FILENAME]),
+                        ('Modified', self.modified)]
+            ttainfo = [('Bitrate', 'Lossless'),
+                       ('Frequency', self.frequency),
+                       ('Channels', str(info.channels)),
+                       ('Length', self.length)]
+            return [('File', fileinfo), ("TrueAudio Info", ttainfo)]
+
+
 Tag = get_class(APEv2File, 'APEv2', ATTRIBUTES)
 
 filetypes = [
@@ -324,3 +397,12 @@ filetypes = [
      ['ape', 'apl']),
     (WavPack, WavPackTag, 'APEv2', 'wv'),
     (Musepack, Tag, 'APEv2', 'mpc')]
+
+if OptimFROG:
+    filetypes.append((OptimFROG, OptimFROGTag, 'APEv2', ['ofr', 'ofs']))
+
+if TAK:
+    filetypes.append((TAK, TAKTag, 'APEv2', 'tak'))
+
+if TrueAudio:
+    filetypes.append((TrueAudio, TrueAudioTag, 'APEv2', 'tta'))
