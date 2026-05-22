@@ -1421,7 +1421,7 @@ The &lt;b&gt;Oxygen team&lt;/b&gt; for the Oxygen icons.
     <message>
       <location filename="../tagmodel.py" line="79" />
       <source>Genre</source>
-      <translation>Genero</translation>
+      <translation>Género</translation>
     </message>
     <message>
       <location filename="../tagmodel.py" line="79" />

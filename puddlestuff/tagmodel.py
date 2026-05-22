@@ -40,6 +40,14 @@ LIBRARY = '__library'
 HIGHLIGHTCOLOR = Qt.GlobalColor.green
 SHIFT_RETURN = 2
 RETURN_ONLY = 1
+DEFAULT_TABLE_TITLE_KEYS = [
+    'Filename', 'Artist', 'Title', 'Album', 'Track', 'Length',
+    'Year', 'Bitrate', 'Genre', 'Comment', 'Dirpath',
+]
+DEFAULT_TABLE_TAGS = [
+    '__filename', 'artist', 'title', 'album', 'track',
+    '__length', 'year', '__bitrate', 'genre', 'comment', '__dirpath',
+]
 
 
 def _default_audio_player():
@@ -48,6 +56,16 @@ def _default_audio_player():
     elif sys.platform == "darwin":
         return 'open -a iTunes'
     return "clementine -p"
+
+
+def _default_table_titles():
+    return [translate('Fields', title) for title in DEFAULT_TABLE_TITLE_KEYS]
+
+
+def _table_titles(titles, tags):
+    if list(tags) == DEFAULT_TABLE_TAGS and list(titles) == DEFAULT_TABLE_TITLE_KEYS:
+        return _default_table_titles()
+    return titles
 
 
 def commontag(tag, tags):
@@ -72,16 +90,9 @@ def loadsettings(filepath=None):
     settings = PuddleConfig()
     if filepath:
         settings.filename = filepath
-    titles = settings.get('tableheader', 'titles', [
-        translate('Fields', 'Filename'), translate('Fields', 'Artist'),
-        translate('Fields', 'Title'), translate('Fields', 'Album'),
-        translate('Fields', 'Track'), translate('Fields', 'Length'),
-        translate('Fields', 'Year'), translate('Fields', 'Bitrate'),
-        translate('Fields', 'Genre'), translate('Fields', 'Comment'),
-        translate('Fields', 'Dirpath')])
-    tags = settings.get('tableheader', 'tags',
-                        ['__filename', 'artist', 'title', 'album', 'track',
-                         '__length', 'year', '__bitrate', 'genre', 'comment', '__dirpath'])
+    titles = settings.get('tableheader', 'titles', _default_table_titles())
+    tags = settings.get('tableheader', 'tags', DEFAULT_TABLE_TAGS)
+    titles = _table_titles(titles, tags)
     # checked = settings.get('tableheader', 'enabled', range(len(tags)), True)
     # checked = []
     fontsize = settings.get('table', 'fontsize', 0, True)
