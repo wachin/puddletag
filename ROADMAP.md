@@ -5,6 +5,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 ## Accomplished Tasks
 - [x] **Spanish Language Support**: Fixed naming collisions that prevented Spanish (es_ES) translations from being packaged.
 - [x] **Improved Locale Detection**: Support for both `es_ES` and `es-ES` formats.
+- [x] **Spanish Locale Fallback**: Spanish UI translations now fall back from regional locales such as `es_EC` to the available `es_ES` catalog.
 - [x] **Packaging & Distribution**: Restructured translation modules and updated `setup.py`/`MANIFEST.in`.
 - [x] **PyQt6 Migration**: Modernized the UI framework for better performance.
 - [x] **Expanded Format Support**: Added AIFF, WAV, AAC, DSF (DSD), OptimFROG, TAK, and TTA (TrueAudio).
@@ -20,12 +21,14 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Library Statistics**: Detailed insights into genre, format, and bitrate distribution.
 - [x] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicates across the library.
 - [x] **Automated Format Documentation**: Supported format help text is generated from the live audio format registry.
+- [x] **Automated Function Documentation**: Action function reference docs are generated from the live action function registry.
 
 ## Planned Features & Improvements
 
 ## Development Notes
 - Debian 12 package reference lists are available in `packages_available_debian12_pyqt6.txt` and `packages_available_debian12_python3.txt` for checking installable Python/PyQt6 dependencies during development.
-- Stop development when a new Debian repository package is required. Record the package name and wait for the developer to install it before continuing; latest additions: `python3-sphinx-bootstrap-theme`, `python3-unidecode`.
+- Debian packages currently used during development include `python3-sphinx`, `python3-sphinx-bootstrap-theme`, `python3-unidecode`, and `python3-pytest`.
+- Stop development when a new Debian repository package is required. Record the package name and wait for the developer to install it before continuing.
 
 ### Core Functionality
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).

@@ -10,6 +10,19 @@ Then there’re _Functions_, which can do things like replace text, trim it, do 
 
 Supported formats: ID3v1, ID3v2 (mp3, wav, aac, aiff, dsf), MP4 (mp4, m4a, etc.), VorbisComments (ogg, flac), Musepack (mpc), Monkey’s Audio (.ape), WavPack (wv), OptimFROG (ofr, ofs), TAK (tak) and TrueAudio (tta).
 
+## Recent development
+
+This repository has recently received renewed maintenance work, including:
+
+- PyQt6 migration and Wayland/HiDPI startup improvements.
+- Spanish translation packaging fixes and locale fallback from regional Spanish locales such as `es_EC` to the available `es_ES` catalog.
+- Expanded audio format support for WAV, AAC, AIFF, DSF, OptimFROG, TAK, and TTA.
+- Template-based export support for HTML, RTF, and CSV.
+- Native playlist save/update support.
+- Rhythmbox and MPD music library integration.
+- Dark mode, a built-in log viewer, library statistics, and duplicate-finder improvements.
+- CLI commands for export and tag editing.
+- Generated documentation for supported audio formats and action functions.
 
 ## Dependencies
 
@@ -119,6 +132,12 @@ First, you need to install the dependencies; this step is different depending on
 
 ```
 apt install python3 python3-mutagen python3-configobj python3-pyparsing python3-pyqt6 python3-pyqt6.qtsvg python3-unidecode
+```
+
+For documentation and tests during development on Debian, also install:
+
+```
+apt install python3-sphinx python3-sphinx-bootstrap-theme python3-pytest
 ```
 
 Then, clone the repo and run puddletag:

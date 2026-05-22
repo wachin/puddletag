@@ -229,19 +229,14 @@ def load_language(qapp, langfile=None):
         lang = cparser.get('main', 'lang', 'auto')
         langs = get_languages([TRANSDIR])
 
-        if lang != 'auto':
-            if lang in langs:
-                f = langs[lang]
-                langargs = os.path.basename(f), os.path.dirname(f)
-
-        if not langargs and lang != 'default':
-            for locale in QLocale.system().uiLanguages():
-                if locale == 'en':
-                    break
-                if locale in langs:
-                    f = langs[locale]
-                    langargs = os.path.basename(f), os.path.dirname(f)
-                    break
+        f = select_language_file(
+            lang,
+            langs,
+            QLocale.system().uiLanguages(),
+            os.environ,
+        )
+        if f:
+            langargs = os.path.basename(f), os.path.dirname(f)
 
     if langargs and langargs != 'default':
         translator = QTranslator()
@@ -275,6 +270,80 @@ def load_language(qapp, langfile=None):
         qapp.installTranslator(t)
     puddlestuff.constants.trans_strings()
     puddlestuff.puddleobjects.trans_imagetypes()
+
+
+def _locale_candidates(locale_name):
+    locale_name = locale_name.split('.', 1)[0].split('@', 1)[0]
+    if not locale_name or locale_name in ('C', 'POSIX'):
+        return []
+
+    normalized = locale_name.replace('-', '_')
+    candidates = [locale_name, normalized, normalized.replace('_', '-')]
+    language = normalized.split('_', 1)[0]
+    if language:
+        candidates.append(language)
+
+    ret = []
+    for candidate in candidates:
+        if candidate and candidate not in ret:
+            ret.append(candidate)
+    return ret
+
+
+def _environment_locale_candidates(environ):
+    ret = []
+    for key in ('LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LANG'):
+        value = environ.get(key, '')
+        for locale_name in value.split(':'):
+            for candidate in _locale_candidates(locale_name):
+                if candidate not in ret:
+                    ret.append(candidate)
+    return ret
+
+
+def _matching_language_file(candidate, languages):
+    if candidate in languages:
+        return languages[candidate]
+
+    language = candidate.replace('-', '_').split('_', 1)[0]
+    if not language:
+        return None
+
+    for lang_code, filename in sorted(languages.items()):
+        normalized = lang_code.replace('-', '_')
+        if normalized == language or normalized.startswith(language + '_'):
+            return filename
+    return None
+
+
+def select_language_file(config_lang, languages, ui_languages, environ=None):
+    if config_lang == 'default':
+        return None
+
+    if config_lang != 'auto':
+        return _matching_language_file(config_lang, languages)
+
+    candidates = []
+    saw_english = False
+    for locale_name in ui_languages:
+        locale_candidates = _locale_candidates(locale_name)
+        if any(candidate.replace('-', '_').split('_', 1)[0] == 'en'
+               for candidate in locale_candidates):
+            saw_english = True
+            break
+        candidates.extend(locale_candidates)
+
+    if saw_english:
+        return None
+
+    if environ is not None:
+        candidates.extend(_environment_locale_candidates(environ))
+
+    for candidate in candidates:
+        filename = _matching_language_file(candidate, languages)
+        if filename:
+            return filename
+    return None
 
 
 import argparse
