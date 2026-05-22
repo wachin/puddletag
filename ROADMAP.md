@@ -12,12 +12,16 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 ## Planned Features & Improvements
 
 ### Core Functionality
+- [x] **Full Unicode Support**: Ensure the user interface and tagging engine remain fully Unicode compliant for global metadata compatibility.
+- [ ] **Expanded Format Support**: Add support for missing formats found in Mp3tag (DSD, AIFF, Matroska/WebM, OptimFROG, TAK, TTA).
+- [ ] **Enhanced Export Templates**: Implement user-defined templates for generating collection reports in HTML, RTF, and CSV formats.
 - [ ] **Asynchronous Lookups**: Add the ability to cancel active tag source lookups (Amazon, Discogs, MusicBrainz) without freezing the UI.
 - [ ] **Advanced Artwork Management**: Provide granular control over artwork saving (Tag only, File only, Both, or None).
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 - [ ] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicate tracks based on metadata and audio fingerprints.
 
 ### Linux Ecosystem Integration
+- [ ] **Native Playlist Management**: Automatic playlist creation and management while editing, integrated with Linux media players.
 - [ ] **Expanded Library Support**: Implement native support for Rhythmbox and MPD libraries.
 - [ ] **CLI Modernization**: Improve the console version to support full scripting and automated batch processing.
 - [ ] **Wayland Optimization**: Ensure seamless performance and UI scaling on Wayland-based desktops, but maintaining support for 11.
