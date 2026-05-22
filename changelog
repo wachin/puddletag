@@ -1,3 +1,19 @@
+21 May 2026
+   Added: Support for new audio formats (WAV, AAC, AIFF, DSF, OptimFROG, TAK, TTA).
+   Added: Enhanced export templates for HTML, CSV, and RTF with loop support.
+   Added: Native MPD (Music Player Daemon) support.
+   Added: Library Statistics tool (genre, format, and bitrate distribution).
+   Added: Enhanced Duplicate Finder based on customizable metadata.
+   Added: Dark Mode support (accessible in General Settings).
+   Added: Centralized logging with a built-in viewer in the Help menu.
+   Added: CLI Modernization (argparse subcommands for headless mode: gui, export, tag).
+   Added: Automatic playlist update on save.
+   Added: Unit test suite for core functionality in /tests.
+   Fixed: Spanish translation packaging and es_ES/es-ES locale detection.
+   Changed: Migrated UI framework to PyQt6.
+   Changed: Improved Wayland platform detection and HiDPI scaling.
+   Updated: Documentation and man pages to reflect new features.
+
 29 August 2020
    Python 3!
 
