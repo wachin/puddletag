@@ -874,6 +874,7 @@ class MainWin(QMainWindow):
             self._table.selectionChanged()
             if not model.previewMode:
                 self.libfilesedited.emit(lib_updates)
+                m3u.auto_update_playlist(status['selectedfiles'])
 
         lib_updates = []
 

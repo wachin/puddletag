@@ -15,18 +15,18 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Full Unicode Support**: Ensure the user interface and tagging engine remain fully Unicode compliant for global metadata compatibility.
 - [x] **Expanded Format Support**: Added support for AIFF, WAV, AAC, DSF (DSD), OptimFROG, TAK, and TTA (TrueAudio).
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).
-- [ ] **Enhanced Export Templates**: Implement user-defined templates for generating collection reports in HTML, RTF, and CSV formats.
+- [x] **Enhanced Export Templates**: Implemented user-defined templates for generating collection reports in HTML, RTF, and CSV formats with loop support.
 - [x] **Asynchronous Lookups**: Added the ability to cancel active tag source lookups (Amazon, Discogs, MusicBrainz) and submissions.
 - [x] **Advanced Artwork Management**: Added granular control over artwork saving (Tag only, File only, Both, or None) in Tag Settings.
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 - [ ] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicate tracks based on metadata and audio fingerprints.
 
 ### Linux Ecosystem Integration
-- [ ] **Native Playlist Management**: Automatic playlist creation and management while editing, integrated with Linux media players.
+- [x] **Native Playlist Management**: Automatic playlist creation and management while editing, with a new "Update playlist automatically on save" option.
 - [ ] **Expanded Library Support**: Implement native support for Rhythmbox and MPD libraries.
-- [ ] **CLI Modernization**: Improve the console version to support full scripting and automated batch processing.
-- [ ] **Wayland Optimization**: Ensure seamless performance and UI scaling on Wayland-based desktops, but maintaining support for x11.
-- [ ] **Theme Awareness**: Better integration with system-wide Dark Mode and custom GTK/Qt themes.
+- [x] **CLI Modernization**: Transitioned to `argparse` and added dedicated CLI commands for exporting and tagging without the GUI.
+- [x] **Wayland Optimization**: Improved support for Wayland-based desktops by ensuring proper platform detection while maintaining X11 fallback.
+- [x] **Theme Awareness**: Added support for Dark Mode, accessible through the General Settings.
 
 ### Distribution & Documentation
 - [ ] **Automated Documentation**: Ensure new features are automatically added to the help files in `/docs` and `/docsrc`.

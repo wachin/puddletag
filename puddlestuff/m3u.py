@@ -117,7 +117,7 @@ def exportm3u(tags, tofile, format=None, reldir=False, winsep=False):
         text = '\n'.join(header + filenames)
     else:
         text = header
-        extinfo = ('#EXTINF: %s, %s' % (str(lnglength(f.length)),
+        extinfo = ('#EXTINF: %d, %s' % (int(f.length),
                                         encode_fn(tagtofilename(format, f, False))) for f in tags)
         [text.extend([z, y]) for z, y in zip(extinfo, filenames)]
         text = '\n'.join(text)
@@ -127,8 +127,44 @@ def exportm3u(tags, tofile, format=None, reldir=False, winsep=False):
     playlist.close()
 
 
+def auto_update_playlist(tags):
+    """Automatically updates playlists in the directories of the given tags
+    if the setting is enabled."""
+    cparser = PuddleConfig()
+    if not cparser.get('playlist', 'auto_update', False):
+        return
+
+    # Group tags by directory
+    dirs = defaultdict(list)
+    for t in tags:
+        dirs[os.path.dirname(t.filepath)].append(t)
+
+    filepattern = cparser.get('playlist', 'filepattern', 'puddletag.m3u')
+    extinfo = cparser.get('playlist', 'extinfo', True)
+    extpattern = cparser.get('playlist', 'extpattern', '%artist% - %title%')
+    reldir_setting = cparser.get('playlist', 'reldir', False)
+    winsep = cparser.get('playlist', 'windows_separator', False)
+
+    for dirname, dir_tags in dirs.items():
+        # In Mp3tag, auto-playlist usually means a playlist for all files in that dir
+        # We'll look for all tags in that directory from status['alltags']
+        from .puddletag import status
+        all_dir_tags = [t for t in status['alltags'] if os.path.dirname(t.filepath) == dirname]
+        
+        if not all_dir_tags:
+            continue
+            
+        # Use the first tag to generate the playlist filename if it has placeholders
+        playlist_name = tagtofilename(filepattern, all_dir_tags[0])
+        playlist_path = os.path.join(dirname, playlist_name)
+        
+        pattern = extpattern if extinfo else None
+        exportm3u(all_dir_tags, playlist_path, pattern, reldir_setting, winsep)
+
+from collections import defaultdict
+from .puddleobjects import PuddleConfig
+
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
     filedlg = QFileDialog()
     filedlg.setFileMode(QFileDialog.FileMode.Directory)
     filedlg.setOption(QFileDialog.Option.ShowDirsOnly)

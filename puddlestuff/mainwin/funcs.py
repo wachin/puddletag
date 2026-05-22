@@ -193,6 +193,16 @@ def display_tag(tag):
     return "".join([s % (z, tostr(v)) for z, v in tag.items()])[:-2]
 
 
+def export_tags(parent=None):
+    from ..export import ExportDialog
+    tracks = status['selectedfiles']
+    if not tracks:
+        tracks = status['alltags']
+    
+    win = ExportDialog(parent, tracks)
+    win.exec()
+
+
 def extended_tags(parent=None):
     rows = status['selectedrows']
     win = helperwin.ExTags(files=status['selectedfiles'], parent=parent)

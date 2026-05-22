@@ -277,20 +277,46 @@ def load_language(qapp, langfile=None):
     puddlestuff.puddleobjects.trans_imagetypes()
 
 
+import argparse
+
 def parse_cmd_options():
-    usage = "Usage: %prog [options] [directory path]"
-    parser = OptionParser(usage=usage)
-
-    parser.add_option("--langfile", dest="langfile",
-                      default='',
-                      help="Path to a translation (.qm) file.", metavar="LANGFILE")
-    parser.add_option("--fontsize", type='float',
-                      dest="fontsize", help="Default fontsize to use (in points).")
-    parser.add_option("-d", "--debug", action="store_true",
-                      dest="debug", default=False, help="Show (useless) debug messages.")
-    parser.add_option("-v", "--version", action="store_true",
-                      dest="version", default=False, help="Show version info and exit.")
-
+    parser = argparse.ArgumentParser(description="puddletag - Audio Tag Editor")
+    
+    # Global options
+    parser.add_argument("-v", "--version", action="store_true", help="Show version info and exit.")
+    parser.add_argument("-d", "--debug", action="store_true", help="Show debug messages.")
+    
+    subparsers = parser.add_subparsers(dest="command", help="Sub-commands")
+    
+    # GUI sub-command
+    gui_parser = subparsers.add_parser("gui", help="Start the GUI (default)")
+    gui_parser.add_argument("paths", nargs="*", help="Files or directories to load")
+    gui_parser.add_argument("--langfile", help="Path to a translation (.qm) file.")
+    gui_parser.add_argument("--fontsize", type=float, help="Default fontsize to use.")
+    
+    # Export sub-command
+    export_parser = subparsers.add_parser("export", help="Export tags via CLI")
+    export_parser.add_argument("--template", choices=["CSV", "HTML", "RTF"], default="CSV", help="Export template")
+    export_parser.add_argument("--output", "-o", required=True, help="Output file")
+    export_parser.add_argument("paths", nargs="+", help="Files or directories to export")
+    
+    # Tag sub-command
+    tag_parser = subparsers.add_parser("tag", help="Set tags via CLI")
+    tag_parser.add_argument("--artist", help="Set artist")
+    tag_parser.add_argument("--album", help="Set album")
+    tag_parser.add_argument("--title", help="Set title")
+    tag_parser.add_argument("paths", nargs="+", help="Files to tag")
+    
+    # To maintain backward compatibility with 'puddletag [paths]'
+    # If no subcommand is provided and the first argument isn't an option, assume 'gui'
+    args = sys.argv[1:]
+    if not args:
+        return parser.parse_args(["gui"])
+    
+    first_arg = args[0]
+    if first_arg not in ["gui", "export", "tag"] and not first_arg.startswith("-"):
+        return parser.parse_args(["gui"] + args)
+    
     return parser.parse_args()
 
 
@@ -345,32 +371,57 @@ class StdOut(object):
 
 
 if __name__ == '__main__':
+    # Wayland/X11 compatibility and HiDPI support
+    if os.environ.get('XDG_SESSION_TYPE') == 'wayland':
+        if 'QT_QPA_PLATFORM' not in os.environ:
+            os.environ['QT_QPA_PLATFORM'] = 'wayland;xcb'
+    
     check_libs()
-    from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtCore import (pyqtRemoveInputHook, QTranslator,
-                              QLibraryInfo, QLocale)
     import logging
     from configobj import ConfigObj
-
-    pyqtRemoveInputHook()
-
+    
     # Load puddletag modules.
     import puddlestuff.resource  # Needs to be first as other modules use it.
     import puddlestuff.constants
-
+    
     migrate_settings()
     from puddlestuff.puddleobjects import get_icon, get_languages, PuddleConfig
     from puddlestuff.translations import translate
 
+    options = parse_cmd_options()
+    
+    if options.version:
+        print_info()
+        sys.exit(0)
+
+    if options.command == "export":
+        from puddlestuff.cli import cli_export
+        cli_export(options.paths, options.template, options.output)
+        sys.exit(0)
+    elif options.command == "tag":
+        from puddlestuff.cli import cli_tag
+        tags = {"artist": options.artist, "album": options.album, "title": options.title}
+        cli_tag(options.paths, tags)
+        sys.exit(0)
+
+    from PyQt6.QtWidgets import QApplication
+    from PyQt6.QtCore import (pyqtRemoveInputHook, QTranslator,
+                              QLibraryInfo, QLocale)
+
+    pyqtRemoveInputHook()
+
     # Init.
     print_info()
     app = QApplication(sys.argv)
-    options, filenames = parse_cmd_options()
     init(options, app)
 
     # Depends on init being called first.
     from puddlestuff.puddletag import MainWin
     from puddlestuff.puddlesettings import load_gen_settings
+    from puddlestuff.theme import update_theme
+
+    theme = PuddleConfig().get('main', 'theme', 'Default')
+    update_theme(app, theme)
 
     app.setWindowIcon(get_icon(None, "appicon.svg"))
     app.setDesktopFileName("puddletag")
@@ -386,6 +437,7 @@ if __name__ == '__main__':
     app.processEvents()
 
     # Check if dirnames passed on command line.
+    filenames = options.paths if hasattr(options, 'paths') else []
     if filenames:
         for filename in filenames:
             if not os.path.exists(filename):

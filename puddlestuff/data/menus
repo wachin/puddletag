@@ -12,6 +12,7 @@
       "separator", 
       "Load &playlist", 
       "Sa&ve playlist", 
+      "&Export...",
       "separator", 
       "&Save", 
       "&Play", 

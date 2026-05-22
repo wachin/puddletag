@@ -134,6 +134,14 @@ class GeneralSettings(QWidget):
                                    translate('GenSettings', 'Default')])
         self._lang_combo.setCurrentIndex(0)
 
+        self._theme_combo = QComboBox()
+        self._theme_combo.addItems([translate('GenSettings', 'Default'),
+                                    translate('GenSettings', 'Dark Mode')])
+        theme = PuddleConfig().get('main', 'theme', 'Default')
+        i = self._theme_combo.findText(theme)
+        if i >= 0:
+            self._theme_combo.setCurrentIndex(i)
+
         lang = PuddleConfig().get('main', 'lang', 'auto')
         self._lang_combo.addItems(list(get_languages([TRANSDIR])))
 
@@ -150,6 +158,11 @@ class GeneralSettings(QWidget):
         hbox.addStretch()
 
         vbox.addLayout(hbox)
+        
+        vbox.addLayout(create_buddy(
+            translate('GenSettings', 'Theme (Requires a restart)'),
+            self._theme_combo))
+
         if self._lang_combo.count() > 2:
             vbox.addLayout(create_buddy(
                 translate('GenSettings', 'Language (Requires a restart)'),
@@ -187,6 +200,8 @@ class GeneralSettings(QWidget):
         elif index == 1:
             cparser.set('main', 'lang', 'default')
 
+        cparser.set('main', 'theme', str(self._theme_combo.currentText()))
+
         vals = dict([c.settingValue for c in self._controls])
         for c in controls:
             if hasattr(c, 'applyGenSettings'):
@@ -216,6 +231,9 @@ class Playlist(QWidget):
         self.windows_separator = QCheckBox(translate("Playlist Settings", 'Use windows path separator (\\)'))
         self.windows_separator.setChecked(cparser.load('playlist', 'windows_separator', False))
 
+        self.auto_update = QCheckBox(translate("Playlist Settings", 'Update playlist automatically on save'))
+        self.auto_update.setChecked(cparser.load('playlist', 'auto_update', False))
+
         self.filename = QLineEdit()
         self.filename.setText(cparser.load('playlist', 'filepattern', 'puddletag.m3u'))
         label = QLabel(translate("Playlist Settings", '&Filename pattern.'))
@@ -227,7 +245,7 @@ class Playlist(QWidget):
 
         vbox = QVBoxLayout()
         [vbox.addWidget(z) for z in (self.extinfo, self.reldir, self.windows_separator,
-                                     label, self.filename)]
+                                     self.auto_update, label, self.filename)]
         vbox.insertLayout(1, hbox)
         vbox.addStretch()
         vbox.insertSpacing(3, 5)
@@ -241,6 +259,7 @@ class Playlist(QWidget):
         cparser.setSection('playlist', 'reldir', self.reldir.isChecked())
         cparser.setSection('playlist', 'filepattern', str(self.filename.text()))
         cparser.setSection('playlist', 'windows_separator', self.windows_separator.isChecked())
+        cparser.setSection('playlist', 'auto_update', self.auto_update.isChecked())
 
 
 class TagMappings(QWidget):

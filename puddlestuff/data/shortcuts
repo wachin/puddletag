@@ -2,6 +2,13 @@
   "info": {
     "version": "33"
   },
+  "shortcut60": {
+    "name": "&Export...", 
+    "command": "export_tags", 
+    "control": "mainwin", 
+    "enabled": "filesloaded",
+    "tooltip": "Export tag information to a file (CSV, HTML, etc.)"
+  },
   "shortcut13": {
     "name": "&Text File->Tag", 
     "command": "text_file_to_tag", 
