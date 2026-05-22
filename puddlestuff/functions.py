@@ -77,9 +77,9 @@ def _pad(text, numlen):
 
 def autonumbering(r_tags, minimum=1, restart=False, padding=1, state=None):
     '''Autonumbering, "Autonumbering: $0, Start: $1, Restart for dir: $2, Padding: $3"
-oi,spinbox,1
-aoeu,check, False
-au,spinbox,1'''
+Start,spinbox,1
+Restart for dir,check,False
+Padding,spinbox,1'''
     if restart:
         if 'autonumbering' not in state:
             state['autonumbering'] = defaultdict(lambda: 0)

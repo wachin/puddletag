@@ -68,7 +68,11 @@ release = "0.10.3"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build"]
+exclude_patterns = [
+    "_build",
+    "generated_supported_formats.txt",
+    "source/generated_action_functions.txt",
+]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 # default_role = None
@@ -225,8 +229,17 @@ def generate_supported_formats(app):
         f.write(supported_formats_rst())
 
 
+def generate_action_functions(app):
+    from puddlestuff.functiondocs import action_functions_rst
+
+    target = os.path.join(app.srcdir, "source", "generated_action_functions.txt")
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(action_functions_rst())
+
+
 def setup(app):
     app.connect("builder-inited", generate_supported_formats)
+    app.connect("builder-inited", generate_action_functions)
 
 
 # -- Options for LaTeX output --------------------------------------------------

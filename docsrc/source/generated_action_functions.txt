@@ -1,0 +1,98 @@
+.. _generated_function_reference:
+
+Generated Function Reference
+----------------------------
+
+This table is generated from the action function registry used by the Actions dialog.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Function
+     - Registry key
+     - Preview text
+     - Arguments
+   * - Autonumbering
+     - ``autonumbering``
+     - ``Autonumbering: $0, Start: $1, Restart for dir: $2, Padding: $3``
+     - Start; Restart for dir; Padding
+   * - Case conversion
+     - ``titleCase``
+     - ``Convert Case: $0: $1``
+     - Type; For Mixed Case, after any of:
+   * - Convert from non-standard encoding
+     - ``enconvert``
+     - ``Convert to encoding: $0, Encoding: $1``
+     - Encoding
+   * - Export artwork to file
+     - ``save_artwork``
+     - ``Export Art: pattern='$1'``
+     - Pattern (extension not required)
+   * - Filename to Tag
+     - ``filenametotag``
+     - ``File->Tag '$1'``
+     - Pattern
+   * - Format value
+     - ``format``
+     - ``Format $0 using $1``
+     - Format string
+   * - Import text file
+     - ``import_text``
+     - ``Text File: $0, '$1'``
+     - Pattern (can be relative path)
+   * - Load Artwork
+     - ``artwork``
+     - ``Artwork: Filenames='$1', Description='$2', Case Sensitive=$3``
+     - Filenames to check (;-separated, shell wildcards [eg. \*] allowed); Default description (can be pattern):; Match filename's case:
+   * - Merge field
+     - ``merge_values``
+     - ``Merge field: $0, sep='$1'``
+     - Separator
+   * - Remove all fields except
+     - ``remove_except``
+     - ``Remove fields except: $1``
+     - Field list (; separated):
+   * - Remove duplicate values
+     - ``remove_dupes``
+     - ``Remove Dupes: $0, Match Case $1``
+     - Match Case
+   * - Remove Fields
+     - ``remove_fields``
+     - ``<blank> $0``
+     - None
+   * - Replace
+     - ``replace``
+     - ``Replace $0: '$1' -> '$2', Match Case: $3, Words Only: $4``
+     - Replace; with:; Match case:; only as whole word
+   * - Replace with RegExp
+     - ``regex``
+     - ``RegReplace $0: RegExp '$1' with '$2', Match Case: $3``
+     - Regular Expression; Replace matches with:; Match Case
+   * - Sort values
+     - ``sort``
+     - ``Sort $0, order='$1', Match Case='$2'``
+     - Order; Match Case
+   * - Split fields using separator
+     - ``split_by_sep``
+     - ``Split using separator $0: sep='$1'``
+     - Separator
+   * - Tag to Dir
+     - ``tag_dir``
+     - ``Tag->Dir: $1``
+     - Pattern (can be relative path)
+   * - Tag to filename
+     - ``move``
+     - ``Tag->File: $1``
+     - Pattern
+   * - Text to Tag
+     - ``texttotag``
+     - ``Text to Tag: $0 -> $1, $2``
+     - Text; Pattern; Output
+   * - Trim whitespace
+     - ``strip``
+     - ``Trim $0``
+     - None
+   * - Update from tag
+     - ``update_from_tag``
+     - ``Update from $2, Fields: $1``
+     - Field list (; separated):; Tag

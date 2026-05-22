@@ -1,0 +1,659 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Functions &#8212; puddletag</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bootstrap-sphinx.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="../_static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-3.4.1/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+
+  </head><body>
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">puddletag</a>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            <li class="divider-vertical"></li>
+            
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../download.html">Download</a></li>
+                <li><a href="../news.html">News</a></li>
+                <li><a href="../docs.html">Documentation</a></li>
+                <li><a href="https://github.com/puddletag/puddletag">Development</a></li>
+                <li><a href="https://github.com/puddletag/puddletag/issues">Issue Tracker</a></li>
+                <li><a href="../screenshots.html">Screenshots</a></li>
+                <li><a href="../about.html">About</a></li>
+            
+            
+              
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><ul>
+<li><a class="reference internal" href="#">Functions</a><ul>
+<li><a class="reference internal" href="#generated-function-reference">Generated Function Reference</a></li>
+<li><a class="reference internal" href="#autonumbering">Autonumbering</a></li>
+<li><a class="reference internal" href="#case-conversion">Case Conversion</a></li>
+<li><a class="reference internal" href="#convert-from-non-standard-encoding">Convert from non-standard encoding</a></li>
+<li><a class="reference internal" href="#export-artwork-to-file">Export artwork to file</a></li>
+<li><a class="reference internal" href="#filename-to-tag">Filename to Tag</a></li>
+<li><a class="reference internal" href="#format-value">Format value</a></li>
+<li><a class="reference internal" href="#import-text-file">Import text file</a></li>
+<li><a class="reference internal" href="#load-artwork">Load artwork</a></li>
+<li><a class="reference internal" href="#merge-field">Merge Field</a></li>
+<li><a class="reference internal" href="#remove-fields">Remove Fields</a></li>
+<li><a class="reference internal" href="#remove-all-fields-except">Remove all fields except</a></li>
+<li><a class="reference internal" href="#remove-duplicate-values">Remove duplicate values</a></li>
+<li><a class="reference internal" href="#replace">Replace</a></li>
+<li><a class="reference internal" href="#replace-with-regexp">Replace with RegExp</a></li>
+<li><a class="reference internal" href="#sort-values">Sort values</a></li>
+<li><a class="reference internal" href="#split-field-using-separator">Split field using separator</a></li>
+<li><a class="reference internal" href="#tag-to-dir">Tag to Dir</a></li>
+<li><a class="reference internal" href="#tag-to-filename">Tag to filename</a></li>
+<li><a class="reference internal" href="#text-to-tag">Text To Tag</a></li>
+<li><a class="reference internal" href="#trim-whitespace">Trim Whitespace</a></li>
+<li><a class="reference internal" href="#update-from-tag">Update From Tag</a></li>
+</ul>
+</li>
+</ul>
+
+
+<hr style='width:80%'>
+
+
+        </div>
+      </div>
+    <div class="body col-md-9 content" role="main">
+      
+  <section id="functions">
+<h1>Functions<a class="headerlink" href="#functions" title="Permalink to this heading">¶</a></h1>
+<section id="generated-function-reference">
+<span id="id1"></span><h2>Generated Function Reference<a class="headerlink" href="#generated-function-reference" title="Permalink to this heading">¶</a></h2>
+<p>This table is generated from the action function registry used by the Actions dialog.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Function</p></th>
+<th class="head"><p>Registry key</p></th>
+<th class="head"><p>Preview text</p></th>
+<th class="head"><p>Arguments</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Autonumbering</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">autonumbering</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Autonumbering:</span> <span class="pre">$0,</span> <span class="pre">Start:</span> <span class="pre">$1,</span> <span class="pre">Restart</span> <span class="pre">for</span> <span class="pre">dir:</span> <span class="pre">$2,</span> <span class="pre">Padding:</span> <span class="pre">$3</span></code></p></td>
+<td><p>Start; Restart for dir; Padding</p></td>
+</tr>
+<tr class="row-odd"><td><p>Case conversion</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">titleCase</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Convert</span> <span class="pre">Case:</span> <span class="pre">$0:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Type; For Mixed Case, after any of:</p></td>
+</tr>
+<tr class="row-even"><td><p>Convert from non-standard encoding</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">enconvert</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Convert</span> <span class="pre">to</span> <span class="pre">encoding:</span> <span class="pre">$0,</span> <span class="pre">Encoding:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Encoding</p></td>
+</tr>
+<tr class="row-odd"><td><p>Export artwork to file</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">save_artwork</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Export</span> <span class="pre">Art:</span> <span class="pre">pattern='$1'</span></code></p></td>
+<td><p>Pattern (extension not required)</p></td>
+</tr>
+<tr class="row-even"><td><p>Filename to Tag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">filenametotag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">File-&gt;Tag</span> <span class="pre">'$1'</span></code></p></td>
+<td><p>Pattern</p></td>
+</tr>
+<tr class="row-odd"><td><p>Format value</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">format</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Format</span> <span class="pre">$0</span> <span class="pre">using</span> <span class="pre">$1</span></code></p></td>
+<td><p>Format string</p></td>
+</tr>
+<tr class="row-even"><td><p>Import text file</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">import_text</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Text</span> <span class="pre">File:</span> <span class="pre">$0,</span> <span class="pre">'$1'</span></code></p></td>
+<td><p>Pattern (can be relative path)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Load Artwork</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">artwork</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Artwork:</span> <span class="pre">Filenames='$1',</span> <span class="pre">Description='$2',</span> <span class="pre">Case</span> <span class="pre">Sensitive=$3</span></code></p></td>
+<td><p>Filenames to check (;-separated, shell wildcards [eg. *] allowed); Default description (can be pattern):; Match filename’s case:</p></td>
+</tr>
+<tr class="row-even"><td><p>Merge field</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">merge_values</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Merge</span> <span class="pre">field:</span> <span class="pre">$0,</span> <span class="pre">sep='$1'</span></code></p></td>
+<td><p>Separator</p></td>
+</tr>
+<tr class="row-odd"><td><p>Remove all fields except</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">remove_except</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Remove</span> <span class="pre">fields</span> <span class="pre">except:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Field list (; separated):</p></td>
+</tr>
+<tr class="row-even"><td><p>Remove duplicate values</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">remove_dupes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Remove</span> <span class="pre">Dupes:</span> <span class="pre">$0,</span> <span class="pre">Match</span> <span class="pre">Case</span> <span class="pre">$1</span></code></p></td>
+<td><p>Match Case</p></td>
+</tr>
+<tr class="row-odd"><td><p>Remove Fields</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">remove_fields</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;blank&gt;</span> <span class="pre">$0</span></code></p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Replace</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">replace</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Replace</span> <span class="pre">$0:</span> <span class="pre">'$1'</span> <span class="pre">-&gt;</span> <span class="pre">'$2',</span> <span class="pre">Match</span> <span class="pre">Case:</span> <span class="pre">$3,</span> <span class="pre">Words</span> <span class="pre">Only:</span> <span class="pre">$4</span></code></p></td>
+<td><p>Replace; with:; Match case:; only as whole word</p></td>
+</tr>
+<tr class="row-odd"><td><p>Replace with RegExp</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">regex</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">RegReplace</span> <span class="pre">$0:</span> <span class="pre">RegExp</span> <span class="pre">'$1'</span> <span class="pre">with</span> <span class="pre">'$2',</span> <span class="pre">Match</span> <span class="pre">Case:</span> <span class="pre">$3</span></code></p></td>
+<td><p>Regular Expression; Replace matches with:; Match Case</p></td>
+</tr>
+<tr class="row-even"><td><p>Sort values</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sort</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Sort</span> <span class="pre">$0,</span> <span class="pre">order='$1',</span> <span class="pre">Match</span> <span class="pre">Case='$2'</span></code></p></td>
+<td><p>Order; Match Case</p></td>
+</tr>
+<tr class="row-odd"><td><p>Split fields using separator</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">split_by_sep</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Split</span> <span class="pre">using</span> <span class="pre">separator</span> <span class="pre">$0:</span> <span class="pre">sep='$1'</span></code></p></td>
+<td><p>Separator</p></td>
+</tr>
+<tr class="row-even"><td><p>Tag to Dir</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tag_dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Tag-&gt;Dir:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Pattern (can be relative path)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Tag to filename</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">move</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Tag-&gt;File:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Pattern</p></td>
+</tr>
+<tr class="row-even"><td><p>Text to Tag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">texttotag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Text</span> <span class="pre">to</span> <span class="pre">Tag:</span> <span class="pre">$0</span> <span class="pre">-&gt;</span> <span class="pre">$1,</span> <span class="pre">$2</span></code></p></td>
+<td><p>Text; Pattern; Output</p></td>
+</tr>
+<tr class="row-odd"><td><p>Trim whitespace</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">strip</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Trim</span> <span class="pre">$0</span></code></p></td>
+<td><p>None</p></td>
+</tr>
+<tr class="row-even"><td><p>Update from tag</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">update_from_tag</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Update</span> <span class="pre">from</span> <span class="pre">$2,</span> <span class="pre">Fields:</span> <span class="pre">$1</span></code></p></td>
+<td><p>Field list (; separated):; Tag</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="autonumbering">
+<span id="id2"></span><h2>Autonumbering<a class="headerlink" href="#autonumbering" title="Permalink to this heading">¶</a></h2>
+<section id="arguments">
+<h3>Arguments<a class="headerlink" href="#arguments" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Start</p></li>
+<li><p>Max Length After Padding</p></li>
+<li><p>Restart Numbering</p></li>
+</ol>
+</section>
+<section id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h3>
+<p>Numbers tracks sequentially beginning with <strong>Start</strong>.</p>
+<p>The number you enter in <strong>Max Length After Padding</strong> will pad the track with extra zeroes until it’s of the same length. Eg. if a file has track number ‘12’, having a padding of 3 will return the number ‘012’, while a padding of 1 will leave the number unchanged since it’s length is already greater than the Max Length.</p>
+<p>Restart Numbering at each directory will restart the numbering from <strong>Start</strong> for each directory encountered. A separate count will be kept for each directory.</p>
+</section>
+</section>
+<section id="case-conversion">
+<span id="id3"></span><h2>Case Conversion<a class="headerlink" href="#case-conversion" title="Permalink to this heading">¶</a></h2>
+<section id="id4">
+<h3>Arguments<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Type</p></li>
+<li><p>Word Delimiter</p></li>
+</ol>
+</section>
+<section id="id5">
+<h3>Description<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
+<p>There are three types of case conversion: <strong>UPPER CASE</strong>,** lower case** and** Mixed Case**. Upper and lower are self-explanatory. Mixed case capitalises each word starting after the characters you specify and converts the rest to lower case.</p>
+<p>For instance, using Mixed Case with “<strong>.</strong>” as a delineator on <em>“this is my name. and my surname. with a dot.here and there.”</em> will return <em>‘This Is My Name. And My Surname. With A Dot.Here And There.’</em></p>
+</section>
+</section>
+<section id="convert-from-non-standard-encoding">
+<span id="id6"></span><h2>Convert from non-standard encoding<a class="headerlink" href="#convert-from-non-standard-encoding" title="Permalink to this heading">¶</a></h2>
+<section id="id7">
+<h3>Arguments<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Encoding</p></li>
+</ol>
+</section>
+<section id="id8">
+<h3>Description<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
+<p>If your files were written using non-standard encoding (eg cp1251 on Windows) you can use this Function to fix ‘em.</p>
+</section>
+</section>
+<section id="export-artwork-to-file">
+<span id="id9"></span><h2>Export artwork to file<a class="headerlink" href="#export-artwork-to-file" title="Permalink to this heading">¶</a></h2>
+<section id="id10">
+<h3>Arguments<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Pattern</p></li>
+</ol>
+</section>
+<section id="id11">
+<h3>Description<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h3>
+<p>Saves all artwork found in an audio file using the desired <strong>Pattern</strong>. Extensions are added automatically.</p>
+<p>If a picture file already exists ‘_1’ will be appended to the filename (before the extension). If that file already exists ‘_2’ will be appended and so on. This will not be done for cases where two or more files contain <em>exactly</em> the same picture data and are to be written to the same filename.</p>
+<p>Usage of the following fields are allowed:</p>
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">img_desc</span></span></dt>
+<dd><p>The description of the current image.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">img_count</span></span></dt>
+<dd><p>The number of images contained in the file.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">img_counter</span></span></dt>
+<dd><p>The number current image being processed.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">img_mime</span></span></dt>
+<dd><p>The mimetype of the current image.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">img_type</span></span></dt>
+<dd><p>The image type, eg. <em>Cover (Front)</em>.</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h3>
+<p>Consider a file <em>/mnt/music/Thebe/Ungawa Kum.mp3</em> containing four images. The first two PNG images and the last two JPEG. Descriptions are ‘one’, ‘two’, etc. for each image.</p>
+<ul class="simple">
+<li><p>The pattern <em>folder_%img_counter%</em> will create four images in <em>/mnt/music/Thebe</em>: <strong>folder_1.png, folder_2.png, folder_3.jpg</strong> and <strong>folder_4.jpg</strong>.</p></li>
+<li><p><em>%img_desc%</em> will create four images in <em>/mnt/music/Thebe</em>: <strong>one.png, two.png, three.jpg</strong> and <strong>four.jpg</strong>.</p></li>
+<li><p><em>/home/user/Desktop/%artist%</em> will create four images in <em>/home/user/Desktop</em>: <strong>Thebe_1.png, Thebe_2.png, Thebe_3.jpg</strong> and <strong>Thebe_4.jpg</strong>.</p></li>
+</ul>
+</section>
+</section>
+<section id="filename-to-tag">
+<span id="id12"></span><h2>Filename to Tag<a class="headerlink" href="#filename-to-tag" title="Permalink to this heading">¶</a></h2>
+<section id="id13">
+<h3>Arguments<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Pattern</p></li>
+</ol>
+</section>
+<section id="id14">
+<h3>Description<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h3>
+<p>See <a class="reference internal" href="menus.html#menus-file-to-tag"><span class="std std-ref">File-&gt;Tag (Ctrl+T)</span></a>.</p>
+</section>
+</section>
+<section id="format-value">
+<span id="id15"></span><h2>Format value<a class="headerlink" href="#format-value" title="Permalink to this heading">¶</a></h2>
+<section id="id16">
+<h3>Arguments<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Format string (also referred to as a Pattern)</p></li>
+</ol>
+</section>
+<section id="id17">
+<h3>Description<a class="headerlink" href="#id17" title="Permalink to this heading">¶</a></h3>
+<p>Formats whatever is passed to it using the Format string.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Extensions are <em>not</em> added if you modify filename related fields using this Function.</p>
+</div>
+</section>
+<section id="id18">
+<h3>Examples<a class="headerlink" href="#id18" title="Permalink to this heading">¶</a></h3>
+<p>A Format string can be (almost) any string. Eg. for a file with the tag, <em>artist=A Guy</em>, <em>album=Screeching</em>, <em>title=Excessively Emo</em>, <em>track=2</em></p>
+<ul class="simple">
+<li><p>Using ‘I wanna write my own.’ as a Format string will return ‘I wanna write my own.’ and write it to the fields you choose.</p></li>
+<li><p>Individual fields can be referenced by placing them inbetween percent characters (%). So <strong>%artist%</strong> will return ‘A Guy’, <strong>%album%</strong>, ‘Screeching’ and so on for the others. Using <strong>%genre%</strong> would return nothing, because there ain’t no genre field in the tag.</p></li>
+<li><p>You can combine fields with any combination of letters as in <strong>I don’t like an %title% %artist%…%album%</strong>. Returning, ‘I don’t like an Excessively Emo A Guy…Screeching’</p></li>
+<li><p>More editing power is available via the scripting functions. They have the format <strong>$name(arguments)</strong>. See the <a class="reference internal" href="scripting.html"><span class="doc">scripting functions page</span></a> for a listing. They can be simple eg. <strong>$upper(value)</strong> will return ‘VALUE’, <strong>$lower(%artist%)</strong> will return ‘a guy’. You can even combine/nest them to get what you want as in <strong>I don’t like an $lower(%title% $mid(%artist%,2,10)) $lower(%album%).</strong> giving “I don’t like an excessively emo guy screeching.”</p></li>
+</ul>
+</section>
+</section>
+<section id="import-text-file">
+<span id="id19"></span><h2>Import text file<a class="headerlink" href="#import-text-file" title="Permalink to this heading">¶</a></h2>
+<section id="id20">
+<h3>Arguments<a class="headerlink" href="#id20" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Pattern</p></li>
+</ol>
+</section>
+<section id="id21">
+<h3>Description<a class="headerlink" href="#id21" title="Permalink to this heading">¶</a></h3>
+<p>Loads the filename described by the Pattern into the field specified. Note that the files complete text is loaded into that field.</p>
+</section>
+<section id="id22">
+<h3>Examples<a class="headerlink" href="#id22" title="Permalink to this heading">¶</a></h3>
+<p>For the file with path <strong>/mnt/Music/artist/album/filename.mp3</strong> and with the tag, <strong>artist=Black Eyed Peas, album=END</strong></p>
+<ul class="simple">
+<li><p>lyrics.txt will load the text file from /mnt/Music/artist/album/lyrics.txt</p></li>
+<li><p>../lyrics.txt will load the file at /mnt/Music/artist/lyrics.txt</p></li>
+<li><p>%album% will load the file at /mnt/Music/artist/album/<strong>END</strong>. No extensions will be added.</p></li>
+<li><p>/mnt/textfiles/lyrics.txt will load from the file at /mnt/textfiles/lyrics.txt</p></li>
+</ul>
+</section>
+</section>
+<section id="load-artwork">
+<span id="id23"></span><h2>Load artwork<a class="headerlink" href="#load-artwork" title="Permalink to this heading">¶</a></h2>
+<section id="id24">
+<h3>Arguments<a class="headerlink" href="#id24" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Filenames</p></li>
+<li><p>Default description</p></li>
+<li><p>Match Case</p></li>
+</ol>
+</section>
+<section id="id25">
+<h3>Description<a class="headerlink" href="#id25" title="Permalink to this heading">¶</a></h3>
+<p>Loads the artwork in filenames to the specified file.</p>
+<p>Filenames are a colon-separated list of shell-style wildcards, eg. <strong>*.jpg;*.png</strong>. Or just something like <strong>folder.jpg</strong>. The files will be loaded in order and the images.</p>
+<p>Default description can be any pattern, eg. <strong>%artist%</strong>.</p>
+<p>Match Case is pretty self-explanatory.</p>
+<p>Be aware that for now that the directory that’ll be searched will be polled every single time this Function is called, so don’t use it on large directories.</p>
+</section>
+</section>
+<section id="merge-field">
+<span id="id26"></span><h2>Merge Field<a class="headerlink" href="#merge-field" title="Permalink to this heading">¶</a></h2>
+<section id="id27">
+<h3>Arguments<a class="headerlink" href="#id27" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Separator</p></li>
+</ol>
+</section>
+<section id="id28">
+<h3>Description<a class="headerlink" href="#id28" title="Permalink to this heading">¶</a></h3>
+<p>Merges the values of a multiple-valued field into a single string, separated by <strong>Separator</strong>.</p>
+<p>eg. Say the genre field contained <strong>Rock, Rap and Reggae</strong> as distinct values. Merging them using the separator <strong>;</strong> (semi-colon) will replace whichever field you specify with the single value <strong>Rock;Rap;Reggae</strong>.</p>
+</section>
+</section>
+<section id="remove-fields">
+<span id="id29"></span><h2>Remove Fields<a class="headerlink" href="#remove-fields" title="Permalink to this heading">¶</a></h2>
+<section id="id30">
+<h3>Description<a class="headerlink" href="#id30" title="Permalink to this heading">¶</a></h3>
+<p>Removes the fields you specify [separated by a comma “<strong>,</strong>”].</p>
+</section>
+</section>
+<section id="remove-all-fields-except">
+<span id="id31"></span><h2>Remove all fields except<a class="headerlink" href="#remove-all-fields-except" title="Permalink to this heading">¶</a></h2>
+<section id="id32">
+<h3>Arguments<a class="headerlink" href="#id32" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Field list</p></li>
+</ol>
+</section>
+<section id="id33">
+<h3>Description<a class="headerlink" href="#id33" title="Permalink to this heading">¶</a></h3>
+<p>Removes all the fields in the file (including cover art) except the ones you specify. The list of fields you specify are separated by a semi-colon (<strong>;</strong>). Any spaces around the field names are trimmed, so <strong>artist;title</strong> and ** artist; title ** are equivalent.</p>
+</section>
+</section>
+<section id="remove-duplicate-values">
+<span id="id34"></span><h2>Remove duplicate values<a class="headerlink" href="#remove-duplicate-values" title="Permalink to this heading">¶</a></h2>
+<section id="id35">
+<h3>Arguments<a class="headerlink" href="#id35" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Match case</p></li>
+</ol>
+</section>
+<section id="id36">
+<h3>Description<a class="headerlink" href="#id36" title="Permalink to this heading">¶</a></h3>
+<p>Removes all duplicate values in a multiple-valued field. Case sensitively or not.</p>
+<p>Eg. if a field has the following values <strong>Rap, Rock and rap</strong>. Using this function on it (without case-sensitivity) will leave <strong>Rap</strong> and <strong>Rock</strong> as the only values.</p>
+</section>
+</section>
+<section id="replace">
+<span id="id37"></span><h2>Replace<a class="headerlink" href="#replace" title="Permalink to this heading">¶</a></h2>
+<section id="id38">
+<h3>Arguments<a class="headerlink" href="#id38" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Text to replace</p></li>
+<li><p>Text to replace with</p></li>
+<li><p>Match Case</p></li>
+<li><p>Only as whole word</p></li>
+</ol>
+</section>
+<section id="id39">
+<h3>Description<a class="headerlink" href="#id39" title="Permalink to this heading">¶</a></h3>
+<p>It works just as you’d expect from any text editor. The only caveat is that words are designated by these <strong>,.() !</strong> characters.</p>
+</section>
+</section>
+<section id="replace-with-regexp">
+<span id="id40"></span><h2>Replace with RegExp<a class="headerlink" href="#replace-with-regexp" title="Permalink to this heading">¶</a></h2>
+<section id="id41">
+<h3>Arguments<a class="headerlink" href="#id41" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>The regular expression</p></li>
+<li><p>Replacement string</p></li>
+</ol>
+</section>
+<section id="id42">
+<h3>Description<a class="headerlink" href="#id42" title="Permalink to this heading">¶</a></h3>
+<p>Matches a regular expression. Groups can then be retrieved using $group_number (counting starts from one) eg $2.</p>
+</section>
+<section id="id43">
+<h3>Examples<a class="headerlink" href="#id43" title="Permalink to this heading">¶</a></h3>
+<p>Some examples for the text, ‘concentricpuddle writes this’.</p>
+<ul class="simple">
+<li><p>regexp=(concentricpuddle) and repl=$upper($1) =&gt; ‘CONCENTRICPUDDLE’</p></li>
+<li><p>regexp=’(concentricpuddle) writes (this)’, repl=’$upper($1) wrote $2’ =&gt; ‘CONCENTRICPUDDLE wrote this’</p></li>
+<li><p>regexp=’(concentricpuddle) writes (this)’, repl=’$upper($1) wrote $3’ =&gt; ‘CONCENTRICPUDDLE wrote $3’, because $3 wasn’t found.</p></li>
+<li><p>regexp=’(c.*puddle)’, repl=’name=$1’ =&gt; ‘name=concentricpuddle’</p></li>
+</ul>
+</section>
+</section>
+<section id="sort-values">
+<span id="id44"></span><h2>Sort values<a class="headerlink" href="#sort-values" title="Permalink to this heading">¶</a></h2>
+<section id="id45">
+<h3>Arguments<a class="headerlink" href="#id45" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Sort Order</p></li>
+<li><p>Match Case</p></li>
+</ol>
+</section>
+<section id="id46">
+<h3>Description<a class="headerlink" href="#id46" title="Permalink to this heading">¶</a></h3>
+<p>Sorts the values in a multiple-valued field using either Ascending or Descending order. Arguments are pretty self-explanatory.</p>
+</section>
+</section>
+<section id="split-field-using-separator">
+<span id="id47"></span><h2>Split field using separator<a class="headerlink" href="#split-field-using-separator" title="Permalink to this heading">¶</a></h2>
+<section id="id48">
+<h3>Arguments<a class="headerlink" href="#id48" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Separator</p></li>
+</ol>
+</section>
+<section id="id49">
+<h3>Description<a class="headerlink" href="#id49" title="Permalink to this heading">¶</a></h3>
+<p>Splits the strings found into multiple values using <strong>Separator</strong>.</p>
+</section>
+<section id="id50">
+<h3>Examples<a class="headerlink" href="#id50" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>If genre=”Rap;Rock;Dubstep” splitting it with “<strong>;</strong>” as the separator will result in genre (provided you’re writing to the genre field) having multiple values: <strong>Rap, Rock and Dubstep</strong></p></li>
+<li><p>If genre were a multiple-valued field with ‘Rock;Rap’ and ‘Classical;Guitar Solo’ it’s distinct values. Splitting them with <strong>;</strong> as the separator will split each value and combine them into the multiple-valued field. In this case we get <strong>Rock, Rap, Classical</strong> and <strong>Guitar Solo</strong> as the distinct values.</p></li>
+</ul>
+</section>
+</section>
+<section id="tag-to-dir">
+<span id="id51"></span><h2>Tag to Dir<a class="headerlink" href="#tag-to-dir" title="Permalink to this heading">¶</a></h2>
+<section id="id52">
+<h3>Arguments<a class="headerlink" href="#id52" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Pattern</p></li>
+</ol>
+</section>
+<section id="id53">
+<h3>Description<a class="headerlink" href="#id53" title="Permalink to this heading">¶</a></h3>
+<p>Works as Tag To Filename (below), but renames/moves directories instead. Directories will only be moved if the destination dir resides on the same filesystem as the source.</p>
+</section>
+</section>
+<section id="tag-to-filename">
+<span id="id54"></span><h2>Tag to filename<a class="headerlink" href="#tag-to-filename" title="Permalink to this heading">¶</a></h2>
+<section id="id55">
+<h3>Arguments<a class="headerlink" href="#id55" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>The text. Can be any pattern.</p></li>
+</ol>
+</section>
+<section id="id56">
+<h3>Description<a class="headerlink" href="#id56" title="Permalink to this heading">¶</a></h3>
+<p>Converts a tag to filename using the pattern (see above description for Format value).</p>
+<p>If the filename contains any of the characters, <strong>\*?;”|:/</strong>, then they will be removed.</p>
+<p>Files can also be moved, by specifying ‘/’ as a directory delimeter. Any forward slashes found in the fields used in constructing the pattern are ommitted (if the artist is AC/DC, it will not create an AC directory, rather the slash will be removed and ACDC will be used).</p>
+<p>Intermediate directories will be created if they don’t exist.</p>
+</section>
+<section id="id57">
+<h3>Examples<a class="headerlink" href="#id57" title="Permalink to this heading">¶</a></h3>
+<p>Say you had a file named ‘track.mp3’ with the following tag, <strong>artist=Before The Fame, album=The Vinyl LP, title=Sounds Better Than Anything After, track=10</strong> and invoked this function.</p>
+<ul class="simple">
+<li><p><em>%artist% - %album% - %track%</em> in the pattern combo will rename it to ‘Before The Fame - The Vinyl LP - Sounds Better Than Anything After.mp3’</p></li>
+<li><p><em>%artist% - $num(%track%, 3) - %title%</em> will rename it to ‘Before The Fame - 010 - Sounds Better Than Anything After.mp3’</p></li>
+<li><p><em>%title%_$upper(%album%)-%track%-%artist%</em> will give the filename ‘Sounds Better Than Anything After_THE VINYL LP-10-Before The Fame.mp3’</p></li>
+</ul>
+<p>For a file with the tag, <strong>artist=Relatively Unknown, title=Horrible for everyone else, album=Fans like it, track=5</strong> with path, /home/concentricpuddle/multimedia/music/Indie/unsorted/unknown.mp3</p>
+<ul class="simple">
+<li><p>%album%/%artist% - %title% will move the file to /home/concentricpuddle/multimedia/music/Indie/<strong>Fans like it/Relatively Unknown - Horrible for everyone else.mp3</strong>.</p></li>
+<li><p>For every slash, the file is moved up one directory. %artist%/%album%/%title% will move the file to /home/concentricpuddle/multimedia/music/<strong>Relatively Unknown/Fans like it/Horrible for everyone else.mp3</strong></p></li>
+<li><p>If you want you can also have an absolute path, by starting the pattern with a slash, eg. the pattern /mnt/library/%album%/%track% will move the file to /mnt/library/Fans like it/5.mp3</p></li>
+</ul>
+</section>
+</section>
+<section id="text-to-tag">
+<span id="id58"></span><h2>Text To Tag<a class="headerlink" href="#text-to-tag" title="Permalink to this heading">¶</a></h2>
+<section id="id59">
+<h3>Arguments<a class="headerlink" href="#id59" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>The text. Can be any pattern.</p></li>
+<li><p>The pattern to match the text against. Works like Tag-&gt;Filename except that instead of using fields like %artist% you use tokens denoted by %number like <strong>%1, %3</strong>.</p></li>
+<li><p>What to output the text as, can be any pattern can be used including tokens delimited by %number.</p></li>
+</ol>
+</section>
+<section id="id60">
+<h3>Description<a class="headerlink" href="#id60" title="Permalink to this heading">¶</a></h3>
+<p>Converts any text from any text to any other text. It’s better explained by using:</p>
+</section>
+<section id="id61">
+<h3>Examples<a class="headerlink" href="#id61" title="Permalink to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Say you had the text, ‘First Second’. Using the pattern <em>%1 %2</em> you can reverse the text by using ‘%2 %1’ as the output, returning ‘Second First’.</p></li>
+<li><p>You can use any valid pattern as the text. Say artist=’Eminem/Recovery’. Using the pattern <strong>%1/%2</strong> and having %2 in the output means that you can retrieve the album name (Recovery). %1 would return Just ‘Eminem’.</p></li>
+<li><p>:doc:’Scripting &lt;scripting&gt;` functions are allowed in the output. Eg. for text=’Jimmy-01/Rebellious Angel’ and a pattern=’%1-%2/%3’, the <strong>$num(%2, 1)</strong> as the output will be evaluated as normal returning just ‘1’.</p></li>
+</ul>
+</section>
+</section>
+<section id="trim-whitespace">
+<span id="id62"></span><h2>Trim Whitespace<a class="headerlink" href="#trim-whitespace" title="Permalink to this heading">¶</a></h2>
+<section id="id63">
+<h3>Description<a class="headerlink" href="#id63" title="Permalink to this heading">¶</a></h3>
+<p>Removes any whitespace before and after text. Using it on <em>“ there’s a space before and one after “</em> will return <em>“there’s a space before and one after”</em></p>
+</section>
+</section>
+<section id="update-from-tag">
+<span id="id64"></span><h2>Update From Tag<a class="headerlink" href="#update-from-tag" title="Permalink to this heading">¶</a></h2>
+<section id="id65">
+<h3>Arguments<a class="headerlink" href="#id65" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Field list (;-separated). Start the list with the tilde (~) character to update all the fields except the ones in the list.</p></li>
+<li><p>Tag type</p></li>
+</ol>
+</section>
+<section id="id66">
+<h3>Description<a class="headerlink" href="#id66" title="Permalink to this heading">¶</a></h3>
+<p>Updates the fields specified with the values found in Tag type.</p>
+<p>If your FLAC file has an ID3 tag, puddletag will read/write only the VorbisComment tag. However sometimes you want to update the FLAC tag with the ID3 tag’s contents. Specify the <strong>Field List</strong>, select the <strong>Tag Type</strong> (ID3 or APEv2).</p>
+<p>After invocation, the current file’s tag will then be updated using the ID3/APEv2 tag’s fields.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tag will be not be changed in any manner.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+      This page and associated images are licensed under <a rel="license" href="http://www.apache.org/licenses/LICENSE-2.0">Apache Version 2.0</a>
+	Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 5.3.0.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

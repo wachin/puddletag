@@ -25,7 +25,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 
 ## Development Notes
 - Debian 12 package reference lists are available in `packages_available_debian12_pyqt6.txt` and `packages_available_debian12_python3.txt` for checking installable Python/PyQt6 dependencies during development.
-- Stop development when a new Debian repository package is required. Record the package name and wait for the developer to install it before continuing; latest addition: `python3-sphinx-bootstrap-theme`.
+- Stop development when a new Debian repository package is required. Record the package name and wait for the developer to install it before continuing; latest additions: `python3-sphinx-bootstrap-theme`, `python3-unidecode`.
 
 ### Core Functionality
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).
