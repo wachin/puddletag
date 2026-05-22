@@ -93,7 +93,7 @@ def parse_shortcuts():
 
 
 def write_translations():
-    f = open('puddlestuff/translations.py', 'r+')
+    f = open('puddlestuff/translations/__init__.py', 'r+')
     out = []
     for i, l in enumerate(f.readlines()):
         out.append(l)

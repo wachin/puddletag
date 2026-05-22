@@ -1,1 +1,6 @@
 include requirements.txt
+recursive-include puddlestuff/translations *.qm *.ts
+recursive-include puddlestuff/data *
+include puddletag.png
+include puddletag.desktop
+include puddletag.1

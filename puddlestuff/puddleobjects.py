@@ -469,7 +469,12 @@ def get_languages(dirs=None):
     for f in files:
         ts_name = get_name(f)
         if ts_name.startswith('puddletag_'):
-            ret[ts_name[len('puddletag_'):]] = f
+            lang_code = ts_name[len('puddletag_'):]
+            ret[lang_code] = f
+            if '_' in lang_code:
+                ret[lang_code.replace('_', '-')] = f
+            elif '-' in lang_code:
+                ret[lang_code.replace('-', '_')] = f
         else:
             ret[ts_name] = f
     return ret
