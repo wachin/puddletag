@@ -18,7 +18,7 @@ import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # -- General configuration -----------------------------------------------------
 
@@ -215,6 +215,18 @@ html_show_copyright = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "puddletagdoc"
+
+
+def generate_supported_formats(app):
+    from puddlestuff.audioinfo.formats import supported_formats_rst
+
+    target = os.path.join(app.srcdir, "generated_supported_formats.txt")
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(supported_formats_rst())
+
+
+def setup(app):
+    app.connect("builder-inited", generate_supported_formats)
 
 
 # -- Options for LaTeX output --------------------------------------------------

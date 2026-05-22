@@ -19,14 +19,18 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Integrated Logging**: Centralized logging with a built-in viewer in the Help menu.
 - [x] **Library Statistics**: Detailed insights into genre, format, and bitrate distribution.
 - [x] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicates across the library.
+- [x] **Automated Format Documentation**: Supported format help text is generated from the live audio format registry.
 
 ## Planned Features & Improvements
+
+## Development Notes
+- Debian 12 package reference lists are available in `packages_available_debian12_pyqt6.txt` and `packages_available_debian12_python3.txt` for checking installable Python/PyQt6 dependencies during development.
 
 ### Core Functionality
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 
 ### Distribution & Documentation
-- [ ] **Automated Documentation**: Ensure new features are automatically added to the help files.
+- [ ] **Automated Documentation**: Extend registry-driven documentation to more feature areas such as plugins, actions, and tag sources.
 - [ ] **Universal Packages**: Official support for Flatpak and AppImage.
 - [ ] **Comprehensive Plugin API Docs**: Detailed documentation for community developers.

@@ -16,7 +16,7 @@ Then there're Functions, which can do things like replace text, trim it, do case
 - Exporting of tag information to various formats (HTML, CSV, RTF) using user-defined templates.
 - Full Unicode support.
 
-Supported formats: ID3v1, ID3v2 (mp3, wav, aac, aiff, dsf), MP4 (mp4, m4a, etc.), VorbisComments (ogg, flac), Musepack (mpc), Monkey's Audio (.ape), WavPack (wv), OptimFROG (ofr, ofs), TAK (tak) and TrueAudio (tta).
+.. include:: generated_supported_formats.txt
 
 Why it is
 ---------
