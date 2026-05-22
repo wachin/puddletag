@@ -140,6 +140,8 @@ For documentation and tests during development on Debian, also install:
 apt install python3-sphinx python3-sphinx-bootstrap-theme python3-pytest
 ```
 
+For translation testing and editing, see [TRANSLATION_TESTING.md](TRANSLATION_TESTING.md).
+
 Then, clone the repo and run puddletag:
 
 ```sh
