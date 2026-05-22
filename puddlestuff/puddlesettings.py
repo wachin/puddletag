@@ -396,6 +396,15 @@ class Tags(QWidget):
                                                     "with the ID3v1 tag upon saving?"))
         v1_label.setBuddy(self._v1_combo)
 
+        self._artwork_combo = QComboBox()
+        artwork_options = [translate("Tag Settings", 'Save to Tag only'),
+                           translate("Tag Settings", 'Save to File only'),
+                           translate("Tag Settings", 'Save to Both'),
+                           translate("Tag Settings", 'None')]
+        self._artwork_combo.addItems(artwork_options)
+        artwork_label = QLabel(translate("Tag Settings", "Artwork saving &policy:"))
+        artwork_label.setBuddy(self._artwork_combo)
+
         self.coverPattern = QLineEdit('folder.jpg')
         cover_label = QLabel(translate('Tag Settings',
                                        'Default &pattern to use when saving artwork.'))
@@ -403,6 +412,9 @@ class Tags(QWidget):
 
         layout = QVBoxLayout()
         vbox = QVBoxLayout()
+
+        layout.addWidget(artwork_label)
+        layout.addWidget(self._artwork_combo)
 
         layout.addWidget(cover_label)
         layout.addWidget(self.coverPattern)
@@ -440,10 +452,16 @@ class Tags(QWidget):
         cover_pattern = cparser.get('tags', 'cover_pattern', 'folder')
         self.coverPattern.setText(cover_pattern)
 
+        artwork_option = cparser.get('tags', 'artwork_option', 2)
+        self._artwork_combo.setCurrentIndex(artwork_option)
+
     def applySettings(self, control=None):
         cparser = PuddleConfig()
         v1_option = self._v1_combo.currentIndex()
         cparser.set('id3tags', 'v1_option', v1_option)
+        artwork_option = self._artwork_combo.currentIndex()
+        cparser.set('tags', 'artwork_option', artwork_option)
+        self._status['artwork_option'] = artwork_option
 
         audioinfo.id3.v1_option = v1_option
         if self.id3_v24.isChecked():

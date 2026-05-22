@@ -16,8 +16,8 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Expanded Format Support**: Added support for AIFF, WAV, AAC, DSF (DSD), OptimFROG, TAK, and TTA (TrueAudio).
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).
 - [ ] **Enhanced Export Templates**: Implement user-defined templates for generating collection reports in HTML, RTF, and CSV formats.
-- [ ] **Asynchronous Lookups**: Add the ability to cancel active tag source lookups (Amazon, Discogs, MusicBrainz) without freezing the UI.
-- [ ] **Advanced Artwork Management**: Provide granular control over artwork saving (Tag only, File only, Both, or None).
+- [x] **Asynchronous Lookups**: Added the ability to cancel active tag source lookups (Amazon, Discogs, MusicBrainz) and submissions.
+- [x] **Advanced Artwork Management**: Added granular control over artwork saving (Tag only, File only, Both, or None) in Tag Settings.
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 - [ ] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicate tracks based on metadata and audio fingerprints.
 
@@ -29,6 +29,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [ ] **Theme Awareness**: Better integration with system-wide Dark Mode and custom GTK/Qt themes.
 
 ### Distribution & Documentation
+- [ ] **Automated Documentation**: Ensure new features are automatically added to the help files in `/docs` and `/docsrc`.
 - [ ] **Universal Packages**: Official support for Flatpak and AppImage to reach more users across different distributions.
 - [ ] **Comprehensive Plugin API Docs**: Detailed documentation to encourage community-driven plugin development.
 

@@ -636,6 +636,11 @@ class MainWin(QWidget):
         self.searchButton.setAutoDefault(True)
         connect(self.searchButton, "clicked", self.search)
 
+        # The Cancel button
+        self.cancelButton = QPushButton(translate("Defaults", "Cancel"))
+        self.cancelButton.setVisible(False)
+        connect(self.cancelButton, "clicked", self.cancelSearch)
+
         # The instruction/feedback label (between Search box and the results)
         self.label = QLabel(translate("Tag Sources",
                                       "Select files and click on Search to retrieve metadata."))
@@ -655,6 +660,11 @@ class MainWin(QWidget):
         self.submitButton = QPushButton(translate("Tag Sources",
                                                   "S&ubmit Tags"))
         connect(self.submitButton, "clicked", self.submit)
+
+        # The Cancel Submit button
+        self.cancelSubmitButton = QPushButton(translate("Defaults", "Cancel"))
+        self.cancelSubmitButton.setVisible(False)
+        connect(self.cancelSubmitButton, "clicked", self.cancelSubmit)
 
         # The Write button (beneath the Search results)
         write_preview = QPushButton(translate("Tag Sources", '&Write'))
@@ -690,6 +700,7 @@ class MainWin(QWidget):
         # Layout the Search row
         searchbox = QHBoxLayout()
         searchbox.addWidget(self.searchButton, 0)
+        searchbox.addWidget(self.cancelButton, 0)
         searchbox.addWidget(self.searchEdit, 1)
 
         # Layout the Response row
@@ -697,6 +708,7 @@ class MainWin(QWidget):
         responsebox.addWidget(linklabel, 1)
         responsebox.addStretch()
         responsebox.addWidget(self.submitButton)
+        responsebox.addWidget(self.cancelSubmitButton)
         responsebox.addWidget(write_preview)
         responsebox.addWidget(clear)
 
@@ -850,6 +862,7 @@ class MainWin(QWidget):
 
     def setResults(self, retval):
         self.searchButton.setEnabled(True)
+        self.cancelButton.setVisible(False)
         if isinstance(retval, str):
             self.label.setText(retval)
         else:
@@ -897,16 +910,27 @@ class MainWin(QWidget):
                                  "An unhandled error occurred: {}").format(str(e))
 
         self.searchButton.setEnabled(False)
-        t = PuddleThread(search, self)
-        t.threadfinished.connect(self.setResults)
-        t.start()
+        self.cancelButton.setVisible(True)
+        self.thread = PuddleThread(search, self)
+        self.thread.threadfinished.connect(self.setResults)
+        self.thread.start()
+
+    def cancelSearch(self):
+        if hasattr(self, 'thread') and self.thread.isRunning():
+            self.thread.terminate()
+            self.thread.wait()
+            self.label.setText(translate("Tag Sources", "Search canceled."))
+            self.searchButton.setEnabled(True)
+            self.cancelButton.setVisible(False)
 
     def submit(self):
         files = self._status['selectedfiles']
         self.submitButton.setEnabled(False)
+        self.cancelSubmitButton.setVisible(True)
 
         def end(text):
             self.submitButton.setEnabled(True)
+            self.cancelSubmitButton.setVisible(False)
             self.label.setText(text)
 
         def submit():
@@ -923,9 +947,17 @@ class MainWin(QWidget):
 
             return translate("Tag Sources", "Submission completed.")
 
-        t = PuddleThread(submit, self)
-        t.threadfinished.connect(end)
-        t.start()
+        self.submit_thread = PuddleThread(submit, self)
+        self.submit_thread.threadfinished.connect(end)
+        self.submit_thread.start()
+
+    def cancelSubmit(self):
+        if hasattr(self, 'submit_thread') and self.submit_thread.isRunning():
+            self.submit_thread.terminate()
+            self.submit_thread.wait()
+            self.label.setText(translate("Tag Sources", "Submission canceled."))
+            self.submitButton.setEnabled(True)
+            self.cancelSubmitButton.setVisible(False)
 
     def saveSettings(self):
         settings = PuddleConfig()

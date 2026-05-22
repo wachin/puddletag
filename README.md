@@ -8,7 +8,7 @@ The usual tag editor features are supported like extracting tag information from
 
 Then there’re _Functions_, which can do things like replace text, trim it, do case conversions, etc. _Actions_ can automate repetitive tasks. Doing web lookups using Amazon (including cover art), Discogs (does cover art too!), FreeDB and MusicBrainz is also supported. There’s quite a bit more, but I’ve reached my comma quota.
 
-Supported formats: ID3v1, ID3v2 (mp3), MP4 (mp4, m4a, etc.), VorbisComments (ogg, flac), Musepack (mpc), Monkey’s Audio (.ape) and WavPack (wv).
+Supported formats: ID3v1, ID3v2 (mp3, wav, aac, aiff, dsf), MP4 (mp4, m4a, etc.), VorbisComments (ogg, flac), Musepack (mpc), Monkey’s Audio (.ape), WavPack (wv), OptimFROG (ofr, ofs), TAK (tak) and TrueAudio (tta).
 
 
 ## Dependencies

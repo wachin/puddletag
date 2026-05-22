@@ -15,7 +15,7 @@ from . import translations, constants
 from .audioinfo import (FILETAGS, setmodtime, PATH, FILENAME,
                         EXTENSION, MockTag, DIRPATH, DIRNAME, READONLY, fn_hash, isempty, encode_fn, decode_fn)
 from .constants import BLANK, SEPARATOR, LOG_FILENAME
-from .puddleobjects import (issubfolder, safe_name)
+from .puddleobjects import (issubfolder, safe_name, PuddleStatus)
 
 translate = translations.translate
 
@@ -314,10 +314,24 @@ def write(audio, tags, save_mtime=True, justrename=False):
                   tags.get(field, '') != audio.get(field, ''))])
 
     if '__image' in tags:
-        if not audio.IMAGETAGS:
+        artwork_option = PuddleStatus()._status.get('artwork_option', 2)
+
+        if not audio.IMAGETAGS or artwork_option == 3:
             del (tags['__image'])
         else:
             undo['__image'] = audio.images
+
+            # Save to file if option is "File only" (1) or "Both" (2)
+            if artwork_option in [1, 2]:
+                from .tagsources import save_cover
+                for img in tags['__image']:
+                    # img is (data, mimetype, description, image_type, width, height)
+                    if isinstance(img, (list, tuple)) and len(img) > 0:
+                        save_cover(audio, img[0], audio[EXTENSION])
+
+            # If "File only" (1), remove from tags so it's not written to the audio file
+            if artwork_option == 1:
+                del tags['__image']
 
     try:
         if fn_fields:

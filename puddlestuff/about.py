@@ -14,9 +14,9 @@ desc = translate("About", '''puddletag is an audio tag editor for GNU/Linux simi
 
 <br /><br />Features include: Batch editing of tags, renaming files using tags, retrieving tags from filenames, using Actions to automate repetitive tasks, importing your music library and loads of other awesome stuff. <br /><br />
 
-Supported formats: id3v1, id3v2 (.mp3), AAC (.mp4, .m4a), VorbisComments (.ogg, .flac) and APEv2 (.ape) <br />< br />
+Supported formats: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m4a), VorbisComments (.ogg, .flac) and APEv2 (.ape, .ofr, .ofs, .tak, .tta) <br />< br />
 
-Visit the puddletag website (<a href="http://puddletag.sourceforge.net">http://puddletag.sourceforge.net</a>) for help and updates.<br /><br />
+Visit the puddletag website (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) for help and updates.<br /><br />
 &copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) <br />
 Licensed under GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
 ''')
