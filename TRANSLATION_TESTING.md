@@ -89,6 +89,40 @@ For Spanish regional locales such as `es_EC`, puddletag should fall back to the 
 Locale: es_ES
 ```
 
+Commands for all bundled translation catalogs:
+
+```bash
+LANG=afr.UTF-8 LC_ALL= ./puddletag
+LANG=cs.UTF-8 LC_ALL= ./puddletag
+LANG=de.UTF-8 LC_ALL= ./puddletag
+LANG=es_EC.UTF-8 LC_ALL= ./puddletag
+LANG=fr.UTF-8 LC_ALL= ./puddletag
+LANG=it.UTF-8 LC_ALL= ./puddletag
+LANG=nl_NL.UTF-8 LC_ALL= ./puddletag
+LANG=pl_PL.UTF-8 LC_ALL= ./puddletag
+LANG=pt_BR.UTF-8 LC_ALL= ./puddletag
+LANG=ru_RU.UTF-8 LC_ALL= ./puddletag
+LANG=sv.UTF-8 LC_ALL= ./puddletag
+```
+
+Expected locale messages:
+
+```text
+Locale: afr
+Locale: cs
+Locale: de
+Locale: es_ES
+Locale: fr
+Locale: it
+Locale: nl-nl
+Locale: pl_PL
+Locale: pt_BR
+Locale: ru_RU
+Locale: sv
+```
+
+Automatic matching uses the bundled catalog names. For example, `LANG=nl_NL.UTF-8` should match `puddletag_nl-nl.qm`, and `LANG=es_EC.UTF-8` should match `puddletag_es_ES.qm`.
+
 If `LC_ALL=C.UTF-8` is set by the shell or test environment, puddletag now also checks `LANG`, `LC_MESSAGES`, and `LANGUAGE` as fallbacks.
 
 ## Editing And Releasing A Translation
