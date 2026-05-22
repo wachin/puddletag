@@ -1,6 +1,7 @@
 import importlib.util
 from importlib.machinery import SourceFileLoader
 import os
+from pathlib import Path
 import unittest
 
 
@@ -52,6 +53,70 @@ class TestTranslations(unittest.TestCase):
                 {"LANG": "es_EC.UTF-8"},
             )
         )
+
+    def test_documented_automatic_locale_commands_match_bundled_catalogs(self):
+        launcher = load_launcher()
+        languages = {
+            "afr": "/tmp/puddletag_afr.qm",
+            "cs": "/tmp/puddletag_cs.qm",
+            "de": "/tmp/puddletag_de.qm",
+            "es_ES": "/tmp/puddletag_es_ES.qm",
+            "fr": "/tmp/puddletag_fr.qm",
+            "it": "/tmp/puddletag_it.qm",
+            "nl-nl": "/tmp/puddletag_nl-nl.qm",
+            "pl_PL": "/tmp/puddletag_pl_PL.qm",
+            "pt_BR": "/tmp/puddletag_pt_BR.qm",
+            "ru_RU": "/tmp/puddletag_ru_RU.qm",
+            "sv": "/tmp/puddletag_sv.qm",
+        }
+
+        cases = {
+            "afr.UTF-8": "/tmp/puddletag_afr.qm",
+            "cs.UTF-8": "/tmp/puddletag_cs.qm",
+            "de.UTF-8": "/tmp/puddletag_de.qm",
+            "es_EC.UTF-8": "/tmp/puddletag_es_ES.qm",
+            "fr.UTF-8": "/tmp/puddletag_fr.qm",
+            "it.UTF-8": "/tmp/puddletag_it.qm",
+            "nl_NL.UTF-8": "/tmp/puddletag_nl-nl.qm",
+            "pl_PL.UTF-8": "/tmp/puddletag_pl_PL.qm",
+            "pt_BR.UTF-8": "/tmp/puddletag_pt_BR.qm",
+            "ru_RU.UTF-8": "/tmp/puddletag_ru_RU.qm",
+            "sv.UTF-8": "/tmp/puddletag_sv.qm",
+        }
+
+        for lang, expected in cases.items():
+            with self.subTest(lang=lang):
+                self.assertEqual(
+                    launcher.select_language_file(
+                        "auto",
+                        languages,
+                        ["C"],
+                        {"LC_ALL": "", "LANG": lang},
+                    ),
+                    expected,
+                )
+
+    def test_all_bundled_translation_catalogs_are_represented_in_locale_tests(self):
+        catalogs = {
+            path.stem.removeprefix("puddletag_")
+            for path in Path("puddlestuff/translations").glob("puddletag_*.qm")
+        }
+
+        tested_catalogs = {
+            "afr",
+            "cs",
+            "de",
+            "es_ES",
+            "fr",
+            "it",
+            "nl-nl",
+            "pl_PL",
+            "pt_BR",
+            "ru_RU",
+            "sv",
+        }
+
+        self.assertEqual(catalogs, tested_catalogs)
 
 
 if __name__ == "__main__":
