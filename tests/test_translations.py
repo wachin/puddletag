@@ -3,6 +3,7 @@ from importlib.machinery import SourceFileLoader
 import os
 from pathlib import Path
 import unittest
+import xml.etree.ElementTree as ET
 
 
 def load_launcher():
@@ -117,6 +118,19 @@ class TestTranslations(unittest.TestCase):
         }
 
         self.assertEqual(catalogs, tested_catalogs)
+
+    def test_spanish_translation_has_no_unfinished_messages(self):
+        root = ET.parse("puddlestuff/translations/puddletag_es_ES.ts").getroot()
+        unfinished = []
+
+        for context in root.findall("context"):
+            name = context.findtext("name")
+            for message in context.findall("message"):
+                translation = message.find("translation")
+                if translation is None or translation.get("type") == "unfinished":
+                    unfinished.append((name, message.findtext("source")))
+
+        self.assertEqual(unfinished, [])
 
 
 if __name__ == "__main__":
