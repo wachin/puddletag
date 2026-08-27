@@ -197,3 +197,5 @@ I won't be supporting the creation of Mp3tag tag source nor does puddletag have 
 
 Be sure to set 'debug off' or remove it alltogether unless you're in the mood for having your filesystem being littered with junk files.
 
+.. include:: generated_tag_sources.txt
+

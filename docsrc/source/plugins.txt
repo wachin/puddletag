@@ -41,3 +41,5 @@ Plugin Examples:
 The :download:`Function plugin example <functionplugin.tar.gz>` contains a short tutorial on writing scripting functions and Functions that can be part of an action.
 
 The :download:`Tag Source Example <tagsource.tar.gz>` contains puddletag's Amazon tag source with a lot of comments.
+
+.. include:: generated_plugins.txt

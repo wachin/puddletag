@@ -72,6 +72,8 @@ exclude_patterns = [
     "_build",
     "generated_supported_formats.txt",
     "source/generated_action_functions.txt",
+    "source/generated_tag_sources.txt",
+    "source/generated_plugins.txt",
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -237,9 +239,27 @@ def generate_action_functions(app):
         f.write(action_functions_rst())
 
 
+def generate_tag_sources(app):
+    from puddlestuff.tagsourcedocs import tag_sources_rst
+
+    target = os.path.join(app.srcdir, "source", "generated_tag_sources.txt")
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(tag_sources_rst())
+
+
+def generate_plugins(app):
+    from puddlestuff.plugindocs import plugins_rst
+
+    target = os.path.join(app.srcdir, "source", "generated_plugins.txt")
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(plugins_rst())
+
+
 def setup(app):
     app.connect("builder-inited", generate_supported_formats)
     app.connect("builder-inited", generate_action_functions)
+    app.connect("builder-inited", generate_tag_sources)
+    app.connect("builder-inited", generate_plugins)
 
 
 # -- Options for LaTeX output --------------------------------------------------

@@ -1,0 +1,34 @@
+.. _generated_tag_source_reference:
+
+Generated Tag Source Reference
+------------------------------
+
+This table is generated from the tag source registry used by the Tag Sources window.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tag source
+     - Group by
+     - Preferences
+     - Submission
+   * - AllMusic.com
+     - album, artist
+     - Retrieve Covers (checkbox); Use AllMusic Album ID to retrieve albums: (checkbox)
+     - No
+   * - Amazon
+     - album, artist
+     - Retrieve Cover (checkbox); Cover size to retrieve (combo); Access Key (Stored as plain-text. Leave empty for default.) (text); Secret Key (Stored as plain-text. Leave empty for default.) (text)
+     - No
+   * - Discogs.com
+     - album, artist
+     - Retrieve Cover (checkbox); Cover size to retrieve (combo); Field to use for discogs_id (text); API Key (Stored as plain-text.Leave empty to use default.) (text)
+     - No
+   * - FreeDB
+     - album
+     - None
+     - No
+   * - MusicBrainz
+     - album, artist
+     - Retrieve Cover (checkbox); Cover size to retrieve: (combo); Amount of images to retrieve: (combo)
+     - No

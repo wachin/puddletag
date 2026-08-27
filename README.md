@@ -22,7 +22,7 @@ This repository has recently received renewed maintenance work, including:
 - Rhythmbox and MPD music library integration.
 - Dark mode, a built-in log viewer, library statistics, and duplicate-finder improvements.
 - CLI commands for export and tag editing.
-- Generated documentation for supported audio formats and action functions.
+- Generated documentation for supported audio formats, action functions, tag sources, and bundled plugins.
 
 ## Dependencies
 

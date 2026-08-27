@@ -22,6 +22,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Enhanced Duplicate Finder**: A robust tool to find and manage duplicates across the library.
 - [x] **Automated Format Documentation**: Supported format help text is generated from the live audio format registry.
 - [x] **Automated Function Documentation**: Action function reference docs are generated from the live action function registry.
+- [x] **Automated Tag Source & Plugin Documentation**: Tag source and bundled plugin reference tables are generated from their live registries.
 
 ## Planned Features & Improvements
 
@@ -35,6 +36,5 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 
 ### Distribution & Documentation
-- [ ] **Automated Documentation**: Extend registry-driven documentation to more feature areas such as plugins, actions, and tag sources.
 - [ ] **Universal Packages**: Official support for Flatpak and AppImage.
 - [ ] **Comprehensive Plugin API Docs**: Detailed documentation for community developers.

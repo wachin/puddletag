@@ -1,0 +1,45 @@
+.. _generated_plugin_reference:
+
+Generated Plugin Reference
+--------------------------
+
+This table is generated from the bundled plugin registry shown in the Plugins dialog.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Plugin
+     - Module
+     - Version
+     - Author
+     - Description
+   * - Extended Tags
+     - ``extended_tags``
+     - 1.2
+     - concentricpuddle
+     - Allows using the Extended Tags dialog as a dockable window. Uses Plugins->Save Extended (Ctrl+Shift+S) to save.
+   * - Highlight duplicate fields.
+     - ``dupe_fields``
+     - 1.0
+     - concentricpuddle
+     - Adds shortcut to Plugins to highlight files which have the same value for a field.
+   * - ID3 Tools.
+     - ``id3_tools``
+     - 1.0
+     - concentricpuddle
+     - Extra functions for handling ID3 tags added to the Tag Tools menu.
+   * - Modtime + 2sec
+     - ``modified_time``
+     - 1.0
+     - concentricpuddle
+     - Add a shortcut to the plugins menu that increases the selected files' modified time by two seconds.
+   * - Save tags
+     - ``save_tags``
+     - 1.0
+     - concentricpuddle
+     - Adds shortcut to Plugins menu to save currently loaded files for debugging purposes.
+   * - View All Fields
+     - ``view_all_fields``
+     - 1.0
+     - concentricpuddle
+     - Adds short to the Plugins Menu to show all fields.
