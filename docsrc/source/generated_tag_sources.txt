@@ -12,6 +12,10 @@ This table is generated from the tag source registry used by the Tag Sources win
      - Group by
      - Preferences
      - Submission
+   * - AcoustID
+     - album
+     - Minimum Score (spinbox); AcoustID Key (text)
+     - Yes
    * - AllMusic.com
      - album, artist
      - Retrieve Covers (checkbox); Use AllMusic Album ID to retrieve albums: (checkbox)
