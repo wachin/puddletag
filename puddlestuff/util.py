@@ -7,60 +7,79 @@ from copy import copy, deepcopy
 from errno import EEXIST
 from operator import itemgetter
 from xml.sax.saxutils import escape as escape_html
-from mutagen import MutagenError
 
+from mutagen import MutagenError
 from PyQt6.QtGui import QAction
 
-from . import translations, constants
-from .audioinfo import (FILETAGS, setmodtime, PATH, FILENAME,
-                        EXTENSION, MockTag, DIRPATH, DIRNAME, READONLY, fn_hash, isempty, encode_fn, decode_fn)
-from .constants import BLANK, SEPARATOR, LOG_FILENAME
-from .puddleobjects import (issubfolder, safe_name, PuddleStatus)
+from . import constants, translations
+from .audioinfo import (
+    DIRNAME,
+    DIRPATH,
+    EXTENSION,
+    FILENAME,
+    FILETAGS,
+    PATH,
+    READONLY,
+    MockTag,
+    decode_fn,
+    encode_fn,
+    fn_hash,
+    isempty,
+    setmodtime,
+)
+from .constants import BLANK, LOG_FILENAME, SEPARATOR
+from .puddleobjects import PuddleStatus, issubfolder, safe_name
 
 translate = translations.translate
 
-ARTIST = 'artist'
-ALBUM = 'album'
+ARTIST = "artist"
+ALBUM = "album"
 
 
 def rename_error_msg(e, filename):
     if isinstance(e, DirRenameError):
         traceback.print_exc()
-        m = translate('Defaults',
-                      "<p>An error occured while renaming the directory <b>{}</b> to <i>{}</i>.</p>"
-                      "<p>Reason: <b>{}</b><br />"
-                      "File used: {}</p>"
-                      ).format(e.oldpath, e.newpath, e.strerror, filename)
+        m = translate(
+            "Defaults",
+            "<p>An error occured while renaming the directory <b>{}</b> to <i>{}</i>.</p>"
+            "<p>Reason: <b>{}</b><br />"
+            "File used: {}</p>",
+        ).format(e.oldpath, e.newpath, e.strerror, filename)
         return m
 
     elif isinstance(e, RenameError):
         traceback.print_exc()
-        m = translate('Defaults',
-                      "<p>An error occured while renaming the file <b>{}</b> to <i>{}</i>.</p>"
-                      "<p>Reason: <b>{}</b></p>"
-                      ).format(e.oldpath, e.newpath, e.strerror)
+        m = translate(
+            "Defaults",
+            "<p>An error occured while renaming the file <b>{}</b> to <i>{}</i>.</p>"
+            "<p>Reason: <b>{}</b></p>",
+        ).format(e.oldpath, e.newpath, e.strerror)
         return m
     elif isinstance(e, PermissionError):
         traceback.print_exc()
-        m = translate('Defaults',
-                      "<p>An error occured while writing to <b>{}</b>.</p>"
-                      "<p>Reason: <b>{}</b>.</p>"
-                      "<p>(<i>See {} for debug info.</i>)</p>"
-                      ).format(filename,
-                               str(e) if e.strerror is None else e.strerror,
-                               LOG_FILENAME,
-                               )
+        m = translate(
+            "Defaults",
+            "<p>An error occured while writing to <b>{}</b>.</p>"
+            "<p>Reason: <b>{}</b>.</p>"
+            "<p>(<i>See {} for debug info.</i>)</p>",
+        ).format(
+            filename,
+            str(e) if e.strerror is None else e.strerror,
+            LOG_FILENAME,
+        )
         return m
     elif isinstance(e, EnvironmentError):
         traceback.print_exc()
-        m = translate('Defaults',
-                      "<p>An error occured while writing to <b>{}</b>.</p>"
-                      "<p>Reason: <b>{}</b> ("
-                      "<i>See {} for debug info.</i>)</p>"
-                      ).format(filename,
-                               str(e) if e.strerror is None else e.strerror,
-                               LOG_FILENAME,
-                               )
+        m = translate(
+            "Defaults",
+            "<p>An error occured while writing to <b>{}</b>.</p>"
+            "<p>Reason: <b>{}</b> ("
+            "<i>See {} for debug info.</i>)</p>",
+        ).format(
+            filename,
+            str(e) if e.strerror is None else e.strerror,
+            LOG_FILENAME,
+        )
         return m
 
 
@@ -68,26 +87,27 @@ def rename(oldpath, newpath):
     if oldpath == newpath:
         return False
     if os.path.exists(newpath):
-        raise RenameError(IOError(EEXIST, os.strerror(EEXIST),
-                                  newpath), oldpath, newpath)
+        raise RenameError(
+            OSError(EEXIST, os.strerror(EEXIST), newpath), oldpath, newpath
+        )
 
     if not os.path.exists(os.path.dirname(newpath)):
         try:
             os.makedirs(os.path.dirname(newpath))
-        except EnvironmentError as e:
-            e.strerror = translate('Errors',
-                                   "Couldn't create intermediate directory: {}"
-                                   ).format(decode_fn(os.path.dirname(newpath)))
+        except OSError as e:
+            e.strerror = translate(
+                "Errors", "Couldn't create intermediate directory: {}"
+            ).format(decode_fn(os.path.dirname(newpath)))
             logging.exception(e.strerror)
             raise RenameError(e, oldpath, newpath)
     try:
         os.rename(oldpath, newpath)
         return True
-    except EnvironmentError as e:
+    except OSError:
         try:
             shutil.move(oldpath, newpath)
             return True
-        except EnvironmentError as e:
+        except OSError as e:
             raise RenameError(e, oldpath, newpath)
 
 
@@ -97,10 +117,11 @@ def rename_dir(filename, olddir, newdir):
     try:
         os.renames(olddir, newdir)
         return True
-    except EnvironmentError as e:
+    except OSError as e:
         if issubfolder(olddir, newdir, None):
-            e.strerror = translate('Errors',
-                                   "Cannot move directory to a subdirectory within itself.")
+            e.strerror = translate(
+                "Errors", "Cannot move directory to a subdirectory within itself."
+            )
         raise DirRenameError(e, olddir, newdir)
 
 
@@ -113,11 +134,12 @@ class RenameError(EnvironmentError):
             self.newpath = filename
         else:
             EnvironmentError.__init__(self, errno, strerror, filename)
-            self.oldpath = ''
-            self.newpath = ''
+            self.oldpath = ""
+            self.newpath = ""
 
 
-class DirRenameError(RenameError): pass
+class DirRenameError(RenameError):
+    pass
 
 
 def convert_dict(d, keys):
@@ -125,11 +147,11 @@ def convert_dict(d, keys):
     for key in keys:
         if key in d:
             d[keys[key]] = d[key]
-            del (d[key])
+            del d[key]
     return d
 
 
-def equal(audio1, audio2, tags=('artist', 'album', 'title')):
+def equal(audio1, audio2, tags=("artist", "album", "title")):
     for key in tags:
         if (key in audio1) and (key in audio2):
             if to_string(audio1[key]) != to_string(audio2[key]):
@@ -142,7 +164,7 @@ def equal(audio1, audio2, tags=('artist', 'album', 'title')):
 def fields_from_text(text):
     if not text:
         return []
-    return [_f for _f in map(str.strip, text.split(',')) if _f]
+    return [_f for _f in map(str.strip, text.split(",")) if _f]
 
 
 def matching(audios, listing):
@@ -162,31 +184,32 @@ def m_to_string(v):
     elif isinstance(v, str):
         return escape_html(v)
     elif isinstance(v, bytes):
-        return escape_html(v.decode('utf8', 'replace'))
+        return escape_html(v.decode("utf8", "replace"))
     else:
         return escape_html(SEPARATOR.join(v))
 
 
 def pprint_tag(tags, fmt="<b>%s</b>: %s<br />", show_read_only=False):
-    image_tr = translate('Defaults', "{} images")
+    image_tr = translate("Defaults", "{} images")
     if tags:
         if isinstance(tags, str):
             return tags
-        elif not hasattr(tags, 'items'):
+        elif not hasattr(tags, "items"):
             return SEPARATOR.join([x for x in tags if x is not None])
 
         if show_read_only:
-            items = ((k, v) for k, v in tags.items() if k != '__image')
+            items = ((k, v) for k, v in tags.items() if k != "__image")
         else:
-            items = ((k, v) for k, v in tags.items() if
-                     k not in READONLY and k != '__image')
+            items = (
+                (k, v) for k, v in tags.items() if k not in READONLY and k != "__image"
+            )
 
         map_func = lambda v: fmt % (v[0], m_to_string(v[1]))
 
         items = sorted(items, key=itemgetter(0))
 
-        if '__image' in tags:
-            items.insert(0, ('__image', image_tr.format(len(tags['__image']))))
+        if "__image" in tags:
+            items.insert(0, ("__image", image_tr.format(len(tags["__image"]))))
 
         return "".join(map(map_func, items))
 
@@ -210,8 +233,7 @@ def rename_file(audio, tags):
 
     if DIRNAME in tags:
         newdir = safe_name(encode_fn(tags[DIRNAME]))
-        newdir = os.path.join(os.path.dirname(audio.dirpath),
-                              newdir)
+        newdir = os.path.join(os.path.dirname(audio.dirpath), newdir)
         if rename_dir(audio.filepath, audio.dirpath, newdir):
             audio.dirpath = newdir
             test_audio.dirpath = newdir
@@ -230,16 +252,15 @@ def rename_file(audio, tags):
     return renamed
 
 
-def split_by_tag(tracks, main='artist', secondary='album'):
+def split_by_tag(tracks, main="artist", secondary="album"):
     def get(t, f):
         return to_string(t.get(f)).strip()
 
     if secondary:
-        ret = defaultdict(lambda: defaultdict(lambda: []))
-        [ret[get(track, main)]
-         [get(track, secondary)].append(track) for track in tracks]
+        ret = defaultdict(lambda: defaultdict(list))
+        [ret[get(track, main)][get(track, secondary)].append(track) for track in tracks]
     else:
-        ret = defaultdict(lambda: [])
+        ret = defaultdict(list)
         [ret[to_string(track.get(main))].append(track) for track in tracks]
     return ret
 
@@ -247,7 +268,7 @@ def split_by_tag(tracks, main='artist', secondary='album'):
 split_by_field = split_by_tag
 
 
-def sorted_split_by_field(tracks, field='artist'):
+def sorted_split_by_field(tracks, field="artist"):
     """Splits the tracks by field, but preserves order.
 
     Returns a list of two-tuples:
@@ -275,9 +296,9 @@ def to_list(value):
 
 def to_string(value):
     if isempty(value):
-        return ''
+        return ""
     elif isinstance(value, bytes):
-        return value.decode('utf8')
+        return value.decode("utf8")
     elif isinstance(value, str):
         return value
     elif isinstance(value, (float, int)):
@@ -297,7 +318,7 @@ def write(audio, tags, save_mtime=True, justrename=False):
     tags = deepcopy(tags)
     renamed = False
     if audio.library and (ARTIST in tags or ALBUM in tags):
-        artist = audio.get(ARTIST, '')
+        artist = audio.get(ARTIST, "")
     else:
         artist = None
 
@@ -308,30 +329,34 @@ def write(audio, tags, save_mtime=True, justrename=False):
 
     fn_fields = dict((key, tags[key]) for key in FILETAGS if key in tags)
 
-    undo = dict([(field, copy(audio.get(field, [])))
-                 for field in tags if
-                 (field not in fn_fields and
-                  tags.get(field, '') != audio.get(field, ''))])
+    undo = dict(
+        [
+            (field, copy(audio.get(field, [])))
+            for field in tags
+            if (field not in fn_fields and tags.get(field, "") != audio.get(field, ""))
+        ]
+    )
 
-    if '__image' in tags:
-        artwork_option = PuddleStatus()._status.get('artwork_option', 2)
+    if "__image" in tags:
+        artwork_option = PuddleStatus()._status.get("artwork_option", 2)
 
         if not audio.IMAGETAGS or artwork_option == 3:
-            del (tags['__image'])
+            del tags["__image"]
         else:
-            undo['__image'] = audio.images
+            undo["__image"] = audio.images
 
             # Save to file if option is "File only" (1) or "Both" (2)
             if artwork_option in [1, 2]:
                 from .tagsources import save_cover
-                for img in tags['__image']:
+
+                for img in tags["__image"]:
                     # img is (data, mimetype, description, image_type, width, height)
                     if isinstance(img, (list, tuple)) and len(img) > 0:
                         save_cover(audio, img[0], audio[EXTENSION])
 
             # If "File only" (1), remove from tags so it's not written to the audio file
             if artwork_option == 1:
-                del tags['__image']
+                del tags["__image"]
 
     try:
         if fn_fields:
@@ -347,11 +372,11 @@ def write(audio, tags, save_mtime=True, justrename=False):
                 audio.save()
             elif not user_only and not renamed:
                 return {}
-    except EnvironmentError:
+    except OSError:
         audio.update(undo)
         audio.preview = preview
         raise
-    
+
     except MutagenError as e:
         if isinstance(e.args[0], PermissionError):
             audio.update(undo)
@@ -365,7 +390,7 @@ def write(audio, tags, save_mtime=True, justrename=False):
             setmodtime(audio.filepath, audio.accessed, audio.modified)
         else:
             os.utime(audio.dirpath, None)
-    except EnvironmentError as ex:
+    except OSError as ex:
         logging.error("Could not set modification time for file or directory.")
         logging.exception(ex)
     return undo
@@ -393,7 +418,9 @@ def dict_diff(d1, d2):
 
 def real_filetags(mapping, revmapping, tags):
     filefields = [mapping.get(key, key) for key in FILETAGS]
-    return dict([(revmapping.get(key, key), tags[key]) for key in filefields if key in tags])
+    return dict(
+        [(revmapping.get(key, key), tags[key]) for key in filefields if key in tags]
+    )
 
 
 def separator(parent=None):
@@ -406,7 +433,7 @@ def without_file(tags):
     return dict([(key, tags[key]) for key in tags if key not in FILETAGS])
 
 
-class PluginFunction(object):
+class PluginFunction:
     def __init__(self, name, function, pprint, args=None, desc=None):
         self.name = name
         self.function = function

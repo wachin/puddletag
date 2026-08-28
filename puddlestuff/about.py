@@ -1,16 +1,27 @@
-# -*- coding: utf-8 -*-
-import mutagen
 from importlib import import_module
 from platform import python_version
+
+import mutagen
 from PyQt6.QtCore import PYQT_VERSION_STR, Qt, qVersion
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QScrollArea, QTabWidget, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QScrollArea,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-from . import version_string, changeset
+from . import changeset, version_string
 from .puddleobjects import OKCancel
 from .translations import translate
 
-desc = translate("About", '''puddletag is an audio tag editor for GNU/Linux similar to the Windows program Mp3tag.
+desc = translate(
+    "About",
+    """puddletag is an audio tag editor for GNU/Linux similar to the Windows program Mp3tag.
 
 <br /><br />Features include: Batch editing of tags, renaming files using tags, retrieving tags from filenames, using Actions to automate repetitive tasks, importing your music library and loads of other awesome stuff. <br /><br />
 
@@ -19,9 +30,12 @@ Supported formats: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m4a
 Visit the puddletag website (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) for help and updates.<br /><br />
 &copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) <br />
 Licensed under GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
-''')
+""",
+)
 
-thanks = translate("About", """<b>Evan Devetzis</b> for his many, many awesome ideas and putting up with more bugs than humanly possible.<br /><br />
+thanks = translate(
+    "About",
+    """<b>Evan Devetzis</b> for his many, many awesome ideas and putting up with more bugs than humanly possible.<br /><br />
 
 First off, a big thanks to **Evan Devetzis** for working tirelessly in helping me make puddletag better by contributing many, many awesome ideas and for being a great bug hunter.
 
@@ -35,35 +49,36 @@ To the writers of the libraries puddletag depends on (without which I'll probabl
 <b>Michael Foord</b> and <b>Nicola Larosa</b> for ConfigObj (seriously, they should replace ConfigParser with this).<br />
 The <b>Oxygen team</b> for the Oxygen icons.
 
-""")
+""",
+)
 
 
 def versions():
     def get_module_version(module_name):
         try:
             from importlib.metadata import version
+
             return version(module_name)
         except ModuleNotFoundError:
             pass
 
         try:
             module = import_module(module_name)
-            return getattr(module, '__version__',
-                translate("About", 'unknown version'))
+            return getattr(module, "__version__", translate("About", "unknown version"))
         except ModuleNotFoundError:
-            return translate("About", 'not installed')
+            return translate("About", "not installed")
 
     return {
-        'Python': python_version(),
-        'PyQt': PYQT_VERSION_STR,
-        'Qt': qVersion(),
-        'Mutagen': mutagen.version_string,
-        'PyParsing': get_module_version('pyparsing'),
-        'ConfigObj': get_module_version('configobj'),
-        'Unidecode': get_module_version('unidecode'),
-        'lxml': get_module_version('lxml'),
-        'pyacoustid': get_module_version('pyacoustid'),
-        'Levenshtein': get_module_version('Levenshtein'),
+        "Python": python_version(),
+        "PyQt": PYQT_VERSION_STR,
+        "Qt": qVersion(),
+        "Mutagen": mutagen.version_string,
+        "PyParsing": get_module_version("pyparsing"),
+        "ConfigObj": get_module_version("configobj"),
+        "Unidecode": get_module_version("unidecode"),
+        "lxml": get_module_version("lxml"),
+        "pyacoustid": get_module_version("pyacoustid"),
+        "Levenshtein": get_module_version("Levenshtein"),
     }
 
 
@@ -89,29 +104,31 @@ class ScrollLabel(QWidget):
 class AboutPuddletag(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.setWindowTitle(translate("About", 'About puddletag'))
+        self.setWindowTitle(translate("About", "About puddletag"))
         icon = QLabel()
-        icon.setPixmap(QPixmap('icons:appicon.svg').scaled(48, 48))
-        lib_versions = '<br />'.join(
-            ['%s: %s' % (lib, version) for (lib, version) in versions().items()]
+        icon.setPixmap(QPixmap("icons:appicon.svg").scaled(48, 48))
+        lib_versions = "<br />".join(
+            ["%s: %s" % (lib, version) for (lib, version) in versions().items()]
         )
 
         if changeset:
-            version = translate('About',
-                                "<h2>puddletag {}</h2>Changeset {}"
-                                ).format(version_string, changeset)
+            version = translate("About", "<h2>puddletag {}</h2>Changeset {}").format(
+                version_string, changeset
+            )
         else:
-            version = translate('About',
-                                "<h2>puddletag {}</h2>"
-                                ).format(version_string)
+            version = translate("About", "<h2>puddletag {}</h2>").format(version_string)
         label = QLabel(version)
 
         tab = QTabWidget()
-        tab.addTab(ScrollLabel(desc), translate('About', '&About'))
-        tab.addTab(ScrollLabel(thanks, Qt.AlignmentFlag.AlignLeft),
-                   translate('About', '&Thanks'))
-        tab.addTab(ScrollLabel(lib_versions, Qt.AlignmentFlag.AlignLeft),
-                   translate('About', '&Libraries'))
+        tab.addTab(ScrollLabel(desc), translate("About", "&About"))
+        tab.addTab(
+            ScrollLabel(thanks, Qt.AlignmentFlag.AlignLeft),
+            translate("About", "&Thanks"),
+        )
+        tab.addTab(
+            ScrollLabel(lib_versions, Qt.AlignmentFlag.AlignLeft),
+            translate("About", "&Libraries"),
+        )
 
         vbox = QVBoxLayout()
         version_layout = QHBoxLayout()
@@ -126,7 +143,7 @@ class AboutPuddletag(QDialog):
         self.setLayout(vbox)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication([])
     win = AboutPuddletag()
     win.show()

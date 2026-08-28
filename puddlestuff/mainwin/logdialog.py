@@ -1,6 +1,13 @@
 from PyQt6.QtCore import QMutex
 from PyQt6.QtGui import QTextOption
-from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QTextEdit, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..constants import RIGHTDOCK
 from ..translations import translate
@@ -12,13 +19,13 @@ class LogDialog(QWidget):
     def __init__(self, parent=None, status=None):
         QWidget.__init__(self, parent)
         self.emits = []
-        self.receives = [('logappend', self.appendText)]
+        self.receives = [("logappend", self.appendText)]
 
         self._text = QTextEdit()
         self._text.setWordWrapMode(QTextOption.WrapMode.NoWrap)
 
-        copy = QPushButton(translate("Logs", '&Copy'))
-        clear = QPushButton(translate("Logs", '&Clear'))
+        copy = QPushButton(translate("Logs", "&Copy"))
+        clear = QPushButton(translate("Logs", "&Clear"))
 
         copy.clicked.connect(self._copy)
         clear.clicked.connect(self._clear)
@@ -38,7 +45,7 @@ class LogDialog(QWidget):
         self._text.append(text)
 
     def _clear(self):
-        self._text.setPlainText('')
+        self._text.setPlainText("")
 
     def _copy(self):
         text = self._text.toPlainText()
@@ -51,9 +58,9 @@ class LogDialog(QWidget):
             self._text.setPlaintext(text)
 
 
-control = ('Logs', LogDialog, RIGHTDOCK, False)
+control = ("Logs", LogDialog, RIGHTDOCK, False)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication([])
     win = LogDialog()
     win.show()

@@ -5,50 +5,81 @@ import sys
 import traceback
 from copy import deepcopy
 
-from PyQt6.QtCore import Qt, pyqtRemoveInputHook, pyqtSignal
-from PyQt6.QtWidgets import QAbstractItemView, QApplication, QCheckBox, QComboBox, QDialog, QGroupBox, QHBoxLayout, \
-    QInputDialog, QLabel, QLineEdit, QPushButton, QSpinBox, QTextEdit, QToolButton, QVBoxLayout, \
-    QWidget
+from PyQt6.QtCore import pyqtRemoveInputHook, pyqtSignal
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    QTextEdit,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .. import audioinfo, version_string
-from ..constants import (TEXT, COMBO, SPINBOX,
-                        CHECKBOX, RIGHTDOCK, CONFIGDIR)
+from ..constants import CHECKBOX, COMBO, CONFIGDIR, RIGHTDOCK, SPINBOX, TEXT
 from ..findfunc import FuncError
 from ..functions import replace_regex
-from ..puddleobjects import (create_buddy, get_icon, winsettings,
-                            ListBox, ListButtons, OKCancel, PuddleConfig, PuddleThread)
-from ..tagsources import (tagsources, status_obj, set_useragent,
-                         write_log, RetrievalError, mp3tag, SubmissionError)
-from ..util import (isempty, pprint_tag,
-                   split_by_field, to_string, translate)
-
+from ..puddleobjects import (
+    ListBox,
+    ListButtons,
+    OKCancel,
+    PuddleConfig,
+    PuddleThread,
+    create_buddy,
+    get_icon,
+    winsettings,
+)
+from ..tagsources import (
+    RetrievalError,
+    SubmissionError,
+    mp3tag,
+    set_useragent,
+    status_obj,
+    tagsources,
+    write_log,
+)
+from ..util import isempty, pprint_tag, split_by_field, to_string, translate
 from .releasewidget import ReleaseWidget
 
 pyqtRemoveInputHook()
 
-TAGSOURCE_CONFIG = os.path.join(CONFIGDIR, 'tagsources.conf')
-MTAG_SOURCE_DIR = os.path.join(CONFIGDIR, 'mp3tag_sources')
+TAGSOURCE_CONFIG = os.path.join(CONFIGDIR, "tagsources.conf")
+MTAG_SOURCE_DIR = os.path.join(CONFIGDIR, "mp3tag_sources")
 
-DEFAULT_SEARCH_TIP = translate("Tag Sources",
-                               "Enter search parameters here. If empty, the selected "
-                               "files are used. <ul><li><b>artist;album</b> searches "
-                               "for a specific album/artist combination.</li><li>To "
-                               "list the albums by an artist leave off the album "
-                               "part, but keep the semicolon (eg. <b>Ratatat;</b>). "
-                               "For a album only leave the artist part as in "
-                               "<b>;Resurrection.</li></ul>")
+DEFAULT_SEARCH_TIP = translate(
+    "Tag Sources",
+    "Enter search parameters here. If empty, the selected "
+    "files are used. <ul><li><b>artist;album</b> searches "
+    "for a specific album/artist combination.</li><li>To "
+    "list the albums by an artist leave off the album "
+    "part, but keep the semicolon (eg. <b>Ratatat;</b>). "
+    "For a album only leave the artist part as in "
+    "<b>;Resurrection.</li></ul>",
+)
 
-FIELDLIST_TIP = translate("Tag Sources",
-                          'Enter a comma seperated list of fields to write. '
-                          '<br /><br />Eg. <b>artist, album, title</b> will only '
-                          'write the artist, album and title fields of the '
-                          'retrieved tags. <br /><br />If you want to '
-                          'exclude some fields, but write all others start the '
-                          'list the tilde (~) character. Eg <b>~composer, '
-                          '__image</b> will write all fields but the '
-                          'composer and __image fields.')
+FIELDLIST_TIP = translate(
+    "Tag Sources",
+    "Enter a comma seperated list of fields to write. "
+    "<br /><br />Eg. <b>artist, album, title</b> will only "
+    "write the artist, album and title fields of the "
+    "retrieved tags. <br /><br />If you want to "
+    "exclude some fields, but write all others start the "
+    "list the tilde (~) character. Eg <b>~composer, "
+    "__image</b> will write all fields but the "
+    "composer and __image fields.",
+)
 
-DEFAULT_REGEXP = {'album': [r'(.*?)([\(\[\{].*[\)\]\}])', '$1']}
+DEFAULT_REGEXP = {"album": [r"(.*?)([\(\[\{].*[\)\]\}])", "$1"]}
 
 
 def apply_regexps(audio, regexps=None):
@@ -73,34 +104,36 @@ def apply_regexps(audio, regexps=None):
 
 def display_tag(tag):
     """Used to display tags in in a human parseable format."""
-    tag = dict((k, v) for k, v in tag.items() if
-               not k.startswith('#') and not isempty(v))
+    tag = dict(
+        (k, v) for k, v in tag.items() if not k.startswith("#") and not isempty(v)
+    )
 
     if not tag:
         return translate("Tag Sources", "<b>Nothing to display.</b>")
     fmt = "<b>%s</b>: %s<br />"
     text = pprint_tag(tag, fmt, True)
-    if text.endswith('<br />'):
-        text = text[:-len('<br />')]
+    text = text.removesuffix("<br />")
     return text
 
 
 def load_mp3tag_sources(dirpath=MTAG_SOURCE_DIR):
     "Loads Mp3tag tag sources from dirpath and return the tag source classes."
-    files = glob.glob(os.path.join(dirpath, '*.src'))
+    files = glob.glob(os.path.join(dirpath, "*.src"))
     classes = []
     for f in files:
         try:
             idents, search, album = mp3tag.open_script(f)
             classes.append(mp3tag.Mp3TagSource(idents, search, album))
         except:
-            logging.exception(translate("Tag Sources", "Couldn't load Mp3tag Tag Source {}").format(f))
+            logging.exception(
+                translate("Tag Sources", "Couldn't load Mp3tag Tag Source {}").format(f)
+            )
             continue
     return classes
 
 
 def strip(audio, field_list, reverse=False, leave_exact=False):
-    '''Returns dict of key/values from audio where the key is in field_list.
+    """Returns dict of key/values from audio where the key is in field_list.
 
     If reverse is True then the dict will consist of all
     fields found in audio where the key is NOT IN in field_list.
@@ -109,50 +142,59 @@ def strip(audio, field_list, reverse=False, leave_exact=False):
     set to True.
 
     Any fields starting with '#' will be removed.
-    '''
+    """
     if not field_list:
-        ret = dict([(key, audio[key]) for key in audio if
-                    not key.startswith('#')])
-        if leave_exact and '#exact' in audio:
-            ret['#exact'] = audio['#exact']
+        ret = dict([(key, audio[key]) for key in audio if not key.startswith("#")])
+        if leave_exact and "#exact" in audio:
+            ret["#exact"] = audio["#exact"]
         return ret
     tags = field_list[::]
-    if tags and tags[0].startswith('~'):
+    if tags and tags[0].startswith("~"):
         reverse = True
         tags[0] = tags[0][1:]
     else:
         reverse = False
     if reverse:
-        ret = dict([(key, audio[key]) for key in audio if key not in
-                    tags and not key.startswith('#')])
+        ret = dict(
+            [
+                (key, audio[key])
+                for key in audio
+                if key not in tags and not key.startswith("#")
+            ]
+        )
     else:
-        ret = dict([(key, audio[key]) for key in field_list
-                    if not key.startswith('#') and key in audio])
+        ret = dict(
+            [
+                (key, audio[key])
+                for key in field_list
+                if not key.startswith("#") and key in audio
+            ]
+        )
 
-    if leave_exact and '#exact' in audio:
-        ret['#exact'] = audio['#exact']
+    if leave_exact and "#exact" in audio:
+        ret["#exact"] = audio["#exact"]
     return ret
 
 
 def split_strip(stringlist):
-    '''Splits and strips each comma-delimited string in a list of strings.
+    """Splits and strips each comma-delimited string in a list of strings.
 
     >>> split_strip(['artist, title', 'album,genre'])
     [['artist', 'title'], ['album', 'genre']]
-    '''
-    return [[field.strip() for field in s.split(',')] for s in stringlist]
+    """
+    return [[field.strip() for field in s.split(",")] for s in stringlist]
 
 
 class FieldsEdit(QWidget):
-    fieldsChanged = pyqtSignal(list, name='fieldsChanged')
+    fieldsChanged = pyqtSignal(list, name="fieldsChanged")
 
     def __init__(self, tags=None, parent=None):
         QWidget.__init__(self, parent)
         if not tags:
             tags = []
         label = QLabel()
-        label.setText(translate("Defaults", '&Fields'))
-        self._text = QLineEdit(', '.join(tags))
+        label.setText(translate("Defaults", "&Fields"))
+        self._text = QLineEdit(", ".join(tags))
         label.setBuddy(self._text)
 
         layout = QHBoxLayout()
@@ -160,8 +202,7 @@ class FieldsEdit(QWidget):
         layout.addWidget(label, 0)
         layout.addWidget(self._text, 1)
 
-        self._text.textChanged.connect(
-            self.emitTags)
+        self._text.textChanged.connect(self.emitTags)
 
         self.setLayout(layout)
 
@@ -169,7 +210,7 @@ class FieldsEdit(QWidget):
         self.fieldsChanged.emit(self.tags(text))
 
     def setTags(self, tags):
-        self._text.setText(', '.join(tags))
+        self._text.setText(", ".join(tags))
 
     def setToolTip(self, value):
         QWidget.setToolTip(self, value)
@@ -177,15 +218,19 @@ class FieldsEdit(QWidget):
 
     def tags(self, text=None):
         if not text:
-            return [_f for _f in [z.strip() for z in
-                                  str(self._text.text()).split(',')] if _f]
+            return [
+                _f
+                for _f in [z.strip() for z in str(self._text.text()).split(",")]
+                if _f
+            ]
         else:
-            return [_f for _f in [z.strip() for z in str(text).split(',')] if _f]
+            return [_f for _f in [z.strip() for z in str(text).split(",")] if _f]
 
 
 class SimpleDialog(QDialog):
     """Class for simple dialog creation."""
-    editingFinished = pyqtSignal(list, name='editingFinished')
+
+    editingFinished = pyqtSignal(list, name="editingFinished")
 
     def __init__(self, title, controls, parent=None):
         """title => Dialog's title.
@@ -268,7 +313,7 @@ class SimpleDialog(QDialog):
 
 
 class SortOptionEditor(QDialog):
-    options = pyqtSignal(list, name='options')
+    options = pyqtSignal(list, name="options")
 
     def __init__(self, options, parent=None):
         """options is a list of strings. Each a comma-delimited field list.
@@ -308,13 +353,18 @@ class SortOptionEditor(QDialog):
         l = self.listbox.item
         patterns = [str(l(z).text()) for z in range(self.listbox.count())]
         row = self.listbox.currentRow()
-        if row < 0:
-            row = 0
-        (text, ok) = QInputDialog().getItem(self, translate("Tag Sources",
-                                                            'Add sort option'),
-                                            translate("Tag Sources",
-                                                      'Enter a sorting option (a comma-separated list of fields. '
-                                                      'Eg. "artist, title")'), patterns, row)
+        row = max(row, 0)
+        (text, ok) = QInputDialog().getItem(
+            self,
+            translate("Tag Sources", "Add sort option"),
+            translate(
+                "Tag Sources",
+                "Enter a sorting option (a comma-separated list of fields. "
+                'Eg. "artist, title")',
+            ),
+            patterns,
+            row,
+        )
         if ok:
             self.listbox.clearSelection()
             self.listbox.addItem(text)
@@ -328,11 +378,17 @@ class SortOptionEditor(QDialog):
             row = self.listbox.currentRow()
         l = self.listbox.item
         patterns = [str(l(z).text()) for z in range(self.listbox.count())]
-        (text, ok) = QInputDialog().getItem(self,
-                                            translate("Tag Sources", 'Edit sort option'),
-                                            translate("Tag Sources",
-                                                      'Enter a sorting option (a comma-separated list of fields. '
-                                                      'Eg. "artist, title")'), patterns, row)
+        (text, ok) = QInputDialog().getItem(
+            self,
+            translate("Tag Sources", "Edit sort option"),
+            translate(
+                "Tag Sources",
+                "Enter a sorting option (a comma-separated list of fields. "
+                'Eg. "artist, title")',
+            ),
+            patterns,
+            row,
+        )
         if ok:
             item = l(row)
             item.setText(text)
@@ -340,64 +396,79 @@ class SortOptionEditor(QDialog):
 
     def applySettings(self):
         item = self.listbox.item
-        options = [str(item(row).text())
-                   for row in range(self.listbox.count())]
+        options = [str(item(row).text()) for row in range(self.listbox.count())]
         self.close()
         self.options.emit(options)
 
 
 class SettingsDialog(QWidget):
-
     def __init__(self, parent=None, status=None):
         QWidget.__init__(self, parent)
-        self.title = translate('Settings', 'Tag Sources')
+        self.title = translate("Settings", "Tag Sources")
 
-        label = QLabel(translate("Tag Sources",
-                                 '&Display format for individual tracks.'))
+        label = QLabel(
+            translate("Tag Sources", "&Display format for individual tracks.")
+        )
         self._text = QLineEdit()
         label.setBuddy(self._text)
 
-        albumlabel = QLabel(translate("Tag Sources",
-                                      'Display format for &retrieved albums'))
+        albumlabel = QLabel(
+            translate("Tag Sources", "Display format for &retrieved albums")
+        )
         self._albumdisp = QLineEdit()
         albumlabel.setBuddy(self._albumdisp)
 
-        sortlabel = QLabel(translate("Tag Sources",
-                                     'Sort retrieved albums using order:'))
+        sortlabel = QLabel(
+            translate("Tag Sources", "Sort retrieved albums using order:")
+        )
         self._sortoptions = QComboBox()
         sortlabel.setBuddy(self._sortoptions)
-        editoptions = QPushButton(translate("Defaults", '&Edit'))
+        editoptions = QPushButton(translate("Defaults", "&Edit"))
         editoptions.clicked.connect(self._editOptions)
 
-        ua_label = QLabel(translate("Tag Sources",
-                                    'User-Agent to when accessing web sites.'))
+        ua_label = QLabel(
+            translate("Tag Sources", "User-Agent to when accessing web sites.")
+        )
         self._ua = QTextEdit()
 
-        self.jfdi = QCheckBox(translate('Profile Editor',
-                                        'Brute force unmatched files.'))
-        self.jfdi.setToolTip(translate('Profile Editor',
-                                       "<p>If a proper match isn't found for a file, the files "
-                                       "will get sorted by filename, the retrieved tag sources "
-                                       "by filename and corresponding (unmatched) tracks will "
-                                       "matched.</p>"))
+        self.jfdi = QCheckBox(
+            translate("Profile Editor", "Brute force unmatched files.")
+        )
+        self.jfdi.setToolTip(
+            translate(
+                "Profile Editor",
+                "<p>If a proper match isn't found for a file, the files "
+                "will get sorted by filename, the retrieved tag sources "
+                "by filename and corresponding (unmatched) tracks will "
+                "matched.</p>",
+            )
+        )
 
-        self.matchFields = QLineEdit('artist, title')
-        self.matchFields.setToolTip(translate('Profile Editor',
-                                              "<p>The fields listed here will be used in determining "
-                                              "whether a track matches the retrieved track. Each "
-                                              "field will be compared using a fuzzy matching algorithm. "
-                                              "If the resulting average match percentage is greater "
-                                              'than the "Minimum Percentage" it\'ll be considered to '
-                                              "match.</p>"))
+        self.matchFields = QLineEdit("artist, title")
+        self.matchFields.setToolTip(
+            translate(
+                "Profile Editor",
+                "<p>The fields listed here will be used in determining "
+                "whether a track matches the retrieved track. Each "
+                "field will be compared using a fuzzy matching algorithm. "
+                "If the resulting average match percentage is greater "
+                'than the "Minimum Percentage" it\'ll be considered to '
+                "match.</p>",
+            )
+        )
 
         self.albumBound = QSpinBox()
-        self.albumBound.setToolTip(translate('Profile Editor',
-                                             "<p>The artist and album fields will be used in "
-                                             "determining whether an album matches the retrieved one. "
-                                             "Each field will be compared using a fuzzy matching "
-                                             "algorithm. If the resulting average match percentage "
-                                             "is greater or equal than what you specify here "
-                                             "it'll be considered to match.</p>"))
+        self.albumBound.setToolTip(
+            translate(
+                "Profile Editor",
+                "<p>The artist and album fields will be used in "
+                "determining whether an album matches the retrieved one. "
+                "Each field will be compared using a fuzzy matching "
+                "algorithm. If the resulting average match percentage "
+                "is greater or equal than what you specify here "
+                "it'll be considered to match.</p>",
+            )
+        )
 
         self.albumBound.setRange(0, 100)
         self.albumBound.setValue(70)
@@ -422,20 +493,33 @@ class SettingsDialog(QWidget):
         vbox.addWidget(ua_label)
         vbox.addWidget(self._ua)
 
-        frame = QGroupBox(translate(
-            'WebDB', 'Automatic retrieval options'))
+        frame = QGroupBox(translate("WebDB", "Automatic retrieval options"))
 
         auto_box = QVBoxLayout()
         frame.setLayout(auto_box)
 
-        auto_box.addLayout(create_buddy(translate('Profile Editor',
-                                                  'Minimum &percentage required for album matches.'),
-                                        self.albumBound))
-        auto_box.addLayout(create_buddy(translate('Profile Editor',
-                                                  'Match tracks using &fields: '), self.matchFields))
-        auto_box.addLayout(create_buddy(translate('Profile Editor',
-                                                  'Minimum percentage required for track match.'),
-                                        self.trackBound))
+        auto_box.addLayout(
+            create_buddy(
+                translate(
+                    "Profile Editor", "Minimum &percentage required for album matches."
+                ),
+                self.albumBound,
+            )
+        )
+        auto_box.addLayout(
+            create_buddy(
+                translate("Profile Editor", "Match tracks using &fields: "),
+                self.matchFields,
+            )
+        )
+        auto_box.addLayout(
+            create_buddy(
+                translate(
+                    "Profile Editor", "Minimum percentage required for track match."
+                ),
+                self.trackBound,
+            )
+        )
         auto_box.addWidget(self.jfdi)
 
         vbox.addWidget(frame)
@@ -453,8 +537,9 @@ class SettingsDialog(QWidget):
         listbox.albumPattern = albumdisp
 
         sort_combo = self._sortoptions
-        sort_options_text = [str(sort_combo.itemText(i)) for i in
-                             range(sort_combo.count())]
+        sort_options_text = [
+            str(sort_combo.itemText(i)) for i in range(sort_combo.count())
+        ]
         sort_options = split_strip(sort_options_text)
         listbox.setSortOptions(sort_options)
 
@@ -464,58 +549,60 @@ class SettingsDialog(QWidget):
         set_useragent(useragent)
 
         listbox.jfdi = self.jfdi.isChecked()
-        listbox.matchFields = [z.strip() for z in
-                               str(self.matchFields.text()).split(',')]
+        listbox.matchFields = [
+            z.strip() for z in str(self.matchFields.text()).split(",")
+        ]
         listbox.albumBound = self.albumBound.value() / 100.0
         listbox.trackBound = self.trackBound.value() / 100.0
 
-        cparser = PuddleConfig(os.path.join(CONFIGDIR, 'tagsources.conf'))
-        set_value = lambda s, v: cparser.set('tagsources', s, v)
-        set_value('trackpattern', text)
-        set_value('albumpattern', albumdisp)
-        set_value('sortoptions', sort_options_text)
-        set_value('useragent', useragent)
-        set_value('album_bound', self.albumBound.value())
-        set_value('track_bound', self.trackBound.value())
-        set_value('jfdi', listbox.jfdi)
-        set_value('match_fields', listbox.matchFields)
+        cparser = PuddleConfig(os.path.join(CONFIGDIR, "tagsources.conf"))
+        set_value = lambda s, v: cparser.set("tagsources", s, v)
+        set_value("trackpattern", text)
+        set_value("albumpattern", albumdisp)
+        set_value("sortoptions", sort_options_text)
+        set_value("useragent", useragent)
+        set_value("album_bound", self.albumBound.value())
+        set_value("track_bound", self.trackBound.value())
+        set_value("jfdi", listbox.jfdi)
+        set_value("match_fields", listbox.matchFields)
 
     def loadSettings(self):
-        cparser = PuddleConfig(os.path.join(CONFIGDIR, 'tagsources.conf'))
+        cparser = PuddleConfig(os.path.join(CONFIGDIR, "tagsources.conf"))
 
-        trackpattern = cparser.get('tagsources', 'trackpattern',
-                                   '%track% - %title%')
+        trackpattern = cparser.get("tagsources", "trackpattern", "%track% - %title%")
 
         self._text.setText(trackpattern)
 
-        sortoptions = cparser.get('tagsources', 'sortoptions',
-                                  ['artist, album', 'album, artist'])
+        sortoptions = cparser.get(
+            "tagsources", "sortoptions", ["artist, album", "album, artist"]
+        )
         self._sortoptions.clear()
         self._sortoptions.addItems(sortoptions)
 
-        albumformat = cparser.get('tagsources', 'albumpattern',
-                                  '%artist% - %album% $if(%__numtracks%, [%__numtracks%], "")')
+        albumformat = cparser.get(
+            "tagsources",
+            "albumpattern",
+            '%artist% - %album% $if(%__numtracks%, [%__numtracks%], "")',
+        )
         self._albumdisp.setText(albumformat)
 
-        self._ua.setText(cparser.get('tagsources',
-                                     'useragent', 'puddletag/' + version_string))
+        self._ua.setText(
+            cparser.get("tagsources", "useragent", "puddletag/" + version_string)
+        )
 
-        self.albumBound.setValue(
-            cparser.get('tagsources', 'album_bound', 70, True))
-        self.trackBound.setValue(
-            cparser.get('tagsources', 'track_bound', 80, True))
-        self.jfdi.setChecked(
-            bool(cparser.get('tagsources', 'jfdi', True, True)))
+        self.albumBound.setValue(cparser.get("tagsources", "album_bound", 70, True))
+        self.trackBound.setValue(cparser.get("tagsources", "track_bound", 80, True))
+        self.jfdi.setChecked(bool(cparser.get("tagsources", "jfdi", True, True)))
 
-        fields = cparser.get('tagsources', 'match_fields',
-                             ['artist', 'title'])
-        fields = ', '.join(z.strip() for z in fields)
+        fields = cparser.get("tagsources", "match_fields", ["artist", "title"])
+        fields = ", ".join(z.strip() for z in fields)
         self.matchFields.setText(fields)
 
     def _editOptions(self):
         text = self._sortoptions.itemText
-        win = SortOptionEditor([text(i) for i in
-                                range(self._sortoptions.count())], self)
+        win = SortOptionEditor(
+            [text(i) for i in range(self._sortoptions.count())], self
+        )
         win.options.connect(self._setSortOptions)
         win.setModal(True)
         win.show()
@@ -557,12 +644,16 @@ def tag_source_search(ts, group, files):
             ret.extend(albums)
             continue
 
-        audio = {'album': primary}
+        audio = {"album": primary}
         changed, audio = apply_regexps(audio)
         if changed:
-            audio['album'] = audio['album'].strip()
-            write_log(translate("Tag Sources", "Retrying search with {}").format(audio['album']))
-            ret.extend(ts.search(audio['album'], group[primary]))
+            audio["album"] = audio["album"].strip()
+            write_log(
+                translate("Tag Sources", "Retrying search with {}").format(
+                    audio["album"]
+                )
+            )
+            ret.extend(ts.search(audio["album"], group[primary]))
 
     return ret, files
 
@@ -570,12 +661,12 @@ def tag_source_search(ts, group, files):
 #############################################################################
 # The Main Tag Sources Window
 class MainWin(QWidget):
-    writepreview = pyqtSignal(name='writepreview')
-    setpreview = pyqtSignal(object, name='setpreview')
-    clearpreview = pyqtSignal(name='clearpreview')
-    enable_preview_mode = pyqtSignal(name='enable_preview_mode')
-    logappend = pyqtSignal(str, name='logappend')
-    disable_preview_mode = pyqtSignal(name='disable_preview_mode')
+    writepreview = pyqtSignal(name="writepreview")
+    setpreview = pyqtSignal(object, name="setpreview")
+    clearpreview = pyqtSignal(name="clearpreview")
+    enable_preview_mode = pyqtSignal(name="enable_preview_mode")
+    logappend = pyqtSignal(str, name="logappend")
+    disable_preview_mode = pyqtSignal(name="disable_preview_mode")
 
     def __init__(self, status, parent=None):
         QWidget.__init__(self, parent)
@@ -586,8 +677,14 @@ class MainWin(QWidget):
         self.setWindowTitle("Tag Sources")
 
         self.receives = []
-        self.emits = ['writepreview', 'setpreview', 'clearpreview',
-                      'enable_preview_mode', 'logappend', 'disable_preview_mode']
+        self.emits = [
+            "writepreview",
+            "setpreview",
+            "clearpreview",
+            "enable_preview_mode",
+            "logappend",
+            "disable_preview_mode",
+        ]
 
         self.fieldMapping = audioinfo.mapping
 
@@ -596,13 +693,13 @@ class MainWin(QWidget):
         self.__sources.extend(load_mp3tag_sources())
 
         for ts in self.__sources:
-            if hasattr(ts, 'preferences') and not isinstance(ts, QWidget):
+            if hasattr(ts, "preferences") and not isinstance(ts, QWidget):
                 try:
                     ts.applyPrefs(load_source_prefs(ts.name, ts.preferences))
                 except:
                     continue
 
-        status['initialized_tagsources'] = self.__sources
+        status["initialized_tagsources"] = self.__sources
 
         self.curSource = self.__sources[0]
         self.__sourceFields = [[] for z in self.__sources]
@@ -613,22 +710,22 @@ class MainWin(QWidget):
         # The Tag Source selector and its label
         self.sourcelist = QComboBox()
         self.sourcelist.addItems([ts.name for ts in self.__sources])
-        connect(self.sourcelist, 'currentIndexChanged', self.changeSource)
+        connect(self.sourcelist, "currentIndexChanged", self.changeSource)
 
-        sourcelabel = QLabel(translate("Tag Sources", 'Sour&ce: '))
+        sourcelabel = QLabel(translate("Tag Sources", "Sour&ce: "))
         sourcelabel.setBuddy(self.sourcelist)
 
         # The Preferences/Configuration button (beside the Tag Source selector)
         preferences = QToolButton()
-        preferences.setIcon(get_icon('configure'))
-        preferences.setToolTip(translate("Tag Sources", 'Configure'))
+        preferences.setIcon(get_icon("configure"))
+        preferences.setToolTip(translate("Tag Sources", "Configure"))
         self.__preferencesButton = preferences
-        connect(preferences, 'clicked', self.configure)
+        connect(preferences, "clicked", self.configure)
 
         # The Search text box
         self.searchEdit = QLineEdit()
         self.searchEdit.setToolTip(DEFAULT_SEARCH_TIP)
-        connect(self.searchEdit, 'returnPressed', self.search)
+        connect(self.searchEdit, "returnPressed", self.search)
 
         # The Search button
         self.searchButton = QPushButton(translate("Tag Sources", "&Search"))
@@ -642,23 +739,25 @@ class MainWin(QWidget):
         connect(self.cancelButton, "clicked", self.cancelSearch)
 
         # The instruction/feedback label (between Search box and the results)
-        self.label = QLabel(translate("Tag Sources",
-                                      "Select files and click on Search to retrieve metadata."))
+        self.label = QLabel(
+            translate(
+                "Tag Sources", "Select files and click on Search to retrieve metadata."
+            )
+        )
 
         # The results box (a tree view of album releases)
         self.listbox = ReleaseWidget(status, self.curSource)
-        connect(self.listbox, 'statusChanged', self.label.setText)
-        connect(self.listbox, 'preview', self.emit_preview)
-        connect(self.listbox, 'exactMatches', self.emitExact)
+        connect(self.listbox, "statusChanged", self.label.setText)
+        connect(self.listbox, "preview", self.emit_preview)
+        connect(self.listbox, "exactMatches", self.emitExact)
 
         # An link to the web page sourced from
         linklabel = QLabel()
         linklabel.setOpenExternalLinks(True)
-        connect(self.listbox, 'infoChanged', linklabel.setText)
+        connect(self.listbox, "infoChanged", linklabel.setText)
 
         # The Submit button (optional, if the tag source support submission)
-        self.submitButton = QPushButton(translate("Tag Sources",
-                                                  "S&ubmit Tags"))
+        self.submitButton = QPushButton(translate("Tag Sources", "S&ubmit Tags"))
         connect(self.submitButton, "clicked", self.submit)
 
         # The Cancel Submit button
@@ -667,7 +766,7 @@ class MainWin(QWidget):
         connect(self.cancelSubmitButton, "clicked", self.cancelSubmit)
 
         # The Write button (beneath the Search results)
-        write_preview = QPushButton(translate("Tag Sources", '&Write'))
+        write_preview = QPushButton(translate("Tag Sources", "&Write"))
         connect(write_preview, "clicked", self.writePreview)
 
         # The Clear preview button (beneath the Search results)
@@ -677,19 +776,21 @@ class MainWin(QWidget):
         # The Fields row
         self.__fieldsEdit = FieldsEdit()
         self.__fieldsEdit.setToolTip(FIELDLIST_TIP)
-        connect(self.__fieldsEdit, 'fieldsChanged', self.__changeFields)
+        connect(self.__fieldsEdit, "fieldsChanged", self.__changeFields)
 
         # The first fields options
         # If checked, only fields that aren’t already in the file will get updated.
-        self.__updateEmpty = QCheckBox(translate("Tag Sources",
-                                                 'Update empty fields only.'))
+        self.__updateEmpty = QCheckBox(
+            translate("Tag Sources", "Update empty fields only.")
+        )
 
         # The Second fields option (Automatically retrieve matches)
         # If checked, the album that best matches the retrieved albums will be automatically retrieved.
         # Uses configured preferences to automate thinsg:
         #    https://docs.puddletag.net/source/preferences.html#auto-retrieval-prefs
-        self.__autoRetrieve = QCheckBox(translate("Tag Sources",
-                                                  'Automatically retrieve matches.'))
+        self.__autoRetrieve = QCheckBox(
+            translate("Tag Sources", "Automatically retrieve matches.")
+        )
 
         # Layout Tag Source row
         sourcebox = QHBoxLayout()
@@ -725,8 +826,8 @@ class MainWin(QWidget):
 
         self.setLayout(vbox)
 
-        connect(status_obj, 'statusChanged', self.label.setText)
-        connect(status_obj, 'logappend', self.logappend)
+        connect(status_obj, "statusChanged", self.label.setText)
+        connect(status_obj, "logappend", self.logappend)
 
         self.changeSource(0)
 
@@ -744,22 +845,24 @@ class MainWin(QWidget):
     def changeSource(self, index):
         self.curSource = self.__sources[index]
         self.searchEdit.setToolTip(
-            getattr(self.curSource, 'tooltip', DEFAULT_SEARCH_TIP))
+            getattr(self.curSource, "tooltip", DEFAULT_SEARCH_TIP)
+        )
         self.listbox.tagSource = self.curSource
 
         self.__preferencesButton.setVisible(
-            not (getattr(self.curSource, 'preferences', False) is False))
+            not (getattr(self.curSource, "preferences", False) is False)
+        )
 
         self.__fieldsEdit.setTags(self.__sourceFields[index])
 
         self.listbox.setMapping(self.fieldMapping.get(self.curSource.name, {}))
 
-        self.searchEdit.setEnabled(hasattr(self.curSource, 'keyword_search'))
+        self.searchEdit.setEnabled(hasattr(self.curSource, "keyword_search"))
 
-        self.submitButton.setVisible(hasattr(self.curSource, 'submit'))
+        self.submitButton.setVisible(hasattr(self.curSource, "submit"))
 
     def configure(self):
-        config = getattr(self.curSource, 'preferences', None)
+        config = getattr(self.curSource, "preferences", None)
         if config is None:
             return
 
@@ -788,7 +891,7 @@ class MainWin(QWidget):
             self.enable_preview_mode.emit()
             self.setpreview.emit(tags)
         else:
-            files = self._status['selectedfiles']
+            files = self._status["selectedfiles"]
             previews = []
             for f, r in zip(files, tags):
                 temp = {}
@@ -815,50 +918,51 @@ class MainWin(QWidget):
             self.setpreview.emit(previews)
 
     def loadSettings(self):
-        settings = PuddleConfig(os.path.join(CONFIGDIR, 'tagsources.conf'))
-        get = lambda s, k, i = False: settings.get('tagsources', s, k, i)
+        settings = PuddleConfig(os.path.join(CONFIGDIR, "tagsources.conf"))
+        get = lambda s, k, i=False: settings.get("tagsources", s, k, i)
 
-        source = get('lastsource', 'Musicbrainz')
-        self.__sourceFields = [settings.get('tagsourcetags', ts.name, [])
-                               for ts in self.__sources]
+        source = get("lastsource", "Musicbrainz")
+        self.__sourceFields = [
+            settings.get("tagsourcetags", ts.name, []) for ts in self.__sources
+        ]
 
         index = self.sourcelist.findText(source)
         if index == -1:
             index = 0
         self.sourcelist.setCurrentIndex(index)
         self.__fieldsEdit.setTags(self.__sourceFields[index])
-        df = get('trackpattern', '%track% - %title%')
+        df = get("trackpattern", "%track% - %title%")
         self.listbox.trackPattern = df
 
-        albumformat = get('albumpattern',
-                          '%artist% - %album%$if(%__numtracks%, [%__numtracks%], "")')
+        albumformat = get(
+            "albumpattern", '%artist% - %album%$if(%__numtracks%, [%__numtracks%], "")'
+        )
         self.listbox.albumPattern = albumformat
 
-        sort_options = get('sortoptions',
-                           ['artist, album', 'album, artist'])
+        sort_options = get("sortoptions", ["artist, album", "album, artist"])
         sort_options = split_strip(sort_options)
         self.listbox.setSortOptions(sort_options)
 
-        sortindex = get('lastsort', 0)
+        sortindex = get("lastsort", 0)
         self.listbox.sort(sort_options[sortindex])
 
-        filepath = os.path.join(CONFIGDIR, 'mappings')
+        filepath = os.path.join(CONFIGDIR, "mappings")
         self.setMapping(audioinfo.loadmapping(filepath))
 
-        useragent = get('useragent', '')
+        useragent = get("useragent", "")
         if useragent:
             set_useragent(useragent)
 
-        checkstate = get('existing', False)
+        checkstate = get("existing", False)
         self.__updateEmpty.setChecked(checkstate)
 
-        checkstate = get('autoretrieve', False)
+        checkstate = get("autoretrieve", False)
         self.__autoRetrieve.setChecked(checkstate)
 
-        self.listbox.albumBound = get('album_bound', 70, True) / 100.0
-        self.listbox.trackBound = get('track_bound', 80, True) / 100.0
-        self.listbox.jfdi = bool(get('jfdi', True, True))
-        self.listbox.matchFields = get('match_fields', ['artist', 'title'])
+        self.listbox.albumBound = get("album_bound", 70, True) / 100.0
+        self.listbox.trackBound = get("track_bound", 80, True) / 100.0
+        self.listbox.jfdi = bool(get("jfdi", True, True))
+        self.listbox.matchFields = get("match_fields", ["artist", "title"])
 
     def setResults(self, retval):
         self.searchButton.setEnabled(True)
@@ -868,30 +972,34 @@ class MainWin(QWidget):
         else:
             releases, files = retval
             if releases:
-                self.label.setText(translate("Tag Sources",
-                                             'Searching complete.'))
+                self.label.setText(translate("Tag Sources", "Searching complete."))
             else:
-                self.label.setText(translate("Tag Sources",
-                                             'No matching albums were found.'))
+                self.label.setText(
+                    translate("Tag Sources", "No matching albums were found.")
+                )
             if files and self.__autoRetrieve.isChecked():
                 self.listbox.setReleases(releases, files)
             else:
                 self.listbox.setReleases(releases)
-            self.listbox.infoChanged.emit('')
+            self.listbox.infoChanged.emit("")
 
     def search(self):
         if not self.searchButton.isEnabled():
             return
-        files = self._status['selectedfiles']
+        files = self._status["selectedfiles"]
         if self.curSource.group_by:
             group = split_by_field(files, *self.curSource.group_by)
-        self.label.setText(translate("Tag Sources", 'Searching...'))
+        self.label.setText(translate("Tag Sources", "Searching..."))
         text = None
         if self.searchEdit.text() and self.searchEdit.isEnabled():
             text = str(self.searchEdit.text())
         elif not files:
-            self.label.setText(translate("Tag Sources",
-                                         '<b>Select some files or enter search paramaters.</b>'))
+            self.label.setText(
+                translate(
+                    "Tag Sources",
+                    "<b>Select some files or enter search paramaters.</b>",
+                )
+            )
             return
 
         def search():
@@ -902,12 +1010,12 @@ class MainWin(QWidget):
                 else:
                     return tag_source_search(self.curSource, group, files)
             except RetrievalError as e:
-                return translate("Tag Sources",
-                                 "An error occured: {}").format(str(e))
+                return translate("Tag Sources", "An error occured: {}").format(str(e))
             except Exception as e:
                 traceback.print_exc()
-                return translate("Tag Sources",
-                                 "An unhandled error occurred: {}").format(str(e))
+                return translate(
+                    "Tag Sources", "An unhandled error occurred: {}"
+                ).format(str(e))
 
         self.searchButton.setEnabled(False)
         self.cancelButton.setVisible(True)
@@ -916,7 +1024,7 @@ class MainWin(QWidget):
         self.thread.start()
 
     def cancelSearch(self):
-        if hasattr(self, 'thread') and self.thread.isRunning():
+        if hasattr(self, "thread") and self.thread.isRunning():
             self.thread.terminate()
             self.thread.wait()
             self.label.setText(translate("Tag Sources", "Search canceled."))
@@ -924,7 +1032,7 @@ class MainWin(QWidget):
             self.cancelButton.setVisible(False)
 
     def submit(self):
-        files = self._status['selectedfiles']
+        files = self._status["selectedfiles"]
         self.submitButton.setEnabled(False)
         self.cancelSubmitButton.setVisible(True)
 
@@ -938,12 +1046,12 @@ class MainWin(QWidget):
                 self.curSource.submit(files)
             except SubmissionError as e:
                 traceback.print_exc()
-                return translate("Tag Sources",
-                                 "An error occured: {}").format(str(e))
+                return translate("Tag Sources", "An error occured: {}").format(str(e))
             except Exception as e:
                 traceback.print_exc()
-                return translate("Tag Sources",
-                                 "An unhandled error occurred: {}").format(str(e))
+                return translate(
+                    "Tag Sources", "An unhandled error occurred: {}"
+                ).format(str(e))
 
             return translate("Tag Sources", "Submission completed.")
 
@@ -952,7 +1060,7 @@ class MainWin(QWidget):
         self.submit_thread.start()
 
     def cancelSubmit(self):
-        if hasattr(self, 'submit_thread') and self.submit_thread.isRunning():
+        if hasattr(self, "submit_thread") and self.submit_thread.isRunning():
             self.submit_thread.terminate()
             self.submit_thread.wait()
             self.label.setText(translate("Tag Sources", "Submission canceled."))
@@ -961,14 +1069,13 @@ class MainWin(QWidget):
 
     def saveSettings(self):
         settings = PuddleConfig()
-        settings.filename = os.path.join(CONFIGDIR, 'tagsources.conf')
-        settings.set('tagsources', 'lastsource', self.sourcelist.currentText())
+        settings.filename = os.path.join(CONFIGDIR, "tagsources.conf")
+        settings.set("tagsources", "lastsource", self.sourcelist.currentText())
         for i, ts in enumerate(self.__sources):
-            settings.set('tagsourcetags', ts.name, self.__sourceFields[i])
-        settings.set('tagsources', 'lastsort', self.listbox.lastSortIndex)
-        settings.set('tagsources', 'existing', self.__updateEmpty.isChecked())
-        settings.set('tagsources', 'autoretrieve',
-                     self.__autoRetrieve.isChecked())
+            settings.set("tagsourcetags", ts.name, self.__sourceFields[i])
+        settings.set("tagsources", "lastsort", self.listbox.lastSortIndex)
+        settings.set("tagsources", "existing", self.__updateEmpty.isChecked())
+        settings.set("tagsources", "autoretrieve", self.__autoRetrieve.isChecked())
 
     def setMapping(self, mapping):
         self.fieldMapping = mapping
@@ -982,12 +1089,12 @@ class MainWin(QWidget):
         self.label.setText(translate("Tag Sources", "<b>Tags were written.</b>"))
 
 
-control = ('Tag Sources', MainWin, RIGHTDOCK, False)
+control = ("Tag Sources", MainWin, RIGHTDOCK, False)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     status = {}
-    status['selectedfiles'] = exampletags.tags
+    status["selectedfiles"] = exampletags.tags
     win = MainWin(status)
     win.show()
     app.exec()

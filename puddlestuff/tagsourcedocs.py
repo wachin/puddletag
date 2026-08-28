@@ -47,9 +47,7 @@ def iter_tag_source_docs(sources=None):
             continue
 
         group_by = tuple(
-            str(field)
-            for field in getattr(instance, "group_by", ()) or ()
-            if field
+            str(field) for field in getattr(instance, "group_by", ()) or () if field
         )
         preferences = tuple(
             _preference_text(preference)
@@ -94,11 +92,13 @@ def tag_sources_rst(sources=None):
         group_by = group_by if group_by else "None"
         preferences = "; ".join(_rst_text(pref) for pref in row.preferences)
         preferences = preferences if preferences else "None"
-        lines.extend([
-            f"   * - {_rst_text(row.name)}",
-            f"     - {group_by}",
-            f"     - {preferences}",
-            f"     - {'Yes' if row.supports_submit else 'No'}",
-        ])
+        lines.extend(
+            [
+                f"   * - {_rst_text(row.name)}",
+                f"     - {group_by}",
+                f"     - {preferences}",
+                f"     - {'Yes' if row.supports_submit else 'No'}",
+            ]
+        )
 
     return "\n".join(lines) + "\n"

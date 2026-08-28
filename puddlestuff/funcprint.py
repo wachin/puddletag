@@ -1,21 +1,20 @@
-# -*- coding: utf-8 -*-
 import re
 from copy import copy
 from functools import partial
 
-from .constants import YES, NO
+from .constants import NO, YES
 
-pattern = re.compile(r'(%\d+\(.+\))|([\\]*\$\d+)')
+pattern = re.compile(r"(%\d+\(.+\))|([\\]*\$\d+)")
 
 
 def perfunc(match, d):
     matchtext = match.group()
-    if matchtext.startswith('\\'):
+    if matchtext.startswith("\\"):
         return matchtext[1:]
     try:
         number = int(matchtext[1:])
         if number >= len(d):
-            return ''
+            return ""
         return d[number]
     except ValueError:
         text = matchtext[1:-1]
@@ -24,18 +23,18 @@ def perfunc(match, d):
                 subfunc = partial(func, d=d)
                 return pattern.sub(subfunc, text)
             except KeyError:
-                return ''
+                return ""
         return matchtext
 
 
 def func(match, d):
     matchtext = match.group()
-    if matchtext.startswith('\\'):
+    if matchtext.startswith("\\"):
         return matchtext[1:]
     try:
         number = int(matchtext[1:])
         if number >= len(d):
-            return ''
+            return ""
 
         if d[number] is False:
             d[number] = NO
@@ -50,9 +49,9 @@ def func(match, d):
                 d[number] = NO
         return d[number]
     except ValueError:
-        number = int(re.search(r'(\d+)', matchtext).group())
+        number = int(re.search(r"(\d+)", matchtext).group())
         if number >= len(d):
-            return ''
+            return ""
         if d[number] is False:
             d[number] = YES
         elif d[number] is True:
@@ -64,14 +63,14 @@ def func(match, d):
                 d[number] = YES
             else:
                 d[number] = NO
-        text = re.search(r'%\d+\((.+)\)', matchtext).group(1)
+        text = re.search(r"%\d+\((.+)\)", matchtext).group(1)
         permatch = pattern.search(text)
         if permatch:
             try:
                 subfunc = partial(perfunc, d=d)
                 return pattern.sub(subfunc, text)
             except (KeyError, IndexError):
-                return ''
+                return ""
         return text
 
 

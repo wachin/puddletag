@@ -2,20 +2,32 @@ import os
 import sys
 
 from PyQt6 import sip
-from PyQt6.QtCore import QEvent, QThread, Qt, pyqtRemoveInputHook, pyqtSignal
+from PyQt6.QtCore import QEvent, Qt, QThread, pyqtRemoveInputHook, pyqtSignal
 from PyQt6.QtGui import QBrush
-from PyQt6.QtWidgets import QApplication, QComboBox, QCompleter, QDialog, QGroupBox, QHBoxLayout, \
-    QLabel, QLineEdit, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QCompleter,
+    QDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..audioinfo import INFOTAGS
 from ..puddleobjects import ListButtons, PuddleConfig
 
 pyqtRemoveInputHook()
-from ..constants import LEFTDOCK, SELECTIONCHANGED, BLANK, KEEP, SEPARATOR
 from functools import partial
+
+from ..constants import BLANK, CONFIGDIR, KEEP, LEFTDOCK, SELECTIONCHANGED, SEPARATOR
 from ..puddlesettings import SettingsError
 from ..translations import translate
-from ..constants import CONFIGDIR
 
 
 def loadsettings(filepath=None):
@@ -23,23 +35,35 @@ def loadsettings(filepath=None):
     if filepath:
         settings.filename = filepath
     else:
-        settings.filename = os.path.join(CONFIGDIR, 'tagpanel')
-    numrows = settings.get('panel', 'numrows', -1, True)
+        settings.filename = os.path.join(CONFIGDIR, "tagpanel")
+    numrows = settings.get("panel", "numrows", -1, True)
     if numrows > -1:
         sections = settings.sections()
         d = {}
         for row in range(numrows):
             section = str(row)
-            tags = settings.get(section, 'tags', [''])
-            titles = settings.get(section, 'titles', [''])
+            tags = settings.get(section, "tags", [""])
+            titles = settings.get(section, "titles", [""])
             d[row] = list(zip(titles, tags))
     else:
-        titles = ['&Artist', '&Title', 'Al&bum', 'T&rack', '&Year', "&Genre", '&Comment']
-        tags = ['artist', 'title', 'album', 'track', 'year', 'genre', 'comment']
+        titles = [
+            "&Artist",
+            "&Title",
+            "Al&bum",
+            "T&rack",
+            "&Year",
+            "&Genre",
+            "&Comment",
+        ]
+        tags = ["artist", "title", "album", "track", "year", "genre", "comment"]
         newtags = list(zip(titles, tags))
-        d = {0: [newtags[0]], 1: [newtags[1]], 2: [newtags[2]],
-             3: [newtags[3], newtags[4], newtags[5]],
-             4: [newtags[6]]}
+        d = {
+            0: [newtags[0]],
+            1: [newtags[1]],
+            2: [newtags[2]],
+            3: [newtags[3], newtags[4], newtags[5]],
+            4: [newtags[6]],
+        }
     return d
 
 
@@ -48,45 +72,51 @@ def savesettings(d, filepath=None):
     if filepath:
         settings.filename = filepath
     else:
-        settings.filename = os.path.join(settings.savedir, 'tagpanel')
-    settings.set('panel', 'numrows', str(len(d)))
+        settings.filename = os.path.join(settings.savedir, "tagpanel")
+    settings.set("panel", "numrows", str(len(d)))
     for row, rowtags in d.items():
-        settings.set(str(row), 'tags', [z[1] for z in rowtags])
-        settings.set(str(row), 'titles', [z[0] for z in rowtags])
+        settings.set(str(row), "tags", [z[1] for z in rowtags])
+        settings.set(str(row), "titles", [z[0] for z in rowtags])
 
 
 class Combo(QComboBox):
-
     def __init__(self, *args, **kwargs):
-        super(Combo, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._edited = False
 
-        def k(text): self._edited = True
+        def k(text):
+            self._edited = True
 
         self.editTextChanged.connect(k)
 
     def setEditText(self, text):
         self._edited = False
-        super(Combo, self).setEditText(text)
+        super().setEditText(text)
 
     def focusOutEvent(self, event):
         if not self._edited:
-            return super(Combo, self).focusOutEvent(event)
+            return super().focusOutEvent(event)
         curtext = self.currentText()
-        index = self.findText(curtext,
-                              Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchFixedString | Qt.MatchFlag.MatchCaseSensitive)
+        index = self.findText(
+            curtext,
+            Qt.MatchFlag.MatchExactly
+            | Qt.MatchFlag.MatchFixedString
+            | Qt.MatchFlag.MatchCaseSensitive,
+        )
         if index == -1:
-            index = self.findText(curtext, Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchFixedString)
+            index = self.findText(
+                curtext, Qt.MatchFlag.MatchExactly | Qt.MatchFlag.MatchFixedString
+            )
         if index > 1:
             if curtext == self.itemText(index):
                 self.removeItem(index)
             self.insertItem(2, curtext)
         self._edited = False
-        return super(Combo, self).focusOutEvent(event)
+        return super().focusOutEvent(event)
 
 
 class Thread(QThread):
-    update = pyqtSignal(object, name='update')
+    update = pyqtSignal(object, name="update")
 
     def __init__(self, values, parent=None):
         self._values = values
@@ -109,17 +139,21 @@ class FrameCombo(QGroupBox):
     which is a dictionary key = tag, value = respective combobox.
     """
 
-    onetomany = pyqtSignal(dict, name='onetomany')
-    onetomanypreview = pyqtSignal(dict, name='onetomanypreview')
-    manypreview = pyqtSignal(list, name='manypreview')
+    onetomany = pyqtSignal(dict, name="onetomany")
+    onetomanypreview = pyqtSignal(dict, name="onetomanypreview")
+    manypreview = pyqtSignal(list, name="manypreview")
 
     def __init__(self, tags=None, parent=None, status=None):
         self.settingsdialog = SettingsWin
         QGroupBox.__init__(self, parent)
-        self.emits = ['onetomany', 'onetomanypreview', 'manypreview']
-        self.receives = [(SELECTIONCHANGED, self.fillCombos),
-                         ('previewModeChanged', lambda v: self._enablePreview()
-                         if v else self._disablePreview()), ]
+        self.emits = ["onetomany", "onetomanypreview", "manypreview"]
+        self.receives = [
+            (SELECTIONCHANGED, self.fillCombos),
+            (
+                "previewModeChanged",
+                lambda v: self._enablePreview() if v else self._disablePreview(),
+            ),
+        ]
         self.combos = {}
         self.labels = {}
         self._hboxes = []
@@ -135,7 +169,9 @@ class FrameCombo(QGroupBox):
             combo.setLineEdit(edit)
             completer = combo.completer()
             completer.setCaseSensitivity(Qt.CaseSensitivity.CaseSensitive)
-            completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+            completer.setCompletionMode(
+                QCompleter.CompletionMode.UnfilteredPopupCompletion
+            )
 
     def disableCombos(self):
         for z in self.combos:
@@ -150,7 +186,9 @@ class FrameCombo(QGroupBox):
             combo.setLineEdit(edit)
             completer = combo.completer()
             completer.setCaseSensitivity(Qt.CaseSensitivity.CaseSensitive)
-            completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+            completer.setCompletionMode(
+                QCompleter.CompletionMode.UnfilteredPopupCompletion
+            )
             edit.textEdited.connect(func)
             combo.currentIndexChanged.connect(func)
             self.__indexFuncs.append((combo, func))
@@ -167,10 +205,10 @@ class FrameCombo(QGroupBox):
             text = str(text)
 
         if text == BLANK:
-            text = ''
+            text = ""
         elif text == KEEP:
             if self._audios:
-                self.manypreview.emit([{field: a.get(field, '')} for a in self._audios])
+                self.manypreview.emit([{field: a.get(field, "")} for a in self._audios])
         else:
             if field in INFOTAGS:
                 value = text
@@ -179,7 +217,7 @@ class FrameCombo(QGroupBox):
         self.onetomanypreview.emit({field: text})
 
     def fillCombos(self, *args):
-        audios = self._status['selectedfiles']
+        audios = self._status["selectedfiles"]
         self._audios = [z.usertags for z in audios]
         combos = self.combos
 
@@ -201,7 +239,7 @@ class FrameCombo(QGroupBox):
                     else:
                         tags[field].add(SEPARATOR.join(value))
                 else:
-                    tags[field].add('')
+                    tags[field].add("")
 
         for field, values in tags.items():
             combo = combos[field]
@@ -211,20 +249,21 @@ class FrameCombo(QGroupBox):
             else:
                 combo.setCurrentIndex(0)
 
-        if 'genre' in tags and len(tags['genre']) == 1:
-            combo = combos['genre']
-            values = sorted(tags['genre'])
+        if "genre" in tags and len(tags["genre"]) == 1:
+            combo = combos["genre"]
+            values = sorted(tags["genre"])
             index = combo.findText(values[0])
             if index > -1:
                 combo.setCurrentIndex(index)
             else:
                 combo.setEditText(values[0])
-        elif 'genre' in tags:
-            combos['genre'].setCurrentIndex(0)
+        elif "genre" in tags:
+            combos["genre"].setCurrentIndex(0)
 
-        self._originalValues = dict([(field, str(combo.currentText()))
-                                     for field, combo in self.combos.items()])
-        self._originalValues['__image'] = self._status['images']
+        self._originalValues = dict(
+            [(field, str(combo.currentText())) for field, combo in self.combos.items()]
+        )
+        self._originalValues["__image"] = self._status["images"]
         [combo.blockSignals(False) for combo in combos.values()]
 
     def save(self):
@@ -232,9 +271,9 @@ class FrameCombo(QGroupBox):
         combos = self.combos
         tags = {}
 
-        images = self._status['images']
+        images = self._status["images"]
         if images is not None:
-            tags['__image'] = images
+            tags["__image"] = images
         originals = {}
         for field, combo in combos.items():
             curtext = str(combo.currentText())
@@ -251,25 +290,24 @@ class FrameCombo(QGroupBox):
                 else:
                     tags[field] = curtext.split(SEPARATOR)
 
-        if '__image' in tags:
-            if self._originalValues['__image'] == tags['__image']:
-                del (tags['__image'])
+        if "__image" in tags:
+            if self._originalValues["__image"] == tags["__image"]:
+                del tags["__image"]
             else:
-                originals['__image'] = tags['__image']
+                originals["__image"] = tags["__image"]
 
         if not tags:
             return
 
         self._originalValues.update(originals)
         self.onetomany.emit(tags)
-        if 'genre' in combos:
-            combo = combos['genre']
+        if "genre" in combos:
+            combo = combos["genre"]
 
-            genres = self._status['genres']
+            genres = self._status["genres"]
             new_genres = [_f for _f in str(combo.currentText()).split(SEPARATOR) if _f]
 
-            [genres.append(genre) for genre in new_genres
-             if genre not in genres]
+            [genres.append(genre) for genre in new_genres if genre not in genres]
 
     def setCombos(self, rowtags):
         """Creates a vertical column of comboboxes.
@@ -316,9 +354,11 @@ class FrameCombo(QGroupBox):
                 self.combos[tagval].setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
                 self.combos[tagval].setEditable(True)
                 self.combos[tagval].completer().setCompletionMode(
-                    QCompleter.CompletionMode.UnfilteredPopupCompletion)
+                    QCompleter.CompletionMode.UnfilteredPopupCompletion
+                )
                 self.combos[tagval].completer().setCaseSensitivity(
-                    Qt.CaseSensitivity.CaseSensitive)
+                    Qt.CaseSensitivity.CaseSensitive
+                )
                 self.labels[tagval].setBuddy(self.combos[tagval])
                 labelbox.addWidget(self.labels[tagval])
                 widgetbox.addWidget(self.combos[tagval])
@@ -345,9 +385,8 @@ class FrameCombo(QGroupBox):
             combo.setEnabled(enable)
             combo.addItems([KEEP, BLANK])
 
-        if 'genre' in self.combos:
-            pass
-            self.combos['genre'].addItems(self._status['genres'])
+        if "genre" in self.combos:
+            self.combos["genre"].addItems(self._status["genres"])
 
     def reloadCombos(self, tags):
         self.setCombos(tags)
@@ -435,22 +474,25 @@ class PuddleTable(QTableWidget):
 TABLEWIDGETBG = QTableWidgetItem().background()
 RED = QBrush(Qt.GlobalColor.red)
 
-TITLE = translate("Defaults", 'Title')
-FIELD = translate("Defaults", 'Field')
-ROW = translate("Tag Panel Settings", 'Row')
+TITLE = translate("Defaults", "Title")
+FIELD = translate("Defaults", "Field")
+ROW = translate("Tag Panel Settings", "Row")
 
 
 class SettingsWin(QWidget):
-
     def __init__(self, parent=None, status=None):
         QDialog.__init__(self, parent)
-        self.title = translate('Settings', 'Tag Panel')
-        self._table = PuddleTable([TITLE, FIELD, ROW],
-                                  [TITLE, FIELD, '0'], self)
+        self.title = translate("Settings", "Tag Panel")
+        self._table = PuddleTable([TITLE, FIELD, ROW], [TITLE, FIELD, "0"], self)
         self._buttons = ListButtons()
-        self._buttons.connectToWidget(self._table, add=self.add,
-                                      edit=self.edit, moveup=self._table.moveUp,
-                                      movedown=self._table.moveDown, duplicate=self.duplicate)
+        self._buttons.connectToWidget(
+            self._table,
+            add=self.add,
+            edit=self.edit,
+            moveup=self._table.moveUp,
+            movedown=self._table.moveDown,
+            duplicate=self.duplicate,
+        )
 
         hbox = QHBoxLayout()
         hbox.addWidget(self._table, 1)
@@ -471,7 +513,7 @@ class SettingsWin(QWidget):
                     rows.append(int(text(row, 2)))
                 except (TypeError, ValueError):
                     pass
-            row = str(max(rows) + 1) if rows else '1'
+            row = str(max(rows) + 1) if rows else "1"
             table.add([TITLE, FIELD.lower(), row])
         else:
             table.add(texts)
@@ -494,8 +536,9 @@ class SettingsWin(QWidget):
             try:
                 l[2] = int(l[2])
             except ValueError:
-                raise SettingsError(translate('Tag Panel Settings',
-                                              'All row numbers must be integers.'))
+                raise SettingsError(
+                    translate("Tag Panel Settings", "All row numbers must be integers.")
+                )
             try:
                 d[l[2]].append(l[:-1])
             except KeyError:
@@ -533,13 +576,14 @@ class SettingsWin(QWidget):
     def duplicate(self):
         table = self._table
         row = table.currentRow()
-        if row < 0: return
+        if row < 0:
+            return
         self.add(table.texts(row))
 
 
-control = ('Tag Panel', FrameCombo, LEFTDOCK, True)
+control = ("Tag Panel", FrameCombo, LEFTDOCK, True)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = SettingsWin()
     win.show()

@@ -2,24 +2,24 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QInputDialog
 
-from .. import status, connect_control
 from ...puddletag import add_shortcuts
+from .. import connect_control, status
 
 
 class _SignalObject(QObject):
-    highlight = pyqtSignal(list, name='highlight')
+    highlight = pyqtSignal(list, name="highlight")
 
 
 obj = _SignalObject()
 
 
 def highlight_dupe_field():
-    field, ok = QInputDialog.getText(None, 'puddletag', 'Field to compare')
+    field, ok = QInputDialog.getText(None, "puddletag", "Field to compare")
     if not ok:
         return
 
     field = str(field)
-    files = status['selectedfiles']
+    files = status["selectedfiles"]
     if not files or len(files) <= 1:
         return
 
@@ -30,9 +30,7 @@ def highlight_dupe_field():
     for f in files[1:]:
         if f.get(field) == value:
             if value is not None:
-                if highlight and highlight[-1] != prev:
-                    highlight.append(prev)
-                elif not highlight:
+                if highlight and highlight[-1] != prev or not highlight:
                     highlight.append(prev)
                 highlight.append(f)
         value = f.get(field)
@@ -52,13 +50,14 @@ def init(parent=None):
         k.setSeparator(True)
         return k
 
-    action = QAction('Dupe highlight', parent)
+    action = QAction("Dupe highlight", parent)
     action.setCheckable(True)
     action.toggled.connect(
-        lambda v: highlight_dupe_field() if v else remove_highlight())
-    add_shortcuts('&Plugins', [sep(), action, sep()])
+        lambda v: highlight_dupe_field() if v else remove_highlight()
+    )
+    add_shortcuts("&Plugins", [sep(), action, sep()])
 
     global obj
     obj.receives = []
-    obj.emits = ['highlight']
+    obj.emits = ["highlight"]
     connect_control(obj)

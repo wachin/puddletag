@@ -12,20 +12,20 @@ revmapping = {}
 
 def loadmapping(filepath, default=None):
     try:
-        lines = open(filepath, 'r').read().split('\n')
-    except (IOError, OSError):
+        lines = open(filepath, "r").read().split("\n")
+    except OSError:
         if default:
             return default
         else:
             return {}
     mappings = {}
     for l in lines:
-        tags = [z.strip() for z in l.split(',')]
+        tags = [z.strip() for z in l.split(",")]
         if len(tags) == 3:  # Tag, Source, Target
             try:
                 mappings[tags[0]].update({tags[1]: tags[2]})
             except KeyError:
-                mappings[tags[0]] = ({tags[1]: tags[2]})
+                mappings[tags[0]] = {tags[1]: tags[2]}
     return mappings
 
 
@@ -45,15 +45,17 @@ def setmapping(m):
 
     mapping = m
     for z in mapping:
-        revmapping[z] = CaselessDict([(value, key) for key, value in mapping[z].items()])
+        revmapping[z] = CaselessDict(
+            [(value, key) for key, value in mapping[z].items()]
+        )
     for z in extensions.values():
         try:
             if z[2] in mapping:
                 z[1].mapping = mapping[z[2]]
                 z[1].revmapping = revmapping[z[2]]
-            if 'global' in mapping:
-                z[1].mapping.update(mapping['global'])
-                z[1].revmapping.update(revmapping['global'])
+            if "global" in mapping:
+                z[1].mapping.update(mapping["global"])
+                z[1].revmapping.update(revmapping["global"])
         except IndexError:
             pass
 
@@ -105,18 +107,22 @@ def Tag(filename):
         return None
 
 
-from . import id3, vorbis, apev2, mp4, wma
+from . import apev2, id3, mp4, vorbis, wma
 
 tag_modules = (id3, vorbis, apev2, mp4, wma)
 
 for m in tag_modules:
-    if hasattr(m, 'filetype'):
+    if hasattr(m, "filetype"):
         register_tag(*m.filetype)
-    if hasattr(m, 'filetypes'):
+    if hasattr(m, "filetypes"):
         list(map(lambda x: register_tag(*x), m.filetypes))
 
-setmapping({'VorbisComment': {'tracknumber': 'track', 'date': 'year'},
-            'APEv2': {'disc': 'discnumber', 'album artist': 'albumartist'}})
+setmapping(
+    {
+        "VorbisComment": {"tracknumber": "track", "date": "year"},
+        "APEv2": {"disc": "discnumber", "album artist": "albumartist"},
+    }
+)
 
 _Tag = Tag
 model_tag = lambda x: x

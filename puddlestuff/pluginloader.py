@@ -1,28 +1,42 @@
 import logging
 import os
 import sys
-from os.path import exists
 from importlib import import_module
+from os.path import exists
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QVBoxLayout
 from configobj import ConfigObj
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QListWidgetItem,
+    QVBoxLayout,
+)
 
-from .constants import (FUNCTIONS, TAGSOURCE, SAVEDIR, PLUGINDIR,
-                        DIALOGS, MUSICLIBS, MODULES, FUNCTIONS_NO_PREVIEW)
+from .constants import (
+    DIALOGS,
+    FUNCTIONS,
+    FUNCTIONS_NO_PREVIEW,
+    MODULES,
+    MUSICLIBS,
+    PLUGINDIR,
+    TAGSOURCE,
+)
 from .puddleobjects import PuddleConfig, winsettings
 from .translations import translate
 
-NAME = 'name'
-AUTHOR = 'author'
-DESC = 'description'
-PT_VERSION = 'puddletag_version'
-VERSION = 'version'
-INFO_SECTION = 'info'
-MODULE_NAME = 'module'
+NAME = "name"
+AUTHOR = "author"
+DESC = "description"
+PT_VERSION = "puddletag_version"
+VERSION = "version"
+INFO_SECTION = "info"
+MODULE_NAME = "module"
 
-PLUGIN_DIRS = [PLUGINDIR,
-               os.path.join(os.path.dirname(__file__), 'plugins')]
+PLUGIN_DIRS = [PLUGINDIR, os.path.join(os.path.dirname(__file__), "plugins")]
 
 PROPERTIES = [NAME, AUTHOR, DESC, PT_VERSION, VERSION]
 
@@ -32,11 +46,13 @@ def get_plugins(plugindir):
         os.makedirs(plugindir)
     infos = []
     for module in os.listdir(plugindir):
-        info_path = os.path.join(plugindir, module, 'info')
+        info_path = os.path.join(plugindir, module, "info")
         if not exists(info_path):
             continue
         config_data = dict(ConfigObj(info_path))
-        values = [config_data.get(INFO_SECTION, {}).get(prop, '') for prop in PROPERTIES]
+        values = [
+            config_data.get(INFO_SECTION, {}).get(prop, "") for prop in PROPERTIES
+        ]
 
         if len([_f for _f in values if _f]) < len(PROPERTIES):
             continue
@@ -51,7 +67,7 @@ def _import_plugin(module_name):
     # imports work (see issue #41). User plugins live outside the package
     # and are imported by module name via the PLUGIN_DIRS sys.path entries.
     try:
-        return import_module('puddlestuff.plugins.' + module_name)
+        return import_module("puddlestuff.plugins." + module_name)
     except ImportError:
         return import_module(module_name)
 
@@ -59,7 +75,7 @@ def _import_plugin(module_name):
 def load_plugins(plugins=None, parent=None):
     [sys.path.insert(0, d) for d in PLUGIN_DIRS]
     cparser = PuddleConfig()
-    to_load = cparser.get('plugins', 'to_load', [])
+    to_load = cparser.get("plugins", "to_load", [])
     functions = {}
     tagsources = []
     dialogs = []
@@ -72,15 +88,15 @@ def load_plugins(plugins=None, parent=None):
         plugins = []
         [plugins.extend(get_plugins(d)) for d in PLUGIN_DIRS]
 
-    plugins.sort(key=lambda d: d.get(NAME, ''))
+    plugins.sort(key=lambda d: d.get(NAME, ""))
 
     plugin_actions = {
-        'functions': functions.update,
-        'functions_no_preview':  functions_no_preview.extend,
-        'tagsources':  tagsources.extend,
-        'dialogs':  dialogs.extend,
-        'musiclibs':  musiclibs.extend
-        }
+        "functions": functions.update,
+        "functions_no_preview": functions_no_preview.extend,
+        "tagsources": tagsources.extend,
+        "dialogs": dialogs.extend,
+        "musiclibs": musiclibs.extend,
+    }
 
     for plugin in plugins:
         if plugin[MODULE_NAME] in to_load:
@@ -91,39 +107,51 @@ def load_plugins(plugins=None, parent=None):
                         action(getattr(module, attribute))
                 modules.append(module)
             except Exception as e:
-                logging.exception(f"Failed to load plugin {plugin[NAME]}; error={e}")                
+                logging.exception(f"Failed to load plugin {plugin[NAME]}; error={e}")
 
     for d in PLUGIN_DIRS:
-        del (sys.path[0])
+        del sys.path[0]
 
-    return {FUNCTIONS: functions, TAGSOURCE: tagsources, DIALOGS: dialogs,
-            MUSICLIBS: musiclibs, MODULES: modules, FUNCTIONS_NO_PREVIEW: functions_no_preview}
+    return {
+        FUNCTIONS: functions,
+        TAGSOURCE: tagsources,
+        DIALOGS: dialogs,
+        MUSICLIBS: musiclibs,
+        MODULES: modules,
+        FUNCTIONS_NO_PREVIEW: functions_no_preview,
+    }
 
 
 class InfoWidget(QLabel):
     def __init__(self, info=None, parent=None):
-        super(InfoWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         self.setWordWrap(True)
         if info:
             self.changeInfo(info)
 
     def changeInfo(self, info):
-        labels = [translate('Plugin Settings', 'Name'),
-                  translate('Plugin Settings', 'Author'),
-                  translate('Plugin Settings', 'Description'),
-                  translate('Plugin Settings', 'Version')]
+        labels = [
+            translate("Plugin Settings", "Name"),
+            translate("Plugin Settings", "Author"),
+            translate("Plugin Settings", "Description"),
+            translate("Plugin Settings", "Version"),
+        ]
         properties = [NAME, AUTHOR, DESC, VERSION]
 
-        text = '<br />'.join(['<b>%s:</b> %s' % (disp, info[prop]) for
-                              disp, prop in zip(labels, properties)])
+        text = "<br />".join(
+            [
+                "<b>%s:</b> %s" % (disp, info[prop])
+                for disp, prop in zip(labels, properties)
+            ]
+        )
         self.setText(text)
 
 
 class PluginConfig(QDialog):
     def __init__(self, parent=None):
-        super(PluginConfig, self).__init__(parent)
-        winsettings('pluginconfig', self)
+        super().__init__(parent)
+        winsettings("pluginconfig", self)
         self._listbox = QListWidget()
         info_display = InfoWidget()
 
@@ -134,16 +162,21 @@ class PluginConfig(QDialog):
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addWidget(
-            QLabel(translate("Plugin Settings",
-                             '<b>Loading/unloading plugins requires a restart.</b>')))
+            QLabel(
+                translate(
+                    "Plugin Settings",
+                    "<b>Loading/unloading plugins requires a restart.</b>",
+                )
+            )
+        )
         self.setLayout(vbox)
 
         plugins = []
         [plugins.extend(get_plugins(d)) for d in PLUGIN_DIRS]
 
         cparser = PuddleConfig()
-        to_load = cparser.get('plugins', 'to_load', [])
-        plugins.sort(key=lambda d: d.get(NAME, ''))
+        to_load = cparser.get("plugins", "to_load", [])
+        plugins.sort(key=lambda d: d.get(NAME, ""))
         for plugin in plugins:
             item = QListWidgetItem()
             item.setText(plugin[NAME])
@@ -155,7 +188,8 @@ class PluginConfig(QDialog):
             self._listbox.addItem(item)
 
         self._listbox.currentItemChanged.connect(
-            lambda item, previous: info_display.changeInfo(item.plugin))
+            lambda item, previous: info_display.changeInfo(item.plugin)
+        )
 
     def get_to_load(self):
         to_load = []
@@ -168,10 +202,10 @@ class PluginConfig(QDialog):
     def applySettings(self, control=None):
         to_load = self.get_to_load()
         cparser = PuddleConfig()
-        cparser.set('plugins', 'to_load', to_load)
+        cparser.set("plugins", "to_load", to_load)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication([])
     win = PluginConfig()
     win.show()

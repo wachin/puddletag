@@ -1,39 +1,33 @@
 try:
-    from Levenshtein import ratio, jaro, jaro_winkler
-
+    from Levenshtein import jaro, jaro_winkler, ratio
 
     def _ratio(a, b):
         """Ratio
-    
-The ratio by which the strings differ."""
-        return ratio(a, b)
 
+        The ratio by which the strings differ."""
+        return ratio(a, b)
 
     def _jaro(a, b):
         """Jaro
 
-The Jaro string similarity metric is intended for short strings like personal last names."""
+        The Jaro string similarity metric is intended for short strings like personal last names."""
         return jaro(a, b)
-
 
     def _jaro_winkler(a, b):
         """Jaro-Winkler
-        
-The Jaro-Winkler string similarity metric is a modification of Jaro metric giving more weight to common prefix, as spelling mistakes are more likely to occur near ends of words."""
-        return a, b
 
+        The Jaro-Winkler string similarity metric is a modification of Jaro metric giving more weight to common prefix, as spelling mistakes are more likely to occur near ends of words."""
+        return a, b
 
     funcs = [_ratio, _jaro, _jaro_winkler]
 except ImportError:
     from difflib import SequenceMatcher
 
-
     def _ratio(a, b):
         """Ratio
-    
-The ratio by which the strings differ."""
-        return SequenceMatcher(None, a, b).ratio()
 
+        The ratio by which the strings differ."""
+        return SequenceMatcher(None, a, b).ratio()
 
     funcs = [_ratio]
 
@@ -41,7 +35,7 @@ The ratio by which the strings differ."""
 def exact(a, b):
     """Exact
 
-Matches exactly."""
+    Matches exactly."""
     if a == b:
         return 1
     else:
@@ -52,10 +46,10 @@ funcs.append(exact)
 
 
 def funcinfo(func):
-    return (func.__doc__.split('\n')[0], '\n'.join(func.__doc__.split('\n')[2:]))
+    return (func.__doc__.split("\n")[0], "\n".join(func.__doc__.split("\n")[2:]))
 
 
-class Algo(object):
+class Algo:
     def __init__(self, tags=None, threshold=0.85, func=_ratio, matchcase=True):
         self.threshold = threshold
         if tags is None:
@@ -81,10 +75,18 @@ class Algo(object):
         self.funcname, self.funcdesc = funcinfo(func)
 
     def pprint(self):
-        threshold = '%.2f' % (self.threshold * 100) + '%'
+        threshold = "%.2f" % (self.threshold * 100) + "%"
         funcname = self.funcname
-        tags = ' | '.join(self.tags)
-        matchcase = ''
+        tags = " | ".join(self.tags)
+        matchcase = ""
         if self.matchcase:
-            matchcase = ' - Match Case'
-        return 'Tags: ' + tags + ' - Algorithm: ' + funcname + ' - Threshold: ' + threshold + matchcase
+            matchcase = " - Match Case"
+        return (
+            "Tags: "
+            + tags
+            + " - Algorithm: "
+            + funcname
+            + " - Threshold: "
+            + threshold
+            + matchcase
+        )

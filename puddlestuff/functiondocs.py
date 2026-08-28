@@ -13,10 +13,7 @@ class ActionFunctionDoc:
 
 
 def _parse_csv_line(line):
-    return [
-        item.strip()
-        for item in next(csv.reader([line], skipinitialspace=True))
-    ]
+    return [item.strip() for item in next(csv.reader([line], skipinitialspace=True))]
 
 
 def _clean_label(label):
@@ -86,11 +83,13 @@ def action_functions_rst(function_map=None):
     for row in rows:
         arguments = "; ".join(_rst_text(arg) for arg in row.arguments)
         arguments = arguments if arguments else "None"
-        lines.extend([
-            f"   * - {_rst_text(row.name)}",
-            f"     - ``{row.key}``",
-            f"     - ``{row.preview}``",
-            f"     - {arguments}",
-        ])
+        lines.extend(
+            [
+                f"   * - {_rst_text(row.name)}",
+                f"     - ``{row.key}``",
+                f"     - ``{row.preview}``",
+                f"     - {arguments}",
+            ]
+        )
 
     return "\n".join(lines) + "\n"

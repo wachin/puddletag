@@ -1,9 +1,13 @@
 def dupes(tracks, tags, func, matchcase=False, threshold=1, prevdupe=None):
     if matchcase:
-        strings = [[(i, t.get(field, '')) for i, t in enumerate(tracks)] for field in tags]
+        strings = [
+            [(i, t.get(field, "")) for i, t in enumerate(tracks)] for field in tags
+        ]
     else:
-        strings = [[(i, t.get(field, '').lower())
-                    for i, t in enumerate(tracks)] for field in tags]
+        strings = [
+            [(i, t.get(field, "").lower()) for i, t in enumerate(tracks)]
+            for field in tags
+        ]
     if prevdupe:
         ret = prevdupe
         start = 0
@@ -30,7 +34,7 @@ def dupes(tracks, tags, func, matchcase=False, threshold=1, prevdupe=None):
 
 def delete(l, dellist):
     while dellist:
-        del (l[dellist[0]])
+        del l[dellist[0]]
         dellist = [z - 1 for z in dellist][1:]
 
 
@@ -72,12 +76,16 @@ def dupesinlib(library, algs, maintag=None, artists=None):
         yield [[tracks[i] for i in z] for z in ret]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from ..libraries import quodlibetlib as quodlibet
-    lib = quodlibet.QuodLibet('.quodlibet/songs')
+
+    lib = quodlibet.QuodLibet(".quodlibet/songs")
     from Levenshtein import ratio
 
-    algos = [algo(['artist', 'title'], 0.80, ratio), algo(['artist', 'title'], 0.70, ratio)]
+    algos = [
+        algo(["artist", "title"], 0.80, ratio),
+        algo(["artist", "title"], 0.70, ratio),
+    ]
     for z in dupesinlib(lib, algos):
         if z:
             print(z)

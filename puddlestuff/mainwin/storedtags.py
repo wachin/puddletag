@@ -2,7 +2,14 @@ import os
 
 from PyQt6.QtCore import QMutex, Qt
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QApplication, QGridLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .. import audioinfo
 from ..audioinfo import tag_versions
@@ -48,12 +55,12 @@ class StoredTags(QScrollArea):
         # widget.wheelEvent.connect(self._hScroll)
 
     def load(self):
-        audios = self._status['selectedfiles']
+        audios = self._status["selectedfiles"]
         if not self.isVisible():
             return
         if audios:
             filepath = audios[0].filepath
-            if self._status['previewmode'] and filepath == self._lastfilepath:
+            if self._status["previewmode"] and filepath == self._lastfilepath:
                 return
             self._lastfilepath = filepath
         else:
@@ -66,26 +73,28 @@ class StoredTags(QScrollArea):
             try:
                 audio = audioinfo._Tag(filepath)
                 tags = tag_versions.tags_in_file(filepath)
-            except (OSError, IOError) as e:
-                audio = {'Error': [e.strerror]}
+            except OSError as e:
+                audio = {"Error": [e.strerror]}
 
             if isinstance(audio, audioinfo.id3.Tag):
-                if 'ID3v2.4' in tags:
-                    tags.remove('ID3v2.4')
-                if 'ID3v2.3' in tags:
-                    tags.remove('ID3v2.3')
-                if 'ID3v2.2' in tags:
-                    tags.remove('ID3v2.2')
-            elif hasattr(audio, 'apev2') and audio.apev2:
-                if 'APEv2' in tags:
-                    tags.remove('APEv2')
+                if "ID3v2.4" in tags:
+                    tags.remove("ID3v2.4")
+                if "ID3v2.3" in tags:
+                    tags.remove("ID3v2.3")
+                if "ID3v2.2" in tags:
+                    tags.remove("ID3v2.2")
+            elif hasattr(audio, "apev2") and audio.apev2:
+                if "APEv2" in tags:
+                    tags.remove("APEv2")
 
-            ret = [(audio['__tag_read'], sort_dict(audio.usertags))]
+            ret = [(audio["__tag_read"], sort_dict(audio.usertags))]
 
             for tag in tags:
-                if not tag == audio['__tag_read']:
+                if not tag == audio["__tag_read"]:
                     try:
-                        ret.append((tag, sort_dict(tag_versions.tag_values(filepath, tag))))
+                        ret.append(
+                            (tag, sort_dict(tag_versions.tag_values(filepath, tag)))
+                        )
                     except:
                         continue
             return ret
@@ -110,13 +119,16 @@ class StoredTags(QScrollArea):
                     t_label.setFont(self._boldfont)
                     grid.addWidget(t_label, offset - 1, 0)
                     for row, (tag, value) in enumerate(values):
-                        field = QLabel('%s:' % tag)
-                        field.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+                        field = QLabel("%s:" % tag)
+                        field.setAlignment(
+                            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+                        )
                         grid.addWidget(field, row + offset, 0)
                         vlabel = QLabel(value)
                         grid.addWidget(vlabel, row + offset, 1)
-                    grid.setRowMinimumHeight(grid.rowCount(),
-                                             vlabel.sizeHint().height())
+                    grid.setRowMinimumHeight(
+                        grid.rowCount(), vlabel.sizeHint().height()
+                    )
                     offset += grid.rowCount() + 1
                 vbox = QVBoxLayout()
                 vbox.addStretch()
@@ -131,7 +143,7 @@ class StoredTags(QScrollArea):
         thread.start()
 
     def showEvent(self, event):
-        super(StoredTags, self).showEvent(event)
+        super().showEvent(event)
         self.load()
 
     def wheelEvent(self, e):
@@ -144,4 +156,4 @@ class StoredTags(QScrollArea):
             QScrollArea.wheelEvent(self, e)
 
 
-control = ('Stored Tags', StoredTags, LEFTDOCK, False)
+control = ("Stored Tags", StoredTags, LEFTDOCK, False)

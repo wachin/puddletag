@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
 import os
 
-from PyQt6.QtWidgets import QApplication, QWidget, QCheckBox, QVBoxLayout
+from PyQt6.QtWidgets import QApplication, QCheckBox, QVBoxLayout, QWidget
 
 from .constants import CONFIGDIR
 from .puddleobjects import PuddleConfig
 from .translations import translate
 
-NAME = 'name'
-DESC = 'description'
-SECTION = 'Config'
-VALUE = 'value'
+NAME = "name"
+DESC = "description"
+SECTION = "Config"
+VALUE = "value"
 
-_filename = os.path.join(CONFIGDIR, 'confirmations')
+_filename = os.path.join(CONFIGDIR, "confirmations")
 _confirmations = {}
 _registered = []
 
@@ -35,8 +34,8 @@ def _load(filename):
     confirmations = {}
     for section in cparser.sections():
         if section.startswith(SECTION):
-            name = cparser.get(section, NAME, '')
-            desc = cparser.get(section, DESC, '')
+            name = cparser.get(section, NAME, "")
+            desc = cparser.get(section, DESC, "")
             value = cparser.get(section, VALUE, True)
             confirmations[name] = [value, desc]
     return confirmations
@@ -64,13 +63,12 @@ def save(filename=None, confirmations=None):
 
 class Settings(QWidget):
     def __init__(self, parent=None):
-        super(Settings, self).__init__(parent)
+        super().__init__(parent)
         layout = QVBoxLayout()
         load()
         self._controls = {}
         for name in _registered:
-            control = QCheckBox(translate('Confirmations',
-                                          _confirmations[name][1]))
+            control = QCheckBox(translate("Confirmations", _confirmations[name][1]))
             control.setChecked(_confirmations[name][0])
             layout.addWidget(control)
             self._controls[name] = control
@@ -83,10 +81,10 @@ class Settings(QWidget):
         save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication([])
-    add('First True', True)
-    add('Name', False, 'Description')
+    add("First True", True)
+    add("Name", False, "Description")
     print(_confirmations)
     win = Settings()
     win.show()

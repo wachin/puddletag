@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
 import tempfile
 
 from PyQt6.QtCore import QRect, Qt
-from PyQt6.QtGui import QFont, QFontMetrics, QPainter, QBrush
+from PyQt6.QtGui import QBrush, QFont, QFontMetrics, QPainter
 from PyQt6.QtSvg import QSvgGenerator
 from PyQt6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
 from ..audioinfo.util import commonimages
-from ..constants import KEEP, BLANK
-from ..constants import RIGHTDOCK, SELECTIONCHANGED
+from ..constants import BLANK, KEEP, RIGHTDOCK, SELECTIONCHANGED
 from ..puddleobjects import PicWidget
 
 
 def svg_to_pic(data, desc):
-    return {'data': data, 'size': len(data),
-            'description': desc, 'imagetype': 3}
+    return {"data": data, "size": len(data), "description": desc, "imagetype": 3}
 
 
 def get_font(rect, *text):
@@ -66,14 +63,14 @@ class ArtworkWidget(QWidget):
         hbox.addStrut(1)
         vbox.addLayout(hbox)
         self.setLayout(vbox)
-        status['images'] = self.images
+        status["images"] = self.images
         self._audios = []
         self._status = status
         self._readOnly = None
 
     def fill(self, audios=None):
         if audios is None:
-            audios = self._status['selectedfiles']
+            audios = self._status["selectedfiles"]
         if not audios:
             self.picwidget.setEnabled(False)
             self.picwidget.setImages(None)
@@ -82,7 +79,7 @@ class ArtworkWidget(QWidget):
             self._audios = audios
             return
         self.picwidget.currentFile = audios[0]
-        self.picwidget.filePattern = self._status['cover_pattern']
+        self.picwidget.filePattern = self._status["cover_pattern"]
         pics = list(self._readOnlyPics())
         self.picwidget.setEnabled(True)
         images = []
@@ -100,7 +97,7 @@ class ArtworkWidget(QWidget):
 
         if images == 0:
             self.picwidget.setImages(pics, default=0)
-            self.picwidget.context = 'Cover Varies'
+            self.picwidget.context = "Cover Varies"
         elif images is None:
             self.picwidget.setImages(pics, default=1)
         else:
@@ -122,8 +119,9 @@ class ArtworkWidget(QWidget):
         if not self._readOnly:
             font = get_font(QRect(0, 0, 200, 200), KEEP, BLANK)
             data = (create_svg(KEEP, font), create_svg(BLANK, font))
-            self._readOnly = tuple([svg_to_pic(datum, desc) for datum, desc
-                                    in zip(data, (KEEP, BLANK))])
+            self._readOnly = tuple(
+                [svg_to_pic(datum, desc) for datum, desc in zip(data, (KEEP, BLANK))]
+            )
         return self._readOnly
 
     def images(self):
@@ -141,4 +139,4 @@ class ArtworkWidget(QWidget):
             self._audios = []
 
 
-control = ('Artwork', ArtworkWidget, RIGHTDOCK, False)
+control = ("Artwork", ArtworkWidget, RIGHTDOCK, False)

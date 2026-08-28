@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Example tutorial for writing a tag source plugin using Amazon's webservice API.
 
 # The important stuff is at the bottom in the Amazon class.
@@ -13,44 +12,52 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-
 from xml.dom import minidom
 
 from puddlestuff.audioinfo import DATA
 from puddlestuff.constants import CHECKBOX, COMBO, TEXT
-from puddlestuff.tagsources import (write_log, RetrievalError,
-                          urlopen, parse_searchstring)
+from puddlestuff.tagsources import (
+    RetrievalError,
+    parse_searchstring,
+    urlopen,
+    write_log,
+)
 from puddlestuff.util import translate
 
-default_access_key = base64.b64decode('QUtJQUozS0JZUlVZUU41UFZRR0E=')
-default_secret_key = base64.b64decode('dmh6Q0ZaSEF6N0VvMmN5REt3STVnS1liU3ZFTCtSckx3c0tmanZEdA==')
+default_access_key = base64.b64decode("QUtJQUozS0JZUlVZUU41UFZRR0E=")
+default_secret_key = base64.b64decode(
+    "dmh6Q0ZaSEF6N0VvMmN5REt3STVnS1liU3ZFTCtSckx3c0tmanZEdA=="
+)
 
 access_key = default_access_key
 secret_key = default_secret_key
 
-SMALLIMAGE = '#smallimage'
-MEDIUMIMAGE = '#mediumimage'
-LARGEIMAGE = '#largeimage'
+SMALLIMAGE = "#smallimage"
+MEDIUMIMAGE = "#mediumimage"
+LARGEIMAGE = "#largeimage"
 
 image_types = [SMALLIMAGE, MEDIUMIMAGE, LARGEIMAGE]
 
 XMLKEYS = {
-    'Artist': 'artist',
-    'Label': 'label',
-    'ReleaseDate': 'year',
-    'Title': 'album',
-    "Publisher": 'publisher'}
+    "Artist": "artist",
+    "Label": "label",
+    "ReleaseDate": "year",
+    "Title": "album",
+    "Publisher": "publisher",
+}
 
-IMAGEKEYS = {'SmallImage': SMALLIMAGE,
-             'MediumImage': MEDIUMIMAGE,
-             'LargeImage': LARGEIMAGE}
+IMAGEKEYS = {
+    "SmallImage": SMALLIMAGE,
+    "MediumImage": MEDIUMIMAGE,
+    "LargeImage": LARGEIMAGE,
+}
 
 
 def check_binding(node):
     """Checks whether a returned item as an Audio CD."""
     try:
-        binding = node.getElementsByTagName('Binding')[0].firstChild.data
-        return binding == 'Audio CD'
+        binding = node.getElementsByTagName("Binding")[0].firstChild.data
+        return binding == "Audio CD"
     except IndexError:
         return
 
@@ -58,23 +65,23 @@ def check_binding(node):
 def create_aws_url(aws_access_key_id, secret, query_dictionary):
     """Creates the query url that'll be used to query Amazon's service."""
     query_dictionary["AWSAccessKeyId"] = aws_access_key_id
-    query_dictionary["Timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                                  time.gmtime())
+    query_dictionary["Timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-    items = [(key, value) for key, value in
-             query_dictionary.items()]
+    items = [(key, value) for key, value in query_dictionary.items()]
     query = urllib.parse.urlencode(sorted(items))
 
     try:
-        hm = hmac.new(secret, "GET\nwebservices.amazon.com\n/onca/xml\n" \
-                      +query, hashlib.sha256)
+        hm = hmac.new(
+            secret, "GET\nwebservices.amazon.com\n/onca/xml\n" + query, hashlib.sha256
+        )
     except TypeError:
-        raise RetrievalError(translate('Amazon',
-                                       'Invalid Access or Secret Key'))
+        raise RetrievalError(translate("Amazon", "Invalid Access or Secret Key"))
     signature = urllib.parse.quote(base64.b64encode(hm.digest()))
 
     query = "http://webservices.amazon.com/onca/xml?%s&Signature=%s" % (
-        query, signature)
+        query,
+        signature,
+    )
     return query
 
 
@@ -84,20 +91,21 @@ def check_matches(albums, artist=None, album_name=None):
         album_name = album_name.lower()
         artist = artist.lower()
 
-        ret = [album for album in albums if
-               album_name in album.get('album', album_name).lower() and
-               artist in album.get('artist', artist).lower()]
+        ret = [
+            album
+            for album in albums
+            if album_name in album.get("album", album_name).lower()
+            and artist in album.get("artist", artist).lower()
+        ]
     elif artist:
         artist = artist.lower()
         ret = [
-            album for album in albums if
-            artist in album.get('artist', artist).lower()
+            album for album in albums if artist in album.get("artist", artist).lower()
         ]
     elif album_name:
         album_name = album_name.lower()
         ret = [
-            album for album in albums if
-            album_name in album.get('album', album).lower()
+            album for album in albums if album_name in album.get("album", album).lower()
         ]
 
     return ret if ret else albums
@@ -105,15 +113,15 @@ def check_matches(albums, artist=None, album_name=None):
 
 def get_asin(node):
     """Retrieves the ASIN of a node."""
-    return node.getElementsByTagName('ASIN')[0].firstChild.data
+    return node.getElementsByTagName("ASIN")[0].firstChild.data
 
 
 def get_image_url(node):
-    return node.getElementsByTagName('URL')[0].firstChild.data
+    return node.getElementsByTagName("URL")[0].firstChild.data
 
 
 def get_site_url(node):
-    return node.getElementsByTagName('DetailPageURL')[0].firstChild.data
+    return node.getElementsByTagName("DetailPageURL")[0].firstChild.data
 
 
 def get_text(node):
@@ -122,16 +130,20 @@ def get_text(node):
 
 
 def keyword_search(keywords):
-    write_log(translate('Amazon',
-                        "Retrieving search results for keywords: {}").format(keywords))
+    write_log(
+        translate("Amazon", "Retrieving search results for keywords: {}").format(
+            keywords
+        )
+    )
     query_pairs = {
         "Operation": "ItemSearch",
-        'SearchIndex': 'Music',
+        "SearchIndex": "Music",
         "ResponseGroup": "ItemAttributes,Images",
         "Service": "AWSECommerceService",
-        'ItemPage': '1',
-        'Keywords': keywords,
-        'AssociateTag': 'puddletag-20'}
+        "ItemPage": "1",
+        "Keywords": keywords,
+        "AssociateTag": "puddletag-20",
+    }
     url = create_aws_url(access_key, secret_key, query_pairs)
     xml = urlopen(url)
     return parse_search_xml(xml)
@@ -140,17 +152,17 @@ def keyword_search(keywords):
 def parse_album_xml(text, album=None):
     """Parses the retrieved xml for an album and get's the track listing."""
     doc = minidom.parseString(text)
-    album_item = doc.getElementsByTagName('Item')[0]
+    album_item = doc.getElementsByTagName("Item")[0]
     try:
-        tracklist = album_item.getElementsByTagName('Tracks')[0]
+        tracklist = album_item.getElementsByTagName("Tracks")[0]
     except IndexError:
-        write_log(translate('Amazon',
-                            'No tracks found in listing.'))
+        write_log(translate("Amazon", "No tracks found in listing."))
         write_log(text)
         return None
     tracks = []
-    discs = [disc for disc in tracklist.childNodes if
-             not disc.nodeType == disc.TEXT_NODE]
+    discs = [
+        disc for disc in tracklist.childNodes if not disc.nodeType == disc.TEXT_NODE
+    ]
     if not (len(discs) > 1 and album):
         album = None
     for discnum, disc in enumerate(discs):
@@ -158,12 +170,17 @@ def parse_album_xml(text, album=None):
             if track_node.nodeType == track_node.TEXT_NODE:
                 continue
             title = get_text(track_node)
-            tracknumber = track_node.attributes['Number'].value
+            tracknumber = track_node.attributes["Number"].value
             if album:
-                tracks.append({'track': tracknumber, 'title': title,
-                               'album': '%s (Disc %s)' % (album, discnum + 1)})
+                tracks.append(
+                    {
+                        "track": tracknumber,
+                        "title": title,
+                        "album": "%s (Disc %s)" % (album, discnum + 1),
+                    }
+                )
             else:
-                tracks.append({'track': tracknumber, 'title': title})
+                tracks.append({"track": tracknumber, "title": title})
     return tracks
 
 
@@ -172,12 +189,12 @@ def parse_search_xml(text):
     list of the albums found.
     """
     doc = minidom.parseString(text)
-    items = doc.getElementsByTagName('Item')
+    items = doc.getElementsByTagName("Item")
     ret = []
 
     for item in items:
         info = {}
-        for attrib in item.getElementsByTagName('ItemAttributes'):
+        for attrib in item.getElementsByTagName("ItemAttributes"):
             if not check_binding(attrib):
                 continue
             for child in attrib.childNodes:
@@ -193,10 +210,12 @@ def parse_search_xml(text):
             image_items = item.getElementsByTagName(key)
             if image_items:
                 info[IMAGEKEYS[key]] = get_image_url(image_items[0])
-        info['#extrainfo'] = (translate('Amazon', "{} at Amazon.com").format(
-                              info.get('album', '')), get_site_url(item))
-        info['#asin'] = get_asin(item)
-        info['asin'] = info['#asin']
+        info["#extrainfo"] = (
+            translate("Amazon", "{} at Amazon.com").format(info.get("album", "")),
+            get_site_url(item),
+        )
+        info["#asin"] = get_asin(item)
+        info["asin"] = info["#asin"]
         ret.append(info)
     return ret
 
@@ -208,34 +227,36 @@ def retrieve_album(info, image=MEDIUMIMAGE):
     if isinstance(info, str):
         asin = info
     else:
-        asin = info['#asin']
+        asin = info["#asin"]
 
     query_pairs = {
         "Operation": "ItemLookup",
         "Service": "AWSECommerceService",
-        'ItemId': asin,
-        'ResponseGroup': 'Tracks',
-        'AssociateTag': 'puddletag-20'}
+        "ItemId": asin,
+        "ResponseGroup": "Tracks",
+        "AssociateTag": "puddletag-20",
+    }
     url = create_aws_url(access_key, secret_key, query_pairs)
 
     if isinstance(info, str):
-        write_log(translate('Amazon',
-                            "Retrieving using ASIN: {}").format(asin))
+        write_log(translate("Amazon", "Retrieving using ASIN: {}").format(asin))
     else:
-        write_log(translate('Amazon',
-                            "Retrieving XML: {} - {}"
-                            ).format(info.get('artist', ''), info.get('album', '')))
+        write_log(
+            translate("Amazon", "Retrieving XML: {} - {}").format(
+                info.get("artist", ""), info.get("album", "")
+            )
+        )
     xml = urlopen(url)
 
     if isinstance(info, str):
         tracks = parse_album_xml(xml)
     else:
-        tracks = parse_album_xml(xml, info['album'])
+        tracks = parse_album_xml(xml, info["album"])
 
     if image in image_types:
         url = info[image]
-        write_log(translate('Amazon', "Retrieving cover: {}").format(url))
-        info.update({'__image': retrieve_cover(url)})
+        write_log(translate("Amazon", "Retrieving cover: {}").format(url))
+        info.update({"__image": retrieve_cover(url)})
     return tracks
 
 
@@ -246,13 +267,14 @@ def retrieve_cover(url):
 
 def search(artist=None, album=None):
     if artist and album:
-        keywords = '+'.join([artist, album])
+        keywords = "+".join([artist, album])
     elif artist:
         keywords = artist
     else:
         keywords = album
-    keywords = re.sub(r'(\s+)', '+', keywords)
+    keywords = re.sub(r"(\s+)", "+", keywords)
     return keyword_search(keywords)
+
 
 # A couple of things you should be aware of.
 # If you're retrieving urls use puddlestuff.tagsources.urlopen instead of the
@@ -273,16 +295,16 @@ def search(artist=None, album=None):
 
 # The only thing required is just a Tag Source object,
 # which'll be the interface to puddletag.
-class Amazon(object):
+class Amazon:
     # The name attribute is required.
-    name = 'Amazon'
+    name = "Amazon"
     # group_by specifies how the tag sources wants files to be grouped.
     # in this case they'll be grouped by album first and then by artists.
 
     # The values passed to Object.search will be album (a string)
     # and dictionary containing the different artists as keys and
     # a list of tags (dictionaries) as the values.
-    group_by = ['album', 'artist']
+    group_by = ["album", "artist"]
 
     # So for these values the values passed to Object.search may be
     # ("Give Up", artist={'The Postal Service': [track listing...]})
@@ -293,8 +315,9 @@ class Amazon(object):
     # values are usually lists and "builtin" values are strings.
     # All strings are unicode, so don't worry about conversions.
 
-    tooltip = translate('Amazon',
-                        """<p>Enter search parameters here. If empty, the selected files
+    tooltip = translate(
+        "Amazon",
+        """<p>Enter search parameters here. If empty, the selected files
                         are used.</p>
                         <ul>
                         <li><b>artist;album</b>
@@ -305,11 +328,12 @@ class Amazon(object):
                         <b>;Resurrection.</li>
                         <li>Entering keywords <b>without a semi-colon (;)</b> will do an
                         Amazon album search using those keywords.</li>
-                        </ul>""")
+                        </ul>""",
+    )
 
     # __init__ should not accept any arguments.
     def __init__(self):
-        super(Amazon, self).__init__()
+        super().__init__()
         self._getcover = True
         self.covertype = 1
 
@@ -342,15 +366,35 @@ class Amazon(object):
         # will be called when puddletag starts.
 
         self.preferences = [
-            [translate('Amazon', 'Retrieve Cover'), CHECKBOX, True],
-            [translate('Amazon', 'Cover size to retrieve'), COMBO,
-             [[translate('Amazon', 'Small'),
-               translate('Amazon', 'Medium'),
-               translate('Amazon', 'Large')], 1]],
-            [translate('Amazon', 'Access Key (Stored '
-                                 'as plain-text. Leave empty for default.)'), TEXT, ''],
-            [translate('Amazon', 'Secret Key (Stored '
-                                 'as plain-text. Leave empty for default.)'), TEXT, ''],
+            [translate("Amazon", "Retrieve Cover"), CHECKBOX, True],
+            [
+                translate("Amazon", "Cover size to retrieve"),
+                COMBO,
+                [
+                    [
+                        translate("Amazon", "Small"),
+                        translate("Amazon", "Medium"),
+                        translate("Amazon", "Large"),
+                    ],
+                    1,
+                ],
+            ],
+            [
+                translate(
+                    "Amazon",
+                    "Access Key (Stored as plain-text. Leave empty for default.)",
+                ),
+                TEXT,
+                "",
+            ],
+            [
+                translate(
+                    "Amazon",
+                    "Secret Key (Stored as plain-text. Leave empty for default.)",
+                ),
+                TEXT,
+                "",
+            ],
         ]
 
     def keyword_search(self, text):
@@ -406,7 +450,7 @@ class Amazon(object):
 
         if artists:
             if len(artists) > 1:
-                artist = 'Various Artists'
+                artist = "Various Artists"
             else:
                 try:
                     artist = list(artists.keys())[0]
@@ -447,6 +491,6 @@ class Amazon(object):
 tagsources = [Amazon]
 info = Amazon
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     x = Amazon()
-    print(x.keyword_search('amy winehouse'))
+    print(x.keyword_search("amy winehouse"))

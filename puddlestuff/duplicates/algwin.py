@@ -1,45 +1,75 @@
 import os
 import sys
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QAction, QDoubleValidator
-from PyQt6.QtWidgets import QApplication, QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, \
-    QInputDialog, QLabel, QLineEdit, QMessageBox, QToolButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, \
-    QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
-from .dupefuncs import dupesinlib
-from .matchfuncs import Algo, funcinfo, funcs, _ratio
-from ..constants import SAVEDIR, RIGHTDOCK
+from ..constants import RIGHTDOCK, SAVEDIR
 from ..findfunc import tagtofilename
+from ..puddleobjects import (
+    ListBox,
+    ListButtons,
+    OKCancel,
+    PuddleConfig,
+    get_icon,
+    progress,
+    winsettings,
+)
 from ..puddletag import add_shortcuts
-from ..puddleobjects import ListButtons, ListBox, OKCancel, PuddleConfig
-from ..puddleobjects import get_icon, progress, winsettings
+from .dupefuncs import dupesinlib
+from .matchfuncs import Algo, _ratio, funcinfo, funcs
 
-title_sort = lambda a: a.get('title', '')
-dupe_sort = lambda a: a[0].get('title', '')
+title_sort = lambda a: a.get("title", "")
+dupe_sort = lambda a: a[0].get("title", "")
 
-DEFAULTSET = {'setname': 'Default',
-              'algs': [Algo(['artist', 'title'], 0.85, _ratio, False)],
-              'disp': ['%artist%', '%artist% - %title%'],
-              'maintag': 'artist'}
+DEFAULTSET = {
+    "setname": "Default",
+    "algs": [Algo(["artist", "title"], 0.85, _ratio, False)],
+    "disp": ["%artist%", "%artist% - %title%"],
+    "maintag": "artist",
+}
 
-DUPEDIR = os.path.join(SAVEDIR, 'dupes')
+DUPEDIR = os.path.join(SAVEDIR, "dupes")
 
 
 def saveset(setname, disp, algs, maintag):
     cparser = PuddleConfig()
     filename = os.path.join(DUPEDIR, setname)
-    open(filename, 'w').close()  # I have to clear the file because if a previous
+    open(filename, "w").close()  # I have to clear the file because if a previous
     # set had more algos then the extra algos will get loaded.
     cparser.filename = filename
-    algs = [{'tags': a.tags, 'threshold': a.threshold,
-             'func': a.func.__name__, 'matchcase': a.matchcase,
-             'maintag': maintag} for a in algs]
+    algs = [
+        {
+            "tags": a.tags,
+            "threshold": a.threshold,
+            "func": a.func.__name__,
+            "matchcase": a.matchcase,
+            "maintag": maintag,
+        }
+        for a in algs
+    ]
 
-    cparser.set('info', 'name', setname)
-    cparser.set('info', 'disp', disp)
+    cparser.set("info", "name", setname)
+    cparser.set("info", "disp", disp)
     for i, a in enumerate(algs):
-        setname = 'alg' + str(i)
+        setname = "alg" + str(i)
         for key, val in a.items():
             cparser.set(setname, key, val)
 
@@ -55,29 +85,29 @@ def loadsets():
     cparser = PuddleConfig()
     for f in files:
         cparser.filename = f
-        name = cparser.get('info', 'name', '')
-        disp = cparser.get('info', 'disp', [])
+        name = cparser.get("info", "name", "")
+        disp = cparser.get("info", "disp", [])
         algos = []
         for section in cparser.sections():
-            if section == 'info':
+            if section == "info":
                 continue
-            tags = cparser.get(section, 'tags', [])
-            threshold = float(cparser.get(section, 'threshold', '0.85'))
-            func = cparser.get(section, 'func', '')
-            matchcase = cparser.get(section, 'matchcase', True)
-            maintag = cparser.get(section, 'maintag', 'artist')
+            tags = cparser.get(section, "tags", [])
+            threshold = float(cparser.get(section, "threshold", "0.85"))
+            func = cparser.get(section, "func", "")
+            matchcase = cparser.get(section, "matchcase", True)
+            maintag = cparser.get(section, "maintag", "artist")
             algos.append(Algo(tags, threshold, func, matchcase))
         sets.append([name, disp, algos, maintag])
     return sets
 
 
 class DupeTree(QTreeWidget):
-    loadtags = pyqtSignal(list, name='loadtags')
-    toplevel = pyqtSignal('QTreeWidgetItem', name='toplevel')
+    loadtags = pyqtSignal(list, name="loadtags")
+    toplevel = pyqtSignal("QTreeWidgetItem", name="toplevel")
 
     def __init__(self, *args, **kwargs):
         QTreeWidget.__init__(self, *args)
-        self.emits = ['loadtags']
+        self.emits = ["loadtags"]
         self.receives = []
 
     def selectedFiles(self):
@@ -105,7 +135,7 @@ class DupeTree(QTreeWidget):
         QTreeWidget.selectionChanged(self, selected, deselected)
         self.loadtags.emit(self.selectedFiles())
 
-    def loadDupes(self, lib, algos, dispformat, maintag='artist'):
+    def loadDupes(self, lib, algos, dispformat, maintag="artist"):
         self.clear()
         dupes = dupesinlib(lib, algos, maintag=maintag)
         self.dupes = []
@@ -120,13 +150,16 @@ class DupeTree(QTreeWidget):
                     for z in sorted(d, key=dupe_sort):
                         child = QTreeWidgetItem([tagtofilename(dispformat[0], z[0])])
                         item.addChild(child)
-                        [child.addChild(QTreeWidgetItem([
-                            tagtofilename(dispformat[1], x)])) for x in
-                            sorted(z[1:], key=title_sort)]
+                        [
+                            child.addChild(
+                                QTreeWidgetItem([tagtofilename(dispformat[1], x)])
+                            )
+                            for x in sorted(z[1:], key=title_sort)
+                        ]
                     self.toplevel.emit(item)
                 yield None
 
-        s = progress(what, 'Checking ', len(artists))
+        s = progress(what, "Checking ", len(artists))
         self.toplevel.connect(self._addItem)
         if self.parentWidget():
             s(self.parentWidget())
@@ -141,23 +174,23 @@ class DupeTree(QTreeWidget):
 
 
 class AlgWin(QWidget):
-    okCLickedSignal = pyqtSignal(Algo, name='okClicked')
+    okCLickedSignal = pyqtSignal(Algo, name="okClicked")
 
     def __init__(self, parent=None, alg=None):
         QWidget.__init__(self, parent)
-        winsettings('algwin', self)
-        taglabel = QLabel('&Tags')
-        self.tags = QLineEdit('artist | title')
+        winsettings("algwin", self)
+        taglabel = QLabel("&Tags")
+        self.tags = QLineEdit("artist | title")
         taglabel.setBuddy(self.tags)
         self.alcombo = QComboBox()
-        allabel = QLabel('&Algorithms')
+        allabel = QLabel("&Algorithms")
         allabel.setBuddy(self.alcombo)
-        self.threshold = QLineEdit('90')
+        self.threshold = QLineEdit("90")
         self.threshold.setValidator(QDoubleValidator(self.threshold))
         perlabel = QLabel("&Match threshold")
         perlabel.setBuddy(self.threshold)
 
-        self.matchcase = QCheckBox('&Match Case')
+        self.matchcase = QCheckBox("&Match Case")
 
         okcancel = OKCancel()
         okcancel.okButton.setDefault(True)
@@ -166,8 +199,18 @@ class AlgWin(QWidget):
         okcancel.cancel.connect(self.close)
 
         vbox = QVBoxLayout()
-        [vbox.addWidget(z) for z in [taglabel, self.tags, perlabel, self.threshold,
-                                     allabel, self.alcombo, self.matchcase]]
+        [
+            vbox.addWidget(z)
+            for z in [
+                taglabel,
+                self.tags,
+                perlabel,
+                self.threshold,
+                allabel,
+                self.alcombo,
+                self.matchcase,
+            ]
+        ]
         frame = QFrame()
         frame.setFrameStyle(QFrame.Shape.Box)
         frame.setLayout(vbox)
@@ -184,7 +227,9 @@ class AlgWin(QWidget):
         self.alcombo.clear()
         self.alcombo.addItems(names)
         self.alcombo.setCurrentIndex(0)
-        tooltip = "<dl>%s</dl>" % ''.join(['<dt><b>%s<b></dt> <dd>%s</dd>' % z for z in x])
+        tooltip = "<dl>%s</dl>" % "".join(
+            ["<dt><b>%s<b></dt> <dd>%s</dd>" % z for z in x]
+        )
         self.alcombo.setToolTip(tooltip)
         if alg:
             self.loadAlgo(alg)
@@ -197,12 +242,14 @@ class AlgWin(QWidget):
             self.alcombo.addItem(alg.funcname)
             self.alcombo.setCurrentIndex(self.alcombo.count() - 1)
 
-        self.tags.setText(' | '.join(alg.tags))
-        self.threshold.setText('%.2f' % (alg.threshold * 100))
+        self.tags.setText(" | ".join(alg.tags))
+        self.threshold.setText("%.2f" % (alg.threshold * 100))
         self.matchcase.setChecked(bool(alg.matchcase))
 
     def saveAlgo(self):
-        tags = [x for x in [z.strip() for z in str(self.tags.text()).split("|")] if x != ""]
+        tags = [
+            x for x in [z.strip() for z in str(self.tags.text()).split("|")] if x != ""
+        ]
         func = funcs[self.alcombo.currentIndex()]
         threshold = float(str(self.threshold.text())) / 100
         matchcase = self.matchcase.isChecked()
@@ -215,21 +262,21 @@ class AlgWin(QWidget):
 
 
 class SetDialog(QDialog):
-    setAvailable = pyqtSignal(list, name='setAvailable')
+    setAvailable = pyqtSignal(list, name="setAvailable")
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        winsettings('setdialog', self)
+        winsettings("setdialog", self)
         vbox = QVBoxLayout()
         self._previndex = 0
         self.setscombo = QComboBox()
-        setlabel = QLabel('&Sets')
+        setlabel = QLabel("&Sets")
         setlabel.setBuddy(self.setscombo)
         vbox.addWidget(setlabel)
 
         comboadd = QToolButton()
-        comboadd.setIcon(get_icon('list-add'))
-        comboadd.setToolTip('Add set')
+        comboadd.setIcon(get_icon("list-add"))
+        comboadd.setToolTip("Add set")
         comboadd.clicked.connect(self.addSet)
 
         hbox = QHBoxLayout()
@@ -238,7 +285,7 @@ class SetDialog(QDialog):
 
         vbox.addLayout(hbox)
 
-        conditions = QLabel('&Conditions')
+        conditions = QLabel("&Conditions")
         vbox.addWidget(conditions)
 
         self.listbox = ListBox()
@@ -250,19 +297,19 @@ class SetDialog(QDialog):
         listhbox.addLayout(listbuttons)
         vbox.addLayout(listhbox)
 
-        label = QLabel('Retrieve values via: ')
+        label = QLabel("Retrieve values via: ")
         self.maintag = QComboBox()
-        self.maintag.addItems(['artist', 'title', 'genre', 'album', 'year'])
+        self.maintag.addItems(["artist", "title", "genre", "album", "year"])
         maintaghbox = QHBoxLayout()
         maintaghbox.addWidget(label)
         maintaghbox.addWidget(self.maintag)
         maintaghbox.addStretch()
         vbox.addLayout(maintaghbox)
 
-        dispformat = QLabel('Display Format')
+        dispformat = QLabel("Display Format")
         vbox.addWidget(dispformat)
         self.texts = [QLineEdit(), QLineEdit()]
-        t = ['Original', 'Duplicates']
+        t = ["Original", "Duplicates"]
         for i, text in enumerate(self.texts):
             label = QLabel(t[i])
             label.setBuddy(text)
@@ -282,18 +329,21 @@ class SetDialog(QDialog):
 
     def addSet(self):
         def gettext():
-            (text, ok) = QInputDialog.getText(self, 'puddletag', 'Enter a name'
-                                                                 'for the set', QLineEdit.EchoMode.Normal)
+            (text, ok) = QInputDialog.getText(
+                self, "puddletag", "Enter a namefor the set", QLineEdit.EchoMode.Normal
+            )
             if ok:
                 if self.setscombo.findText(text) > -1:
-                    QMessageBox.information(self, 'puddletag', 'The name entered already exists.')
+                    QMessageBox.information(
+                        self, "puddletag", "The name entered already exists."
+                    )
                     return gettext()
                 return text
 
         text = gettext()
         if text:
             self.setscombo.addItem(text)
-            self._sets.append([str(text), ['', ''], []])
+            self._sets.append([str(text), ["", ""], []])
             self.setscombo.setCurrentIndex(self.setscombo.count() - 1)
 
     def fill(self, sets):
@@ -324,13 +374,15 @@ class SetDialog(QDialog):
 
     def changeSet(self, index):
         i = self._previndex
-        prevset = {'setname': self._sets[i][0],
-                   'disp': [str(text.text()) for text in self.texts],
-                   'algs': self._sets[i][2],
-                   'maintag': str(self.maintag.currentText())}
-        self._sets[i][1] = prevset['disp']
-        self._sets[i][2] = prevset['algs']
-        self._sets[i][3] = prevset['maintag']
+        prevset = {
+            "setname": self._sets[i][0],
+            "disp": [str(text.text()) for text in self.texts],
+            "algs": self._sets[i][2],
+            "maintag": str(self.maintag.currentText()),
+        }
+        self._sets[i][1] = prevset["disp"]
+        self._sets[i][2] = prevset["algs"]
+        self._sets[i][3] = prevset["maintag"]
         saveset(**prevset)
         self.currentSet = self._sets[index]
         self._previndex = index
@@ -362,15 +414,17 @@ class SetDialog(QDialog):
         self.listbox.moveDown(self.currentSet[2])
 
     def remove(self):
-        del (self.currentSet[2][self.listbox.currentRow()])
+        del self.currentSet[2][self.listbox.currentRow()]
         self.listbox.takeItem(self.listbox.currentRow())
 
     def okClicked(self):
         i = self.setscombo.currentIndex()
-        prevset = {'setname': self._sets[i][0],
-                   'disp': [str(text.text()) for text in self.texts],
-                   'algs': self._sets[i][2],
-                   'maintag': str(self.maintag.currentText())}
+        prevset = {
+            "setname": self._sets[i][0],
+            "disp": [str(text.text()) for text in self.texts],
+            "algs": self._sets[i][2],
+            "maintag": str(self.maintag.currentText()),
+        }
         saveset(**prevset)
         self.close()
         self.setAvailable.emit(self.currentSet)
@@ -380,34 +434,42 @@ class SetDialog(QDialog):
 
 
 def load_window(parent):
-    from ..libraries import quodlibetlib as quodlibet
     from ..constants import HOMEDIR
-    lib = quodlibet.QuodLibet(os.path.join(HOMEDIR, '.quodlibet/songs'))
+    from ..libraries import quodlibetlib as quodlibet
+
+    lib = quodlibet.QuodLibet(os.path.join(HOMEDIR, ".quodlibet/songs"))
     from Levenshtein import ratio
-    algos = [Algo(['artist', 'title'], 0.80, ratio), Algo(['artist', 'title'], 0.70, ratio)]
-    qb = parent.addDock('Duplicates', DupeTree, RIGHTDOCK, connect=True)
-    qb.loadDupes(lib, algos, ['%artist% - %title%', '%title%'])
+
+    algos = [
+        Algo(["artist", "title"], 0.80, ratio),
+        Algo(["artist", "title"], 0.70, ratio),
+    ]
+    qb = parent.addDock("Duplicates", DupeTree, RIGHTDOCK, connect=True)
+    qb.loadDupes(lib, algos, ["%artist% - %title%", "%title%"])
 
 
 def init(parent=None):
-    action = QAction('Dupes in Lib', parent)
+    action = QAction("Dupes in Lib", parent)
     # if not status['library']:
     # action.setEnabled(False)
     action.triggered.connect(lambda: load_window(parent))
-    add_shortcuts('&Tools', [action])
+    add_shortcuts("&Tools", [action])
 
 
 if __name__ == "__main__":
-    from ..libraries import quodlibetlib as quodlibet
     from ..constants import HOMEDIR
+    from ..libraries import quodlibetlib as quodlibet
 
-    lib = quodlibet.QuodLibet(os.path.join(HOMEDIR, '.quodlibet/songs'))
+    lib = quodlibet.QuodLibet(os.path.join(HOMEDIR, ".quodlibet/songs"))
     from Levenshtein import ratio
 
-    algos = [Algo(['artist', 'title'], 0.80, ratio), Algo(['artist', 'title'], 0.70, ratio)]
+    algos = [
+        Algo(["artist", "title"], 0.80, ratio),
+        Algo(["artist", "title"], 0.70, ratio),
+    ]
     app = QApplication(sys.argv)
     qb = DupeTree()
     qb.show()
     QApplication.processEvents()
-    qb.loadDupes(lib, algos, ['%artist% - %title%', '%title%'])
+    qb.loadDupes(lib, algos, ["%artist% - %title%", "%title%"])
     app.exec()

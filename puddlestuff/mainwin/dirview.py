@@ -1,24 +1,40 @@
 import os
 
-from PyQt6.QtCore import QDir, QDirIterator, QItemSelectionModel, QMutex, QSettings, QUrl, Qt, pyqtSignal
+from PyQt6.QtCore import (
+    QDir,
+    QDirIterator,
+    QItemSelectionModel,
+    QMutex,
+    QSettings,
+    Qt,
+    QUrl,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QAction, QDesktopServices, QFileSystemModel
-from PyQt6.QtWidgets import QAbstractItemView, QCheckBox, QHeaderView, QMenu, QTreeView, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QCheckBox,
+    QHeaderView,
+    QMenu,
+    QTreeView,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..constants import LEFTDOCK, QT_CONFIG
-from ..puddleobjects import (PuddleConfig, PuddleThread,
-                             PuddleHeader)
-from ..puddlesettings import (load_gen_settings,
-                              save_gen_settings)
+from ..puddleobjects import PuddleConfig, PuddleHeader, PuddleThread
+from ..puddlesettings import load_gen_settings, save_gen_settings
 from ..tagmodel import has_previews
 from ..translations import translate
 
 qmutex = QMutex()
 
+
 class DirModel(QFileSystemModel):
     def __init__(self, parent=None):
         QFileSystemModel.__init__(self, parent)
 
-        self.setRootPath('/')
+        self.setRootPath("/")
         self.setFilter(QDir.Filter.Dirs | QDir.Filter.NoDotAndDotDot)
         self.setReadOnly(False)
 
@@ -26,18 +42,20 @@ class DirModel(QFileSystemModel):
         """Overridden to only show the expand arrow when there are subfolders."""
         if parent.flags() & Qt.ItemFlag.ItemNeverHasChildren:
             return False
-        elif (self.filePath(parent)):
+        elif self.filePath(parent):
             return QDirIterator(
                 self.filePath(parent),
                 self.filter() | QDir.Filter.NoDotAndDotDot,
-                QDirIterator.IteratorFlag.NoIteratorFlags
+                QDirIterator.IteratorFlag.NoIteratorFlags,
             ).hasNext()
         return QFileSystemModel.hasChildren(self, parent)
 
+
 class DirView(QTreeView):
     """The treeview used to select a directory."""
-    removeFolders = pyqtSignal(list, bool, name='removeFolders')
-    loadFiles = pyqtSignal(object, list, bool, name='loadFiles')
+
+    removeFolders = pyqtSignal(list, bool, name="removeFolders")
+    loadFiles = pyqtSignal(object, list, bool, name="loadFiles")
 
     def __init__(self, parent=None, subfolders=False, status=None):
         QTreeView.__init__(self, parent)
@@ -75,9 +93,12 @@ class DirView(QTreeView):
         Returns True if the user cancels the action, False if
         the user chooses to go ahead or there are no un-commited previews.
         """
-        msg = translate('Previews', 'Some files have uncommited previews. '
-                                    'Changes will be lost once you load a directory. <br />'
-                                    'Do you still want to load a new directory?<br />')
+        msg = translate(
+            "Previews",
+            "Some files have uncommited previews. "
+            "Changes will be lost once you load a directory. <br />"
+            "Do you still want to load a new directory?<br />",
+        )
         if not has_previews(parent=self.parentWidget(), msg=msg):
             return False
         select = self._select
@@ -101,24 +122,20 @@ class DirView(QTreeView):
         connect = lambda o, s: o.triggered.connect(s)
 
         menu = QMenu(self)
-        refresh = QAction(translate("Dirview",
-                                    'Refresh Directory'), self)
+        refresh = QAction(translate("Dirview", "Refresh Directory"), self)
 
         index = self.indexAt(event.pos())
         connect(refresh, lambda: self.model().fetchMore(index))
 
         header = self.header()
         if self.header().isHidden():
-            show_header = QAction(translate("Dirview",
-                                            'Show Header'), self)
+            show_header = QAction(translate("Dirview", "Show Header"), self)
             connect(show_header, header.show)
         else:
-            show_header = QAction(translate("Dirview",
-                                            'Hide Header'), self)
+            show_header = QAction(translate("Dirview", "Hide Header"), self)
             connect(show_header, header.hide)
 
-        open_dir = QAction(translate(
-            'Dirview', 'Open in File Manager'), self)
+        open_dir = QAction(translate("Dirview", "Open in File Manager"), self)
         connect(open_dir, lambda: self.openExtern(index))
 
         menu.addAction(refresh)
@@ -126,7 +143,7 @@ class DirView(QTreeView):
         menu.addAction(open_dir)
 
         menu.exec(event.globalPos())
-        super(DirView, self).contextMenuEvent(event)
+        super().contextMenuEvent(event)
 
     def dirMoved(self, dirs):
         if not self.isVisible():
@@ -159,16 +176,16 @@ class DirView(QTreeView):
     def loadSettings(self):
         settings = QSettings(QT_CONFIG, QSettings.Format.IniFormat)
         header = self.header()
-        if settings.value('dirview/header'):
-            header.restoreState(settings.value('dirview/header'))
-        hide = bool(settings.value('dirview/hide', True))
+        if settings.value("dirview/header"):
+            header.restoreState(settings.value("dirview/header"))
+        hide = bool(settings.value("dirview/hide", True))
         self.setHeaderHidden(hide)
 
         if self.isVisible() == False:
             return
 
         cparser = PuddleConfig()
-        d = cparser.get('main', 'lastfolder', '/')
+        d = cparser.get("main", "lastfolder", "/")
         while not os.path.exists(d):
             d = os.path.dirname(d)
             if not d:
@@ -195,7 +212,7 @@ class DirView(QTreeView):
         if event.buttons() == Qt.MouseButton.RightButton:
             return
         else:
-            super(DirView, self).mousePressEvent(event)
+            super().mousePressEvent(event)
 
     def openExtern(self, index):
         if index.isValid():
@@ -235,7 +252,7 @@ class DirView(QTreeView):
                     continue
                 if isinstance(d, bytes):
                     try:
-                        d = str(d, 'utf8')
+                        d = str(d, "utf8")
                     except (UnicodeEncodeError, UnicodeDecodeError):
                         pass
                 index = getindex(d)
@@ -270,9 +287,8 @@ class DirView(QTreeView):
 
     def saveSettings(self):
         settings = QSettings(QT_CONFIG, QSettings.Format.IniFormat)
-        settings.setValue('dirview/header',
-                          self.header().saveState())
-        settings.setValue('dirview/hide', self.isHeaderHidden())
+        settings.setValue("dirview/header", self.header().saveState())
+        settings.setValue("dirview/hide", self.isHeaderHidden())
 
     def selectionChanged(self, selected, deselected):
         QTreeView.selectionChanged(self, selected, deselected)
@@ -281,10 +297,8 @@ class DirView(QTreeView):
             return
 
         getfilename = self.model().filePath
-        dirs = list(set([getfilename(i) for
-                         i in selected.indexes()]))
-        old = list(set([getfilename(i) for
-                        i in deselected.indexes()]))
+        dirs = list(set([getfilename(i) for i in selected.indexes()]))
+        old = list(set([getfilename(i) for i in deselected.indexes()]))
         if self._lastselection:
             if len(old) == self._lastselection:
                 append = False
@@ -313,16 +327,16 @@ class DirView(QTreeView):
             parent = parent.parent()
 
     def focusDir(self, dir_path):
-        """Focuses the component on the given path """
+        """Focuses the component on the given path"""
         self.selectDirs(dir_path)
 
 
 class DirViewWidget(QWidget):
-    loadFiles = pyqtSignal(object, list, bool, name='loadFiles')
-    removeFolders = pyqtSignal(list, bool, name='removeFolders')
+    loadFiles = pyqtSignal(object, list, bool, name="loadFiles")
+    removeFolders = pyqtSignal(list, bool, name="removeFolders")
 
     def __init__(self, parent=None, subfolders=False, status=None):
-        super(DirViewWidget, self).__init__(parent)
+        super().__init__(parent)
         self._status = status
 
         self.dirview = DirView(self, subfolders, status)
@@ -330,13 +344,12 @@ class DirViewWidget(QWidget):
         self.dirview.removeFolders.connect(self.removeFolders)
 
         self.receives = [
-            ('dirschanged', self.dirview.selectDirs),
-            ('dirsmoved', self.dirview.dirMoved),
+            ("dirschanged", self.dirview.selectDirs),
+            ("dirsmoved", self.dirview.dirMoved),
         ]
-        self.emits = ['loadFiles', 'removeFolders']
+        self.emits = ["loadFiles", "removeFolders"]
 
-        self.subfolderCheck = QCheckBox(translate('Dirview', 'Subfolders'),
-                                        self)
+        self.subfolderCheck = QCheckBox(translate("Dirview", "Subfolders"), self)
         self.subfolderCheck.stateChanged.connect(self.setSubFolders)
 
         layout = QVBoxLayout()
@@ -347,7 +360,7 @@ class DirViewWidget(QWidget):
     def loadSettings(self):
         self.dirview.loadSettings()
         self.subfolderCheck.blockSignals(True)
-        if load_gen_settings([('Su&bfolders', True)])[0][1]:
+        if load_gen_settings([("Su&bfolders", True)])[0][1]:
             self.subfolderCheck.setChecked(True)
         else:
             self.subfolderCheck.setChecked(False)
@@ -357,21 +370,20 @@ class DirViewWidget(QWidget):
         self.dirview.saveSettings()
 
     def setSubFolders(self, check):
-        value = (check == Qt.CheckState.Checked)
+        value = check == Qt.CheckState.Checked
         self.dirview.subfolders = value
-        save_gen_settings({'Su&bfolders': value})
-        self._status['table'].subFolders = value
+        save_gen_settings({"Su&bfolders": value})
+        self._status["table"].subFolders = value
 
     def _focusDir(self, dir_path):
-        """Focuses the Filesystem component on the given path """
+        """Focuses the Filesystem component on the given path"""
         self.parentWidget().show()
         self.dirview.focusDir(dir_path)
 
-
     def focusCurrentFileParent(parent=None):
-        """Focuses the Filesystem component on the parent folder of the currently selected file """
+        """Focuses the Filesystem component on the parent folder of the currently selected file"""
 
-        files = parent._status['selectedfiles']
+        files = parent._status["selectedfiles"]
         if not files:
             return
 
@@ -379,4 +391,4 @@ class DirViewWidget(QWidget):
         parent._focusDir(dir_path)
 
 
-control = ('Filesystem', DirViewWidget, LEFTDOCK, True)
+control = ("Filesystem", DirViewWidget, LEFTDOCK, True)

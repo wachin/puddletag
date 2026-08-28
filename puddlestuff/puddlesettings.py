@@ -2,16 +2,50 @@ import os
 import sys
 from copy import deepcopy
 
-from PyQt6.QtCore import QAbstractListModel, QItemSelection, QItemSelectionModel, QModelIndex, Qt, pyqtSignal
+from PyQt6.QtCore import (
+    QAbstractListModel,
+    QItemSelection,
+    QItemSelectionModel,
+    QModelIndex,
+    Qt,
+    pyqtSignal,
+)
 from PyQt6.QtGui import QBrush, QColor, QPalette
-from PyQt6.QtWidgets import QAbstractItemView, QApplication, QCheckBox, QColorDialog, QComboBox, QDialog, QFrame, \
-    QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QListView, QMessageBox, QPushButton, QRadioButton, \
-    QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QCheckBox,
+    QColorDialog,
+    QComboBox,
+    QDialog,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListView,
+    QMessageBox,
+    QPushButton,
+    QRadioButton,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
-from . import genres, confirmations, audioinfo
+from . import audioinfo, confirmations, genres
 from .constants import TRANSDIR
 from .pluginloader import PluginConfig
-from .puddleobjects import (ListButtons, OKCancel, PuddleConfig, winsettings, get_languages, create_buddy)
+from .puddleobjects import (
+    ListButtons,
+    OKCancel,
+    PuddleConfig,
+    create_buddy,
+    get_languages,
+    winsettings,
+)
 from .shortcutsettings import ActionEditorDialog
 from .translations import translate
 
@@ -28,20 +62,20 @@ class SettingsError(Exception):
 
 def load_gen_settings(setlist, extras=False):
     settings = PuddleConfig()
-    settings.filename = os.path.join(settings.savedir, 'gensettings')
+    settings.filename = os.path.join(settings.savedir, "gensettings")
     ret = []
     for setting in setlist:
         desc = setting[0]
         default = setting[1]
-        ret.append([desc, settings.get(desc, 'value', default)])
+        ret.append([desc, settings.get(desc, "value", default)])
     return ret
 
 
 def save_gen_settings(setlist):
     settings = PuddleConfig()
-    settings.filename = os.path.join(settings.savedir, 'gensettings')
+    settings.filename = os.path.join(settings.savedir, "gensettings")
     for desc, value in setlist.items():
-        settings.set(desc, 'value', value)
+        settings.set(desc, "value", value)
 
 
 def update_settings():
@@ -49,23 +83,24 @@ def update_settings():
 
     # Mapping contains invalid case for ID3
     cparser = PuddleConfig()
-    filepath = os.path.join(cparser.savedir, 'mappings')
+    filepath = os.path.join(cparser.savedir, "mappings")
     mapping = audioinfo.loadmapping(filepath, {})
 
     if "ID3" in mapping:
-        id3 = mapping['ID3']
-        keys = {'MusicBrainz Album ID': 'MusicBrainz Album Id',
-                'MusicBrainz Artist ID': 'MusicBrainz Artist Id'}
+        id3 = mapping["ID3"]
+        keys = {
+            "MusicBrainz Album ID": "MusicBrainz Album Id",
+            "MusicBrainz Artist ID": "MusicBrainz Artist Id",
+        }
         for k in keys:
             if k in id3:
                 id3[keys[k]] = id3[k]
-                del (id3[k])
+                del id3[k]
 
         audioinfo.setmapping(mapping)
 
 
 class SettingsCheckBox(QCheckBox):
-
     def __init__(self, default=None, text=None, parent=None):
         QCheckBox.__init__(self, translate("GenSettings", text), parent)
 
@@ -82,7 +117,6 @@ class SettingsCheckBox(QCheckBox):
 
 
 class SettingsLineEdit(QWidget):
-
     def __init__(self, desc, default, parent=None):
         QWidget.__init__(self, parent)
         vbox = QVBoxLayout()
@@ -105,12 +139,11 @@ class SettingsLineEdit(QWidget):
 
 
 class GeneralSettings(QWidget):
-
     def __init__(self, controls, parent=None):
         QWidget.__init__(self, parent)
         settings = []
         for control in controls:
-            if hasattr(control, 'gensettings'):
+            if hasattr(control, "gensettings"):
                 settings.extend(load_gen_settings(control.gensettings, True))
         self._controls = []
 
@@ -126,47 +159,56 @@ class GeneralSettings(QWidget):
             vbox.addWidget(widget)
             self._controls.append(widget)
 
-        edit_sort_options = QPushButton(
-            translate("GenSettings", '&Edit sort options'))
+        edit_sort_options = QPushButton(translate("GenSettings", "&Edit sort options"))
 
         self._lang_combo = QComboBox()
-        self._lang_combo.addItems([translate('GenSettings', '<Autodetect>'),
-                                   translate('GenSettings', 'Default')])
+        self._lang_combo.addItems(
+            [
+                translate("GenSettings", "<Autodetect>"),
+                translate("GenSettings", "Default"),
+            ]
+        )
         self._lang_combo.setCurrentIndex(0)
 
         self._theme_combo = QComboBox()
-        self._theme_combo.addItems([translate('GenSettings', 'Default'),
-                                    translate('GenSettings', 'Dark Mode')])
-        theme = PuddleConfig().get('main', 'theme', 'Default')
+        self._theme_combo.addItems(
+            [translate("GenSettings", "Default"), translate("GenSettings", "Dark Mode")]
+        )
+        theme = PuddleConfig().get("main", "theme", "Default")
         i = self._theme_combo.findText(theme)
         if i >= 0:
             self._theme_combo.setCurrentIndex(i)
 
-        lang = PuddleConfig().get('main', 'lang', 'auto')
+        lang = PuddleConfig().get("main", "lang", "auto")
         self._lang_combo.addItems(list(get_languages([TRANSDIR])))
 
-        if lang != 'auto':
+        if lang != "auto":
             i = self._lang_combo.findText(lang, Qt.MatchFlag.MatchFixedString)
             if i > 0:
                 self._lang_combo.setCurrentIndex(i)
 
-        edit_sort_options.clicked.connect(
-            self.editSortOptions)
+        edit_sort_options.clicked.connect(self.editSortOptions)
 
         hbox = QHBoxLayout()
         hbox.addWidget(edit_sort_options)
         hbox.addStretch()
 
         vbox.addLayout(hbox)
-        
-        vbox.addLayout(create_buddy(
-            translate('GenSettings', 'Theme (Requires a restart)'),
-            self._theme_combo))
+
+        vbox.addLayout(
+            create_buddy(
+                translate("GenSettings", "Theme (Requires a restart)"),
+                self._theme_combo,
+            )
+        )
 
         if self._lang_combo.count() > 2:
-            vbox.addLayout(create_buddy(
-                translate('GenSettings', 'Language (Requires a restart)'),
-                self._lang_combo))
+            vbox.addLayout(
+                create_buddy(
+                    translate("GenSettings", "Language (Requires a restart)"),
+                    self._lang_combo,
+                )
+            )
         else:
             self._lang_combo.setCurrentIndex(0)
         vbox.addStretch()
@@ -174,69 +216,87 @@ class GeneralSettings(QWidget):
 
     def editSortOptions(self):
         cparser = PuddleConfig()
-        options = cparser.get('table', 'sortoptions',
-                              ['__filename,track,__dirpath', 'track, album',
-                               '__filename,album,__dirpath'])
+        options = cparser.get(
+            "table",
+            "sortoptions",
+            [
+                "__filename,track,__dirpath",
+                "track, album",
+                "__filename,album,__dirpath",
+            ],
+        )
 
         from .mainwin.tagsources import SortOptionEditor
+
         win = SortOptionEditor(options, self)
         win.options.connect(self.applySortOptions)
         win.show()
 
     def applySortOptions(self, options):
         from .mainwin import previews
+
         previews.set_sort_options(options)
         cparser = PuddleConfig()
-        cparser.set('table', 'sortoptions', options)
+        cparser.set("table", "sortoptions", options)
 
     def applySettings(self, controls):
 
         cparser = PuddleConfig()
         index = self._lang_combo.currentIndex()
         if index > 1:
-            cparser.set('main', 'lang', str(self._lang_combo.currentText()))
+            cparser.set("main", "lang", str(self._lang_combo.currentText()))
         elif index == 0:
-            cparser.set('main', 'lang', 'auto')
+            cparser.set("main", "lang", "auto")
         elif index == 1:
-            cparser.set('main', 'lang', 'default')
+            cparser.set("main", "lang", "default")
 
-        cparser.set('main', 'theme', str(self._theme_combo.currentText()))
+        cparser.set("main", "theme", str(self._theme_combo.currentText()))
 
         vals = dict([c.settingValue for c in self._controls])
         for c in controls:
-            if hasattr(c, 'applyGenSettings'):
+            if hasattr(c, "applyGenSettings"):
                 c.applyGenSettings(vals)
         save_gen_settings(vals)
 
 
 class Playlist(QWidget):
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
-
 
         cparser = PuddleConfig()
 
         self.extpattern = QLineEdit()
-        self.extpattern.setText(cparser.load('playlist', 'extpattern', '%artist% - %title%'))
+        self.extpattern.setText(
+            cparser.load("playlist", "extpattern", "%artist% - %title%")
+        )
 
-        self.extinfo = QCheckBox(translate("Playlist Settings", '&Write extended info'), self)
+        self.extinfo = QCheckBox(
+            translate("Playlist Settings", "&Write extended info"), self
+        )
         self.extinfo.stateChanged.connect(self.extpattern.setEnabled)
-        self.extinfo.setChecked(cparser.load('playlist', 'extinfo', True))
+        self.extinfo.setChecked(cparser.load("playlist", "extinfo", True))
         self.extpattern.setEnabled(self.extinfo.isChecked())
 
-        self.reldir = QCheckBox(translate("Playlist Settings", 'Entries &relative to working directory'))
-        self.reldir.setChecked(cparser.load('playlist', 'reldir', False))
+        self.reldir = QCheckBox(
+            translate("Playlist Settings", "Entries &relative to working directory")
+        )
+        self.reldir.setChecked(cparser.load("playlist", "reldir", False))
 
-        self.windows_separator = QCheckBox(translate("Playlist Settings", 'Use windows path separator (\\)'))
-        self.windows_separator.setChecked(cparser.load('playlist', 'windows_separator', False))
+        self.windows_separator = QCheckBox(
+            translate("Playlist Settings", "Use windows path separator (\\)")
+        )
+        self.windows_separator.setChecked(
+            cparser.load("playlist", "windows_separator", False)
+        )
 
-        self.auto_update = QCheckBox(translate("Playlist Settings", 'Update playlist automatically on save'))
-        self.auto_update.setChecked(cparser.load('playlist', 'auto_update', False))
+        self.auto_update = QCheckBox(
+            translate("Playlist Settings", "Update playlist automatically on save")
+        )
+        self.auto_update.setChecked(cparser.load("playlist", "auto_update", False))
 
         self.filename = QLineEdit()
-        self.filename.setText(cparser.load('playlist', 'filepattern', 'puddletag.m3u'))
-        label = QLabel(translate("Playlist Settings", '&Filename pattern.'))
+        self.filename.setText(cparser.load("playlist", "filepattern", "puddletag.m3u"))
+        label = QLabel(translate("Playlist Settings", "&Filename pattern."))
         label.setBuddy(self.filename)
 
         hbox = QHBoxLayout()
@@ -244,8 +304,17 @@ class Playlist(QWidget):
         hbox.addWidget(self.extpattern)
 
         vbox = QVBoxLayout()
-        [vbox.addWidget(z) for z in (self.extinfo, self.reldir, self.windows_separator,
-                                     self.auto_update, label, self.filename)]
+        [
+            vbox.addWidget(z)
+            for z in (
+                self.extinfo,
+                self.reldir,
+                self.windows_separator,
+                self.auto_update,
+                label,
+                self.filename,
+            )
+        ]
         vbox.insertLayout(1, hbox)
         vbox.addStretch()
         vbox.insertSpacing(3, 5)
@@ -254,24 +323,26 @@ class Playlist(QWidget):
 
     def applySettings(self, control=None):
         cparser = PuddleConfig()
-        cparser.setSection('playlist', 'extinfo', self.extinfo.isChecked())
-        cparser.setSection('playlist', 'extpattern', str(self.extpattern.text()))
-        cparser.setSection('playlist', 'reldir', self.reldir.isChecked())
-        cparser.setSection('playlist', 'filepattern', str(self.filename.text()))
-        cparser.setSection('playlist', 'windows_separator', self.windows_separator.isChecked())
-        cparser.setSection('playlist', 'auto_update', self.auto_update.isChecked())
+        cparser.setSection("playlist", "extinfo", self.extinfo.isChecked())
+        cparser.setSection("playlist", "extpattern", str(self.extpattern.text()))
+        cparser.setSection("playlist", "reldir", self.reldir.isChecked())
+        cparser.setSection("playlist", "filepattern", str(self.filename.text()))
+        cparser.setSection(
+            "playlist", "windows_separator", self.windows_separator.isChecked()
+        )
+        cparser.setSection("playlist", "auto_update", self.auto_update.isChecked())
 
 
 class TagMappings(QWidget):
-
     def __init__(self, parent=None):
-        filename = os.path.join(PuddleConfig().savedir, 'mappings')
+        filename = os.path.join(PuddleConfig().savedir, "mappings")
         self._edited = deepcopy(audioinfo.mapping)
         self._mappings = audioinfo.mapping
 
         QWidget.__init__(self, parent)
-        tooltip = translate("Mapping Settings",
-                            '''<ul><li>Tag is the format that the mapping applies to.
+        tooltip = translate(
+            "Mapping Settings",
+            """<ul><li>Tag is the format that the mapping applies to.
                             One of <b>ID3, APEv2, MP4, or VorbisComment</b>.
                             </li><li>Fields will be mapped from Source to Target,
                             meaning that if Source is found in a tag, it'll be
@@ -282,15 +353,19 @@ class TagMappings(QWidget):
                             write to the organization field.</li><li>Mappings for
                             tag sources are also supported, just use the name of the
                             tag source as Tag, eg. <b>Tag=MusicBrainz,
-                            Source=artist,Target=performer</b>.</li></ul>''')
+                            Source=artist,Target=performer</b>.</li></ul>""",
+        )
 
         self._table = QTableWidget()
         self._table.setToolTip(tooltip)
         self._table.setColumnCount(3)
-        self._table.setHorizontalHeaderLabels([
-            translate("Mapping Settings", 'Tag'),
-            translate("Mapping Settings", 'Original Field'),
-            translate("Mapping Settings", 'Target')])
+        self._table.setHorizontalHeaderLabels(
+            [
+                translate("Mapping Settings", "Tag"),
+                translate("Mapping Settings", "Original Field"),
+                translate("Mapping Settings", "Target"),
+            ]
+        )
         header = self._table.horizontalHeader()
         header.setVisible(True)
         self._table.verticalHeader().setVisible(False)
@@ -306,8 +381,12 @@ class TagMappings(QWidget):
         hbox.addLayout(buttons, 0)
 
         self._setMappings(self._mappings)
-        label = QLabel(translate("Mapping Settings",
-                                 '<b>A restart is required to apply these settings.</b>'))
+        label = QLabel(
+            translate(
+                "Mapping Settings",
+                "<b>A restart is required to apply these settings.</b>",
+            )
+        )
         vbox = QVBoxLayout()
         vbox.addLayout(hbox, 1)
         vbox.addWidget(label)
@@ -318,13 +397,13 @@ class TagMappings(QWidget):
         setItem = self._table.setItem
         self._table.setRowCount(1)
         row = 0
-        if 'puddletag' in mappings:
-            puddletag = mappings['puddletag']
+        if "puddletag" in mappings:
+            puddletag = mappings["puddletag"]
         else:
             puddletag = {}
         for z, v in mappings.items():
             for source, target in v.items():
-                if source in puddletag and z != 'puddletag':
+                if source in puddletag and z != "puddletag":
                     continue
                 setItem(row, 0, QTableWidgetItem(z))
                 setItem(row, 1, QTableWidgetItem(source))
@@ -338,10 +417,13 @@ class TagMappings(QWidget):
         table = self._table
         row = table.rowCount()
         table.insertRow(row)
-        for column, v in enumerate([
-            translate("Mapping Settings", 'Tag'),
-            translate("Mapping Settings", 'Source'),
-            translate("Mapping Settings", 'Target')]):
+        for column, v in enumerate(
+            [
+                translate("Mapping Settings", "Tag"),
+                translate("Mapping Settings", "Source"),
+                translate("Mapping Settings", "Target"),
+            ]
+        ):
             table.setItem(row, column, QTableWidgetItem(v))
         item = table.item(row, 0)
         table.setCurrentItem(item)
@@ -368,15 +450,16 @@ class TagMappings(QWidget):
             else:
                 mappings[tag] = {other: original}
         self._mappings = mappings
-        filename = os.path.join(PuddleConfig().savedir, 'mappings')
-        f = open(filename, 'w')
-        f.write('\n'.join([','.join(z) for z in text]))
+        filename = os.path.join(PuddleConfig().savedir, "mappings")
+        f = open(filename, "w")
+        f.write("\n".join([",".join(z) for z in text]))
         f.close()
 
     def duplicate(self):
         table = self._table
         row = table.currentRow()
-        if row < 0: return
+        if row < 0:
+            return
         item = table.item
         itemtext = lambda column: str(item(row, column).text())
         texts = [itemtext(z) for z in range(3)]
@@ -390,7 +473,6 @@ class TagMappings(QWidget):
 
 
 class Tags(QWidget):
-
     def __init__(self, parent=None, status=None):
         QWidget.__init__(self, parent)
         self._edited = False
@@ -398,35 +480,53 @@ class Tags(QWidget):
         self._status = status
 
         self._filespec = QLineEdit()
-        speclabel = QLabel(translate("Tag Settings",
-                                     '&Restrict incoming files to (eg. "*.mp3; *.ogg; *.aac")'))
+        speclabel = QLabel(
+            translate(
+                "Tag Settings",
+                '&Restrict incoming files to (eg. "*.mp3; *.ogg; *.aac")',
+            )
+        )
         speclabel.setBuddy(self._filespec)
 
-        v1_options = [translate("Tag Settings", 'Remove ID3v1 tag.'),
-                      translate("Tag Settings", "Update the ID3v1 tag's "
-                                                "values only if an ID3v1 tag is present."),
-                      translate("Tag Settings", "Create an ID3v1 tag if it's "
-                                                "not present. Otherwise update it.")]
+        v1_options = [
+            translate("Tag Settings", "Remove ID3v1 tag."),
+            translate(
+                "Tag Settings",
+                "Update the ID3v1 tag's values only if an ID3v1 tag is present.",
+            ),
+            translate(
+                "Tag Settings",
+                "Create an ID3v1 tag if it's not present. Otherwise update it.",
+            ),
+        ]
         self._v1_combo = QComboBox()
         self._v1_combo.addItems(v1_options)
 
-        v1_label = QLabel(translate("Tag Settings", "puddletag writes "
-                                                    "only &ID3v2 tags.<br />What should be done "
-                                                    "with the ID3v1 tag upon saving?"))
+        v1_label = QLabel(
+            translate(
+                "Tag Settings",
+                "puddletag writes "
+                "only &ID3v2 tags.<br />What should be done "
+                "with the ID3v1 tag upon saving?",
+            )
+        )
         v1_label.setBuddy(self._v1_combo)
 
         self._artwork_combo = QComboBox()
-        artwork_options = [translate("Tag Settings", 'Save to Tag only'),
-                           translate("Tag Settings", 'Save to File only'),
-                           translate("Tag Settings", 'Save to Both'),
-                           translate("Tag Settings", 'None')]
+        artwork_options = [
+            translate("Tag Settings", "Save to Tag only"),
+            translate("Tag Settings", "Save to File only"),
+            translate("Tag Settings", "Save to Both"),
+            translate("Tag Settings", "None"),
+        ]
         self._artwork_combo.addItems(artwork_options)
         artwork_label = QLabel(translate("Tag Settings", "Artwork saving &policy:"))
         artwork_label.setBuddy(self._artwork_combo)
 
-        self.coverPattern = QLineEdit('folder.jpg')
-        cover_label = QLabel(translate('Tag Settings',
-                                       'Default &pattern to use when saving artwork.'))
+        self.coverPattern = QLineEdit("folder.jpg")
+        cover_label = QLabel(
+            translate("Tag Settings", "Default &pattern to use when saving artwork.")
+        )
         cover_label.setBuddy(self.coverPattern)
 
         layout = QVBoxLayout()
@@ -444,13 +544,11 @@ class Tags(QWidget):
         vbox.addWidget(v1_label)
         vbox.addWidget(self._v1_combo)
 
-        group = QGroupBox(translate('Tag Settings', 'ID3 Options'))
+        group = QGroupBox(translate("Tag Settings", "ID3 Options"))
 
-        self.id3_v24 = QRadioButton(translate('Tag Settings',
-                                              'Write ID3v2.&4'), group)
+        self.id3_v24 = QRadioButton(translate("Tag Settings", "Write ID3v2.&4"), group)
         self.id3_v24.setChecked(True)
-        self.id3_v23 = QRadioButton(translate('Tag Settings',
-                                              'Write ID3v2.&3'), group)
+        self.id3_v23 = QRadioButton(translate("Tag Settings", "Write ID3v2.&3"), group)
 
         group.setLayout(vbox)
         vbox.addWidget(self.id3_v24)
@@ -461,46 +559,44 @@ class Tags(QWidget):
         self.setLayout(layout)
 
         cparser = PuddleConfig()
-        index = cparser.get('id3tags', 'v1_option', 2)
+        index = cparser.get("id3tags", "v1_option", 2)
         self._v1_combo.setCurrentIndex(index)
-        v2_option = cparser.get('id3tags', 'v2_option', 4)
+        v2_option = cparser.get("id3tags", "v2_option", 4)
         if v2_option == 3:
             self.id3_v23.setChecked(True)
-        filespec = ';'.join(cparser.get('table', 'filespec', []))
+        filespec = ";".join(cparser.get("table", "filespec", []))
         self._filespec.setText(filespec)
-        cover_pattern = cparser.get('tags', 'cover_pattern', 'folder')
+        cover_pattern = cparser.get("tags", "cover_pattern", "folder")
         self.coverPattern.setText(cover_pattern)
 
-        artwork_option = cparser.get('tags', 'artwork_option', 2)
+        artwork_option = cparser.get("tags", "artwork_option", 2)
         self._artwork_combo.setCurrentIndex(artwork_option)
 
     def applySettings(self, control=None):
         cparser = PuddleConfig()
         v1_option = self._v1_combo.currentIndex()
-        cparser.set('id3tags', 'v1_option', v1_option)
+        cparser.set("id3tags", "v1_option", v1_option)
         artwork_option = self._artwork_combo.currentIndex()
-        cparser.set('tags', 'artwork_option', artwork_option)
-        self._status['artwork_option'] = artwork_option
+        cparser.set("tags", "artwork_option", artwork_option)
+        self._status["artwork_option"] = artwork_option
 
         audioinfo.id3.v1_option = v1_option
         if self.id3_v24.isChecked():
             audioinfo.id3.v2_option = 4
-            cparser.set('id3tags', 'v2_option', 4)
+            cparser.set("id3tags", "v2_option", 4)
         else:
             audioinfo.id3.v2_option = 3
-            cparser.set('id3tags', 'v2_option', 3)
+            cparser.set("id3tags", "v2_option", 3)
 
         filespec = str(self._filespec.text())
         control.filespec = filespec
-        filespec = [z.strip() for z in filespec.split(';')]
-        cparser.set('table', 'filespec', filespec)
-        cparser.set('tags', 'cover_pattern',
-                    str(self.coverPattern.text()))
-        self._status['cover_pattern'] = str(self.coverPattern.text())
+        filespec = [z.strip() for z in filespec.split(";")]
+        cparser.set("table", "filespec", filespec)
+        cparser.set("tags", "cover_pattern", str(self.coverPattern.text()))
+        self._status["cover_pattern"] = str(self.coverPattern.text())
 
 
 class ListModel(QAbstractListModel):
-
     def __init__(self, options):
         QAbstractListModel.__init__(self)
         self.options = options
@@ -519,7 +615,9 @@ class ListModel(QAbstractListModel):
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid() or not (0 <= index.row() < len(self.options)):
             return None
-        if (role == Qt.ItemDataRole.DisplayRole) or (role == Qt.ItemDataRole.ToolTipRole):
+        if (role == Qt.ItemDataRole.DisplayRole) or (
+            role == Qt.ItemDataRole.ToolTipRole
+        ):
             try:
                 return str(self.options[index.row()][0])
             except IndexError:
@@ -541,7 +639,8 @@ class ListModel(QAbstractListModel):
 class SettingsList(QListView):
     """Just want a list that emits a selectionChanged signal, with
     the currently selected row."""
-    selectionChangedSignal = pyqtSignal(int, name='selectionChanged')
+
+    selectionChangedSignal = pyqtSignal(int, name="selectionChanged")
 
     def __init__(self, parent=None):
         QListView.__init__(self, parent)
@@ -552,7 +651,6 @@ class SettingsList(QListView):
 
 
 class StatusWidgetItem(QTableWidgetItem):
-
     def __init__(self, text, color):
         QTableWidgetItem.__init__(self, text)
         self.setBackground(QBrush(color))
@@ -560,27 +658,31 @@ class StatusWidgetItem(QTableWidgetItem):
 
 
 class ColorEdit(QWidget):
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         cparser = PuddleConfig()
         get_color = lambda key, default: QColor.fromRgb(
-            *cparser.get('extendedtags', key, default, True))
-        add = get_color('add', [0, 255, 0])
-        edit = get_color('edit', [255, 255, 0])
-        remove = get_color('remove', [255, 0, 0])
+            *cparser.get("extendedtags", key, default, True)
+        )
+        add = get_color("add", [0, 255, 0])
+        edit = get_color("edit", [255, 255, 0])
+        remove = get_color("remove", [255, 0, 0])
 
         get_color = lambda key, default: QColor.fromRgb(
-            *cparser.get('table', key, default, True))
+            *cparser.get("table", key, default, True)
+        )
 
-        preview = get_color('preview_color', [192, 255, 192])
+        preview = get_color("preview_color", [192, 255, 192])
         selection_default = QPalette().color(QPalette.ColorRole.Mid).getRgb()[:-1]
 
-        selection = get_color('selected_color', selection_default)
+        selection = get_color("selected_color", selection_default)
 
         colors = (add, edit, remove, preview, selection)
 
-        text = translate("Colour Settings", '<p>Below are the backgrounds used for various controls in puddletag. <br /> Double click the desired action to change its colour.</p>')
+        text = translate(
+            "Colour Settings",
+            "<p>Below are the backgrounds used for various controls in puddletag. <br /> Double click the desired action to change its colour.</p>",
+        )
         label = QLabel(text)
 
         self.listbox = QTableWidget(0, 1, self)
@@ -589,15 +691,19 @@ class ColorEdit(QWidget):
         self.listbox.setSortingEnabled(False)
         header.setVisible(True)
         header.setStretchLastSection(True)
-        self.listbox.setHorizontalHeaderLabels(['Action'])
+        self.listbox.setHorizontalHeaderLabels(["Action"])
         self.listbox.setRowCount(len(colors))
 
         titles = [
-            (translate("Colour Settings", 'Row selected in file-view.'), selection),
-            (translate("Colour Settings", 'Row colour for files with previews.'), preview),
-            (translate("Colour Settings", 'Field added in Extended Tags.'), add),
-            (translate("Colour Settings", 'Field edited in Extended Tags.'), edit),
-            (translate("Colour Settings", 'Field removed in Extended Tags.'), remove), ]
+            (translate("Colour Settings", "Row selected in file-view."), selection),
+            (
+                translate("Colour Settings", "Row colour for files with previews."),
+                preview,
+            ),
+            (translate("Colour Settings", "Field added in Extended Tags."), add),
+            (translate("Colour Settings", "Field edited in Extended Tags."), edit),
+            (translate("Colour Settings", "Field removed in Extended Tags."), remove),
+        ]
 
         for i, z in enumerate(titles):
             self.listbox.setItem(i, 0, StatusWidgetItem(*z))
@@ -612,8 +718,7 @@ class ColorEdit(QWidget):
         self._status = (row, self.listbox.item(row, column).background())
         win = QColorDialog(self)
         win.setCurrentColor(self.listbox.item(row, column).background().color())
-        win.currentColorChanged.connect(
-            self.intermediateColor)
+        win.currentColorChanged.connect(self.intermediateColor)
         win.rejected.connect(self.setColor)
         win.open()
 
@@ -629,19 +734,21 @@ class ColorEdit(QWidget):
     def applySettings(self, control=None):
         cparser = PuddleConfig()
         x = lambda c: c.getRgb()[:-1]
-        colors = [x(self.listbox.item(z, 0).background().color())
-                  for z in range(self.listbox.rowCount())]
-        cparser.set('table', 'selected_color', colors[0])
-        cparser.set('table', 'preview_color', colors[1])
-        cparser.set('extendedtags', 'add', colors[2])
-        cparser.set('extendedtags', 'edit', colors[3])
-        cparser.set('extendedtags', 'remove', colors[4])
+        colors = [
+            x(self.listbox.item(z, 0).background().color())
+            for z in range(self.listbox.rowCount())
+        ]
+        cparser.set("table", "selected_color", colors[0])
+        cparser.set("table", "preview_color", colors[1])
+        cparser.set("extendedtags", "add", colors[2])
+        cparser.set("extendedtags", "edit", colors[3])
+        cparser.set("extendedtags", "remove", colors[4])
 
         control.model().selectionBackground = QColor.fromRgb(*colors[0])
         control.model().previewBackground = QColor.fromRgb(*colors[1])
 
 
-SETTINGSWIN = 'settingsdialog'
+SETTINGSWIN = "settingsdialog"
 
 
 class SettingsDialog(QDialog):
@@ -650,23 +757,23 @@ class SettingsDialog(QDialog):
     def __init__(self, controls, parent=None, status=None):
         QDialog.__init__(self, parent)
         self.setWindowTitle("puddletag settings")
-        winsettings('settingswin', self)
+        winsettings("settingswin", self)
 
         built_in = [
-            (translate("Settings", 'General'),
-             GeneralSettings(controls), controls),
-            (translate("Settings", 'Confirmations'),
-             confirmations.Settings(), None),
-            (translate("Settings", 'Mappings'), TagMappings(), None),
-            (translate("Settings", 'Playlist'), Playlist(), None),
-            (translate("Settings", 'Colours'), ColorEdit(), status['table']),
-            (translate("Settings", 'Genres'),
-             genres.Genres(status=status), None),
-            (translate("Settings", 'Tags'), Tags(status=status),
-             status['table']),
-            (translate("Settings", 'Plugins'), PluginConfig(), None),
-            (translate("Settings", 'Shortcuts'),
-             ActionEditorDialog(status['actions']), None), ]
+            (translate("Settings", "General"), GeneralSettings(controls), controls),
+            (translate("Settings", "Confirmations"), confirmations.Settings(), None),
+            (translate("Settings", "Mappings"), TagMappings(), None),
+            (translate("Settings", "Playlist"), Playlist(), None),
+            (translate("Settings", "Colours"), ColorEdit(), status["table"]),
+            (translate("Settings", "Genres"), genres.Genres(status=status), None),
+            (translate("Settings", "Tags"), Tags(status=status), status["table"]),
+            (translate("Settings", "Plugins"), PluginConfig(), None),
+            (
+                translate("Settings", "Shortcuts"),
+                ActionEditorDialog(status["actions"]),
+                None,
+            ),
+        ]
 
         d = dict(enumerate(built_in))
 
@@ -726,10 +833,14 @@ class SettingsDialog(QDialog):
             try:
                 z[1].applySettings(z[2])
             except SettingsError as e:
-                QMessageBox.warning(self, 'puddletag',
-                                    translate('Settings',
-                                              "An error occurred while saving the settings of <b>{}</b>: {}"
-                                              ).format(z[0], str(e)))
+                QMessageBox.warning(
+                    self,
+                    "puddletag",
+                    translate(
+                        "Settings",
+                        "An error occurred while saving the settings of <b>{}</b>: {}",
+                    ).format(z[0], str(e)),
+                )
                 return
         self.close()
 

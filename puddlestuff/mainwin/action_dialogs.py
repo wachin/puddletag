@@ -1,11 +1,11 @@
 from functools import partial
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QListWidgetItem
+from PyQt6.QtWidgets import QHBoxLayout, QListWidgetItem, QPushButton
 
 from ..actiondlg import ActionWindow, CreateFunction
 from ..constants import RIGHTDOCK, SELECTIONCHANGED
-from ..mainwin.funcs import run_func, applyaction
+from ..mainwin.funcs import applyaction, run_func
 from ..puddleobjects import PuddleConfig
 from ..translations import translate
 
@@ -14,14 +14,14 @@ class ActionDialog(ActionWindow):
     def __init__(self, *args, **kwargs):
         self.emits = []
         self.receives = [(SELECTIONCHANGED, self._update)]
-        if 'status' in kwargs:
-            self._status = kwargs['status']
-            del (kwargs['status'])
-        super(ActionDialog, self).__init__(*args, **kwargs)
+        if "status" in kwargs:
+            self._status = kwargs["status"]
+            del kwargs["status"]
+        super().__init__(*args, **kwargs)
         self.okcancel.okButton.hide()
         self.okcancel.cancelButton.hide()
-        self._apply = QPushButton(translate("Defaults", 'Appl&y'))
-        write = lambda funcs: applyaction(self._status['selectedfiles'], funcs)
+        self._apply = QPushButton(translate("Defaults", "Appl&y"))
+        write = lambda funcs: applyaction(self._status["selectedfiles"], funcs)
         self._apply.clicked.connect(partial(self.okClicked, False))
         self.donewithmyshit.connect(write)
         hbox = QHBoxLayout()
@@ -31,7 +31,7 @@ class ActionDialog(ActionWindow):
 
     def _update(self):
         try:
-            self.example, selected = self._status['firstselection']
+            self.example, selected = self._status["firstselection"]
         except IndexError:
             self.example = None
         if self.isVisible():
@@ -49,7 +49,7 @@ class ActionDialog(ActionWindow):
         self.listbox.clear()
         self.macros = self.loadMacros()
         cparser = PuddleConfig()
-        to_check = cparser.get('actions', 'checked', [])
+        to_check = cparser.get("actions", "checked", [])
         for i, m in sorted(self.macros.items()):
             func_name = m.name
             item = QListWidgetItem(func_name)
@@ -65,7 +65,7 @@ class ActionDialog(ActionWindow):
         self.saveChecked()
 
     def showEvent(self, event):
-        super(ActionDialog, self).showEvent(event)
+        super().showEvent(event)
         if self.example:
             self.updateExample()
 
@@ -74,14 +74,14 @@ class FunctionDialog(CreateFunction):
     def __init__(self, *args, **kwargs):
         self.emits = []
         self.receives = [(SELECTIONCHANGED, self._update)]
-        if 'status' in kwargs:
-            self._status = kwargs['status']
-            del (kwargs['status'])
-        super(FunctionDialog, self).__init__(*args, **kwargs)
+        if "status" in kwargs:
+            self._status = kwargs["status"]
+            del kwargs["status"]
+        super().__init__(*args, **kwargs)
         self.okcancel.okButton.hide()
         self.okcancel.cancelButton.hide()
-        self._apply = QPushButton(translate("Defaults", 'Appl&y'))
-        write = lambda func: run_func(self._status['selectedfiles'], func)
+        self._apply = QPushButton(translate("Defaults", "Appl&y"))
+        write = lambda func: run_func(self._status["selectedfiles"], func)
         self._apply.clicked.connect(partial(self.okClicked, False))
         self.valschanged.connect(write)
         self.okcancel.cancel.disconnect(self.close)
@@ -96,14 +96,14 @@ class FunctionDialog(CreateFunction):
             return
         widget = self.stack.currentWidget()
         try:
-            f, selected = self._status['firstselection']
+            f, selected = self._status["firstselection"]
         except IndexError:
-            widget.updateExample.emit('')
+            widget.updateExample.emit("")
             return
 
         field = list(selected.keys())[0]
         self.example = f
-        self._text = f.get(field, '')
+        self._text = f.get(field, "")
 
         widget._combotags = list(selected.keys())
 
@@ -117,9 +117,10 @@ class FunctionDialog(CreateFunction):
 
     def showEvent(self, event):
         self._update()
-        return super(FunctionDialog, self).showEvent(event)
+        return super().showEvent(event)
 
 
 controls = [
     ("Functions", FunctionDialog, RIGHTDOCK, False),
-    ("Actions", ActionDialog, RIGHTDOCK, False)]
+    ("Actions", ActionDialog, RIGHTDOCK, False),
+]

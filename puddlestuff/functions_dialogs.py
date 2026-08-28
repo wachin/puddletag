@@ -1,6 +1,11 @@
-# -*- coding: utf-8 -*-
-from PyQt6.QtWidgets import (QCheckBox, QLabel, QHBoxLayout, QSpinBox,
-                             QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (
+    QCheckBox,
+    QHBoxLayout,
+    QLabel,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from .translations import translate
 
@@ -12,7 +17,7 @@ def sanitize(type_, value, default=None):
         except (TypeError, ValueError):
             return default
     elif type_ is bool:
-        if value is True or value == 'True':
+        if value is True or value == "True":
             return True
         else:
             return False
@@ -32,7 +37,7 @@ class AutoNumbering(QWidget):
 
         vbox = QVBoxLayout()
 
-        startlabel = QLabel(translate('Autonumbering Wizard', "&Start: "))
+        startlabel = QLabel(translate("Autonumbering Wizard", "&Start: "))
         self._start = QSpinBox()
         startlabel.setBuddy(self._start)
         self._start.setValue(1)
@@ -40,7 +45,9 @@ class AutoNumbering(QWidget):
 
         vbox.addLayout(hbox(startlabel, self._start))
 
-        label = QLabel(translate('Autonumbering Wizard', 'Max length after padding with zeroes: '))
+        label = QLabel(
+            translate("Autonumbering Wizard", "Max length after padding with zeroes: ")
+        )
         self._padlength = QSpinBox()
         label.setBuddy(self._padlength)
         self._padlength.setValue(1)
@@ -48,7 +55,9 @@ class AutoNumbering(QWidget):
         self._padlength.setMinimum(1)
         vbox.addLayout(hbox(label, self._padlength))
 
-        self._restart_numbering = QCheckBox(translate('Autonumbering Wizard', "&Restart numbering at each directory."))
+        self._restart_numbering = QCheckBox(
+            translate("Autonumbering Wizard", "&Restart numbering at each directory.")
+        )
 
         vbox.addWidget(self._restart_numbering)
         vbox.addStretch()
@@ -68,7 +77,8 @@ class AutoNumbering(QWidget):
         x = [
             self._start.value(),
             self._restart_numbering.isChecked(),
-            self._padlength.value()]
+            self._padlength.value(),
+        ]
         return x
 
 

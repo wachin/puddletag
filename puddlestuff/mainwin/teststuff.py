@@ -3,27 +3,45 @@ from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QPushButton, QVBoxLayout, QWidget
 
 from .. import audioinfo
-from ..audioinfo.util import (PATH,
-                              FILENAME, INFOTAGS,
-                              READONLY, isempty, FILETAGS, EXTENSION, DIRPATH,
-                              getdeco, setdeco)
+from ..audioinfo.util import (
+    DIRPATH,
+    EXTENSION,
+    FILENAME,
+    FILETAGS,
+    INFOTAGS,
+    PATH,
+    READONLY,
+    getdeco,
+    isempty,
+    setdeco,
+)
 from ..constants import RIGHTDOCK
 from ..puddleobjects import PuddleDock
 
-ATTRIBUTES = ('frequency', 'length', 'bitrate', 'accessed', 'size', 'created',
-              'modified')
+ATTRIBUTES = (
+    "frequency",
+    "length",
+    "bitrate",
+    "accessed",
+    "size",
+    "created",
+    "modified",
+)
 
 
 class Tag(audioinfo.MockTag):
     """Use as base for all tag classes."""
+
     IMAGETAGS = ()
     mapping = {}
     revmapping = {}
 
-    _hash = {PATH: 'filepath',
-             FILENAME: 'filename',
-             EXTENSION: 'ext',
-             DIRPATH: 'dirpath'}
+    _hash = {
+        PATH: "filepath",
+        FILENAME: "filename",
+        EXTENSION: "ext",
+        DIRPATH: "dirpath",
+    }
 
     def __init__(self, dictionary=None):
         # self.IMAGETAGS = tuple(set([IMAGETAGS[random.randint(0,3)] for z in IMAGETAGS]))
@@ -44,10 +62,10 @@ class Tag(audioinfo.MockTag):
 
     def link(self, dictionary):
         self._tags = dictionary
-        self.filepath = dictionary['__filename']
+        self.filepath = dictionary["__filename"]
 
     def save(self):
-        logging.info('saving ' + self.filename)
+        logging.info("saving " + self.filename)
 
     def copy(self):
         return Tag(self._tags.copy())
@@ -57,7 +75,7 @@ class Tag(audioinfo.MockTag):
         """Get the tag value from self._tags. There is a slight
         caveat in that this method will never return a KeyError exception.
         Rather it'll return ''."""
-        if key == '__image':
+        if key == "__image":
             return self.images
 
         try:
@@ -77,7 +95,7 @@ class Tag(audioinfo.MockTag):
             return
 
         if key not in INFOTAGS and isempty(value):
-            del (self[key])
+            del self[key]
         elif key in INFOTAGS or isinstance(key, int):
             self._tags[key] = value
         elif (key not in INFOTAGS) and isinstance(value, (str, int)):
@@ -87,29 +105,33 @@ class Tag(audioinfo.MockTag):
 
     def mutvalues(self):
         # Retrieves key, value pairs according to id3.
-        return [self._tags[key] for key in self if type(key) is not int and not key.startswith('__')]
+        return [
+            self._tags[key]
+            for key in self
+            if type(key) is not int and not key.startswith("__")
+        ]
 
 
 class TestWidget(QWidget):
-    setpreview = pyqtSignal(dict, name='setpreview')
+    setpreview = pyqtSignal(dict, name="setpreview")
 
     def __init__(self, parent=None, status=None):
         QWidget.__init__(self, parent)
-        self.emits = ['setpreview']
+        self.emits = ["setpreview"]
         self.receives = []
-        button = QPushButton('Set Previews')
+        button = QPushButton("Set Previews")
         button.clicked.connect(self._changePreview)
         self._status = status
 
-        load1000button = QPushButton('Load 1000')
+        load1000button = QPushButton("Load 1000")
         load1000button.clicked.connect(self._load1000)
         self._status = status
 
-        save_tags = QPushButton('Save Files')
+        save_tags = QPushButton("Save Files")
         save_tags.clicked.connect(self._saveTags)
         self._status = status
 
-        load_many = QPushButton('Load Many')
+        load_many = QPushButton("Load Many")
         load_many.clicked.connect(self._loadMany)
         self._status = status
 
@@ -122,32 +144,38 @@ class TestWidget(QWidget):
 
     def _changePreview(self):
         status = self._status
-        files = status['allfiles'][2:10]
+        files = status["allfiles"][2:10]
         d = {}
         for f in files:
-            d[f] = {'artist': 'Preview Artist', 'title': 'Preview Title'}
+            d[f] = {"artist": "Preview Artist", "title": "Preview Title"}
         self.setpreview.emit(d)
 
     def _load1000(self):
-        table = PuddleDock._controls['table']
+        table = PuddleDock._controls["table"]
         table.model().load(list(map(Tag, tags.tags)))
         table.model().saveModification = False
 
     def _loadMany(self):
-        model = PuddleDock._controls['table'].model()
-        num, ok = QInputDialog.getInt(self, 'puddletag',
-                                      'Enter the number of files to fill the file-view with.', 10)
+        model = PuddleDock._controls["table"].model()
+        num, ok = QInputDialog.getInt(
+            self,
+            "puddletag",
+            "Enter the number of files to fill the file-view with.",
+            10,
+        )
         if num:
             # pdb.set_trace()
             model.load(list(map(Tag, tags.tags[:num])))
             model.saveModification = False
 
     def _saveTags(self):
-        files = self._status['allfiles']
-        f = open('savedfiles', 'w')
-        f.write('# -*- coding: utf-8 -*-\ntags = [%s]' %
-                ',\n'.join((str(z.tags) for z in files)))
+        files = self._status["allfiles"]
+        f = open("savedfiles", "w")
+        f.write(
+            "# -*- coding: utf-8 -*-\ntags = [%s]"
+            % ",\n".join(str(z.tags) for z in files)
+        )
         f.close()
 
 
-control = ('Puddle Testing', TestWidget, RIGHTDOCK, False)
+control = ("Puddle Testing", TestWidget, RIGHTDOCK, False)

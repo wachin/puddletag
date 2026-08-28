@@ -1,26 +1,55 @@
-# -*- coding: utf-8 -*-
 """Dialog's that crop up along the application, but are used at at most
 one place, and aren't that complicated are put here."""
+
 import os
 import sys
 from copy import deepcopy
 
 from PyQt6.QtCore import QItemSelectionModel, Qt, pyqtRemoveInputHook, pyqtSignal
-from PyQt6.QtGui import QAction, QPalette, QBrush, QColor
-from PyQt6.QtWidgets import QAbstractItemView, QApplication, QCheckBox, QComboBox, QCompleter, \
-    QDialog, QFileDialog, QFrame, QGridLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QMessageBox, \
-    QPlainTextEdit, QPushButton, QSpinBox, QTableWidget, QTableWidgetItem, QTextEdit, QToolButton, QVBoxLayout
+from PyQt6.QtGui import QAction, QBrush, QColor, QPalette
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QCompleter,
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPlainTextEdit,
+    QPushButton,
+    QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QToolButton,
+    QVBoxLayout,
+)
 
-from . import findfunc, audioinfo
-from .audioinfo import commontags, PATH
+from . import audioinfo, findfunc
+from .audioinfo import PATH, commontags
 from .constants import HOMEDIR, KEEP
 from .puddleobjects import (
-    get_icon, gettaglist, partial,
-    settaglist, winsettings, ListButtons, MoveButtons, OKCancel,
-    PicWidget, PuddleConfig, natural_sort_key)
+    ListButtons,
+    MoveButtons,
+    OKCancel,
+    PicWidget,
+    PuddleConfig,
+    get_icon,
+    gettaglist,
+    natural_sort_key,
+    partial,
+    settaglist,
+    winsettings,
+)
 from .translations import translate
-from .util import pprint_tag
-from .util import to_string
+from .util import pprint_tag, to_string
 
 ADD, EDIT, REMOVE = (1, 2, 3)
 UNCHANGED = 0
@@ -30,16 +59,14 @@ TAG_DISP = "<b>%s: </b> %s, "
 
 
 class AutonumberDialog(QDialog):
-    newtracks = pyqtSignal(int, int, bool, int, str, str, bool, name='newtracks')
+    newtracks = pyqtSignal(int, int, bool, int, str, str, bool, name="newtracks")
 
-    def __init__(self, parent=None, minval=0, numtracks=0,
-                 enablenumtracks=False):
+    def __init__(self, parent=None, minval=0, numtracks=0, enablenumtracks=False):
 
         QDialog.__init__(self, parent)
 
-        self.setWindowTitle(
-            translate('Autonumbering Wizard', "Autonumbering Wizard"))
-        winsettings('autonumbering', self)
+        self.setWindowTitle(translate("Autonumbering Wizard", "Autonumbering Wizard"))
+        winsettings("autonumbering", self)
 
         def hbox(*widgets):
             box = QHBoxLayout()
@@ -53,7 +80,7 @@ class AutonumberDialog(QDialog):
         self._start.setValue(minval)
         self._start.setMaximum(65536)
 
-        startlabel = QLabel(translate('Autonumbering Wizard', "&Start: "))
+        startlabel = QLabel(translate("Autonumbering Wizard", "&Start: "))
         startlabel.setBuddy(self._start)
 
         vbox.addLayout(hbox(startlabel, self._start))
@@ -63,30 +90,38 @@ class AutonumberDialog(QDialog):
         self._padlength.setMaximum(65535)
         self._padlength.setMinimum(1)
 
-        label = QLabel(translate('Autonumbering Wizard',
-                                 'Max length after padding with zeroes: '))
+        label = QLabel(
+            translate("Autonumbering Wizard", "Max length after padding with zeroes: ")
+        )
         label.setBuddy(self._padlength)
 
         vbox.addLayout(hbox(label, self._padlength))
 
-        self._separator = QCheckBox(translate('Autonumbering Wizard',
-                                              "Add track &separator ['/']: Number of tracks"))
+        self._separator = QCheckBox(
+            translate(
+                "Autonumbering Wizard", "Add track &separator ['/']: Number of tracks"
+            )
+        )
         self._numtracks = QSpinBox()
         self._numtracks.setEnabled(False)
         self._numtracks.setMaximum(65535)
         if numtracks:
             self._numtracks.setValue(numtracks)
-        self._restart_numbering = QCheckBox(translate('Autonumbering Wizard',
-                                                      "&Restart numbering at each directory group."))
-        self._restart_numbering.stateChanged.connect(
-            self.showDirectorySplittingOptions)
+        self._restart_numbering = QCheckBox(
+            translate(
+                "Autonumbering Wizard", "&Restart numbering at each directory group."
+            )
+        )
+        self._restart_numbering.stateChanged.connect(self.showDirectorySplittingOptions)
 
         vbox.addLayout(hbox(self._separator, self._numtracks))
         vbox.addWidget(self._restart_numbering)
 
         self.custom_numbering_widgets = []
 
-        label = QLabel(translate('Autonumbering Wizard', "Group tracks using pattern:: "))
+        label = QLabel(
+            translate("Autonumbering Wizard", "Group tracks using pattern:: ")
+        )
 
         self.grouping = QLineEdit()
         label.setBuddy(self.grouping)
@@ -94,7 +129,7 @@ class AutonumberDialog(QDialog):
         vbox.addLayout(hbox(label, self.grouping))
         self.custom_numbering_widgets.extend([label, self.grouping])
 
-        label = QLabel(translate('Autonumbering Wizard', "Output field: "))
+        label = QLabel(translate("Autonumbering Wizard", "Output field: "))
 
         self.output_field = QComboBox()
         label.setBuddy(self.output_field)
@@ -109,8 +144,9 @@ class AutonumberDialog(QDialog):
         vbox.addLayout(hbox(label, self.output_field))
         self.custom_numbering_widgets.extend([label, self.output_field])
 
-        self.count_by_group = QCheckBox(translate('Autonumbering Wizard',
-                                                  'Increase counter only on group change'))
+        self.count_by_group = QCheckBox(
+            translate("Autonumbering Wizard", "Increase counter only on group change")
+        )
         vbox.addWidget(self.count_by_group)
         self.custom_numbering_widgets.append(self.count_by_group)
 
@@ -121,7 +157,8 @@ class AutonumberDialog(QDialog):
         okcancel.ok.connect(self.emitValuesAndSave)
         okcancel.cancel.connect(self.close)
         self._separator.stateChanged.connect(
-            lambda v: self._numtracks.setEnabled(v == Qt.CheckState.Checked))
+            lambda v: self._numtracks.setEnabled(v == Qt.CheckState.Checked)
+        )
 
         # self._restart_numbering.stateChanged.connect(
         #              self.showDirectorySplittingOptions)
@@ -136,12 +173,17 @@ class AutonumberDialog(QDialog):
 
         if is_checked:
             self._numtracks.setVisible(False)
-            self._separator.setText(translate('Autonumbering Wizard',
-                                              "Add track &separator ['/']"))
+            self._separator.setText(
+                translate("Autonumbering Wizard", "Add track &separator ['/']")
+            )
         else:
             self._numtracks.setVisible(True)
-            self._separator.setText(translate('Autonumbering Wizard',
-                                              "Add track &separator ['/']: Number of tracks"))
+            self._separator.setText(
+                translate(
+                    "Autonumbering Wizard",
+                    "Add track &separator ['/']: Number of tracks",
+                )
+            )
 
     def emitValuesAndSave(self):
         if self._numtracks.isVisible():
@@ -171,25 +213,22 @@ class AutonumberDialog(QDialog):
 
     def _loadSettings(self):
         cparser = PuddleConfig()
-        section = 'autonumbering'
-        self._start.setValue(cparser.get(section, 'start', 1))
-        self._separator.setChecked(
-            cparser.get(section, 'separator', False))
-        self._padlength.setValue(cparser.get(section, 'padlength', 1))
+        section = "autonumbering"
+        self._start.setValue(cparser.get(section, "start", 1))
+        self._separator.setChecked(cparser.get(section, "separator", False))
+        self._padlength.setValue(cparser.get(section, "padlength", 1))
 
-        self._restart_numbering.setChecked(
-            cparser.get(section, 'restart', False))
+        self._restart_numbering.setChecked(cparser.get(section, "restart", False))
 
-        self.count_by_group.setChecked(
-            cparser.get(section, 'count_by_group', False))
+        self.count_by_group.setChecked(cparser.get(section, "count_by_group", False))
 
         self.showDirectorySplittingOptions(self._restart_numbering.isChecked())
 
-        self.grouping.setText(cparser.get(section, 'grouping', '%__dirpath%'))
+        self.grouping.setText(cparser.get(section, "grouping", "%__dirpath%"))
 
-        output_field_text = cparser.get(section, 'output_field', 'track')
+        output_field_text = cparser.get(section, "output_field", "track")
         if not output_field_text:
-            output_field_text = 'track'
+            output_field_text = "track"
 
         last_output_field_index = self.output_field.findText(output_field_text)
         if last_output_field_index > -1:
@@ -197,34 +236,34 @@ class AutonumberDialog(QDialog):
 
     def _saveSettings(self):
         cparser = PuddleConfig()
-        section = 'autonumbering'
-        cparser.set(section, 'start', self._start.value())
-        cparser.set(section, 'separator', self._separator.isChecked())
-        cparser.set(section, 'count_by_group', self.count_by_group.isChecked())
-        cparser.set(section, 'numtracks', self._numtracks.value())
-        cparser.set(section, 'restart', self._restart_numbering.isChecked())
-        cparser.set(section, 'padlength', self._padlength.value())
-        cparser.set(section, 'grouping', self.grouping.text())
-        cparser.set(section, 'output_field', self.output_field.currentText())
+        section = "autonumbering"
+        cparser.set(section, "start", self._start.value())
+        cparser.set(section, "separator", self._separator.isChecked())
+        cparser.set(section, "count_by_group", self.count_by_group.isChecked())
+        cparser.set(section, "numtracks", self._numtracks.value())
+        cparser.set(section, "restart", self._restart_numbering.isChecked())
+        cparser.set(section, "padlength", self._padlength.value())
+        cparser.set(section, "grouping", self.grouping.text())
+        cparser.set(section, "output_field", self.output_field.currentText())
 
 
 class ImportTextFile(QDialog):
     """Dialog that importing a text file to retrieve tags from."""
-    Newtags = pyqtSignal(list, str, name='Newtags')
+
+    Newtags = pyqtSignal(list, str, name="Newtags")
 
     def __init__(self, parent=None, filename=None, clipboard=None):
         QDialog.__init__(self, parent)
 
-        self.setWindowTitle(
-            translate('Text File -> Tag', "Import tags from text file"))
-        winsettings('importwin', self)
+        self.setWindowTitle(translate("Text File -> Tag", "Import tags from text file"))
+        winsettings("importwin", self)
 
         grid = QGridLayout()
 
-        self.label = QLabel(translate('Text File -> Tag', "Text"))
+        self.label = QLabel(translate("Text File -> Tag", "Text"))
         grid.addWidget(self.label, 0, 0)
 
-        self.label = QLabel(translate('Text File -> Tag', "Tag preview"))
+        self.label = QLabel(translate("Text File -> Tag", "Tag preview"))
         grid.addWidget(self.label, 0, 2)
 
         self.file = QTextEdit()
@@ -244,10 +283,8 @@ class ImportTextFile(QDialog):
         self.ok = okcancel.okButton
         self.cancel = okcancel.cancelButton
 
-        self.openfile = QPushButton(
-            translate('Text File -> Tag', "&Select File"))
-        getclip = QPushButton(
-            translate('Text File -> Tag', "&Paste Clipboard"))
+        self.openfile = QPushButton(translate("Text File -> Tag", "&Select File"))
+        getclip = QPushButton(translate("Text File -> Tag", "&Paste Clipboard"))
         getclip.clicked.connect(self.openClipBoard)
 
         hbox.addWidget(self.openfile)
@@ -274,8 +311,7 @@ class ImportTextFile(QDialog):
     def emitValues(self):
         """When I'm done, emit a signal with the updated tags."""
         self.close()
-        self.Newtags.emit(self.dicttags,
-                          str(self.patterncombo.currentText()))
+        self.Newtags.emit(self.dicttags, str(self.patterncombo.currentText()))
 
     def fillTags(self, string=None):  # string is there purely for the SIGNAL
         """Fill the tag textbox."""
@@ -289,11 +325,13 @@ class ImportTextFile(QDialog):
         self.dicttags = []
         self.tags.clear()
         for z in self.lines.split("\n"):
-            self.dicttags.append(findfunc.filenametotag(
-                str(self.patterncombo.currentText()), z, False, False))
+            self.dicttags.append(
+                findfunc.filenametotag(
+                    str(self.patterncombo.currentText()), z, False, False
+                )
+            )
         if self.dicttags:
-            self.tags.setHtml(
-                "<br/>".join([formattag(z) for z in self.dicttags]))
+            self.tags.setHtml("<br/>".join([formattag(z) for z in self.dicttags]))
 
     def openFile(self, filename=None, dirpath=None):
         """Open the file and fills the textboxes."""
@@ -301,24 +339,24 @@ class ImportTextFile(QDialog):
             dirpath = self.lastDir
 
         if not filename:
-            selectedFile = QFileDialog.getOpenFileName(self,
-                                                       'OpenFolder', dirpath)
+            selectedFile = QFileDialog.getOpenFileName(self, "OpenFolder", dirpath)
             filename = selectedFile[0]
 
         if not filename:
             return True
 
         try:
-            f = open(filename, 'r')
-        except (IOError, OSError) as detail:
-            errormsg = translate('Text File -> Tag',
-                                 "The file <b>{}</b> couldn't be loaded.<br /> "
-                                 "Do you want to choose another?"
-                                 ).format(filename)
+            f = open(filename, "r")
+        except OSError as detail:
+            errormsg = translate(
+                "Text File -> Tag",
+                "The file <b>{}</b> couldn't be loaded.<br /> "
+                "Do you want to choose another?",
+            ).format(filename)
 
-            ret = QMessageBox.question(self,
-                                       translate('Text File -> Tag', "Error"),
-                                       errormsg)
+            ret = QMessageBox.question(
+                self, translate("Text File -> Tag", "Error"), errormsg
+            )
 
             if ret == QMessageBox.StandardButton.Yes:
                 return self.openFile()
@@ -331,13 +369,12 @@ class ImportTextFile(QDialog):
         self.fillTags()
         self.show()
         self.file.textChanged.connect(self.setLines)
-        self.patterncombo.editTextChanged.connect(
-            self.fillTags)
+        self.patterncombo.editTextChanged.connect(self.fillTags)
         self.lastDir = os.path.dirname(filename)
 
     def openClipBoard(self):
         text = str(QApplication.clipboard().text())
-        self.lines = text.split('\n')
+        self.lines = text.split("\n")
         self.file.setPlainText(text)
         self.setLines()
         self.fillTags()
@@ -352,7 +389,7 @@ class ImportTextFile(QDialog):
 
 class TextEdit(QPlainTextEdit):
     def focusInEvent(self, event):
-        super(TextEdit, self).focusInEvent(event)
+        super().focusInEvent(event)
         self.selectAll()
         pos = len(self.toPlainText()) - 1
         if pos > 0:
@@ -364,7 +401,7 @@ class TextEdit(QPlainTextEdit):
         cursor = self.textCursor()
         cursor.clearSelection()
         self.setTextCursor(cursor)
-        super(TextEdit, self).focusOutEvent(event)
+        super().focusOutEvent(event)
 
 
 class EditField(QDialog):
@@ -379,17 +416,18 @@ class EditField(QDialog):
     in the form {field: value}.
     (Because the user might choose to edit a different tag,
     then the one that was chosen and you'd want to delete that one)"""
-    donewithmyshit = pyqtSignal(str, str, object, name='donewithmyshit')
+
+    donewithmyshit = pyqtSignal(str, str, object, name="donewithmyshit")
 
     def __init__(self, field=None, parent=None, field_list=None, edit=True):
 
         QDialog.__init__(self, parent)
-        self.setWindowTitle(translate('Edit Field', 'Edit Field'))
-        winsettings('edit_field', self)
+        self.setWindowTitle(translate("Edit Field", "Edit Field"))
+        winsettings("edit_field", self)
 
         self.vbox = QVBoxLayout()
 
-        label = QLabel(translate('Edit Field', "&Field"))
+        label = QLabel(translate("Edit Field", "&Field"))
         self.tagcombo = QComboBox()
         self.tagcombo.setEditable(True)
         label.setBuddy(self.tagcombo)
@@ -401,13 +439,13 @@ class EditField(QDialog):
 
         # Get the previous field
         self.__oldField = field
-        label1 = QLabel(translate('Edit Field', "&Value"))
+        label1 = QLabel(translate("Edit Field", "&Value"))
         self.value = TextEdit()
         self.value.setTabChangesFocus(True)
         label1.setBuddy(self.value)
 
         okcancel = OKCancel()
-        okcancel.okButton.setText(translate('Edit Field', 'A&dd'))
+        okcancel.okButton.setText(translate("Edit Field", "A&dd"))
 
         if field is not None:
             x = self.tagcombo.findText(field[0])
@@ -418,7 +456,7 @@ class EditField(QDialog):
                 self.tagcombo.setEditText(field[0])
             self.value.setPlainText(field[1])
             if edit:
-                okcancel.okButton.setText(translate('Edit Field', 'E&dit'))
+                okcancel.okButton.setText(translate("Edit Field", "E&dit"))
 
         list(map(self.vbox.addWidget, [label, self.tagcombo, label1, self.value]))
 
@@ -435,7 +473,8 @@ class EditField(QDialog):
         self.donewithmyshit.emit(
             str(self.tagcombo.currentText()),
             str(self.value.toPlainText()),
-            self.__oldField)
+            self.__oldField,
+        )
 
 
 class StatusWidgetItem(QTableWidgetItem):
@@ -502,8 +541,7 @@ class VerticalHeader(QHeaderView):
         self.setDefaultSectionSize(self.minimumSectionSize() + 4)
         self.setMinimumSectionSize(1)
 
-        self.sectionResized.connect(
-            self._resize)
+        self.sectionResized.connect(self._resize)
 
     def _resize(self, row, oldsize, newsize):
         self.setDefaultSectionSize(newsize)
@@ -520,7 +558,7 @@ class StatusWidgetCombo(QComboBox):
         items = map(str, items)
         items = sorted(items, key=natural_sort_key)
         if len(items) > 1:
-            items.append(r'\\'.join(items))
+            items.append(r"\\".join(items))
         self.addItem(KEEP)
         self.addItems(items)
         self.setCurrentIndex(0)
@@ -593,36 +631,43 @@ class ExTags(QDialog):
     """A dialog that shows you the tags in a file
 
     In addition, any attached cover art is shown."""
-    rowChanged = pyqtSignal(object, name='rowChanged')
-    extendedtags = pyqtSignal(dict, name='extendedtags')
 
-    def __init__(self, parent=None, row=None, files=None, preview_mode=False,
-                 artwork=True, status=None):
+    rowChanged = pyqtSignal(object, name="rowChanged")
+    extendedtags = pyqtSignal(dict, name="extendedtags")
+
+    def __init__(
+        self,
+        parent=None,
+        row=None,
+        files=None,
+        preview_mode=False,
+        artwork=True,
+        status=None,
+    ):
 
         if status is None:
-            status = {'cover_pattern': 'folder'}
+            status = {"cover_pattern": "folder"}
 
         self.status = status
 
         QDialog.__init__(self, parent)
-        winsettings('extendedtags', self)
+        winsettings("extendedtags", self)
         self.get_fieldlist = []
         self.previewMode = preview_mode
 
         add = QColor.fromRgb(255, 255, 0)
         edit = QColor.fromRgb(0, 255, 0)
         remove = QColor.fromRgb(255, 0, 0)
-        self._colors = {ADD: QBrush(add),
-                        EDIT: QBrush(edit), REMOVE: QBrush(remove)}
+        self._colors = {ADD: QBrush(add), EDIT: QBrush(edit), REMOVE: QBrush(remove)}
 
         self.table = QTableWidget(0, 2, self)
         self.table.setVerticalHeader(VerticalHeader())
         self.table.verticalHeader().setVisible(False)
         self.table.setSortingEnabled(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setHorizontalHeaderLabels([
-            translate('Extended Tags', 'Field'),
-            translate('Extended Tags', 'Value')])
+        self.table.setHorizontalHeaderLabels(
+            [translate("Extended Tags", "Field"), translate("Extended Tags", "Value")]
+        )
 
         header = self.table.horizontalHeader()
         header.setVisible(True)
@@ -631,12 +676,10 @@ class ExTags(QDialog):
         header.setSortIndicator(0, Qt.SortOrder.AscendingOrder)
 
         self.piclabel = PicWidget(buttons=True)
-        self.piclabel.imageChanged.connect(
-            self._imageChanged)
+        self.piclabel.imageChanged.connect(self._imageChanged)
 
         if not isinstance(self.piclabel.removepic, QAction):
-            self.piclabel.removepic.clicked.connect(
-                self.removePic)
+            self.piclabel.removepic.clicked.connect(self.removePic)
         else:
             self.piclabel.removepic.triggered.connect(self.removePic)
 
@@ -654,9 +697,12 @@ class ExTags(QDialog):
         self.okcancel.insertWidget(0, buttons)
 
         self._reset = QToolButton()
-        self._reset.setToolTip(translate('Extended Tags',
-                                         'Resets the selected fields to their original value.'))
-        self._reset.setIcon(get_icon('edit-undo'))
+        self._reset.setToolTip(
+            translate(
+                "Extended Tags", "Resets the selected fields to their original value."
+            )
+        )
+        self._reset.setIcon(get_icon("edit-undo"))
         self._reset.clicked.connect(self.resetFields)
 
         self.listbuttons = ListButtons()
@@ -784,24 +830,24 @@ class ExTags(QDialog):
         if prevtag is not None:
             if duplicate:
                 row = rowcount
-                self._settag(rowcount, tag, value, ADD,
-                             self.previewMode, True)
+                self._settag(rowcount, tag, value, ADD, self.previewMode, True)
             else:
                 if tag == prevtag[0]:
                     row = self.table.currentRow()
-                    self._settag(row, tag, value, EDIT,
-                                 self.previewMode, True)
+                    self._settag(row, tag, value, EDIT, self.previewMode, True)
                     if row + 1 < rowcount:
                         self.table.selectRow(row + 1)
                 else:
                     cur_item = self.table.item(self.table.currentRow(), 0)
                     self.resetFields([cur_item])
-                    self.table.setCurrentItem(cur_item,
-                                              QItemSelectionModel.SelectionFlag.ClearAndSelect)
+                    self.table.setCurrentItem(
+                        cur_item, QItemSelectionModel.SelectionFlag.ClearAndSelect
+                    )
                     self.table.selectRow(self.table.row(cur_item))
                     self.removeField()
-                    valitem = self._settag(rowcount, tag,
-                                           value, ADD, self.previewMode, True)
+                    valitem = self._settag(
+                        rowcount, tag, value, ADD, self.previewMode, True
+                    )
                     cur_item.linked = [valitem]
         else:
             self._settag(rowcount, tag, value, ADD, self.previewMode, True)
@@ -828,13 +874,12 @@ class ExTags(QDialog):
     def loadSettings(self):
         cparser = PuddleConfig()
         self.get_fieldlist = gettaglist()
-        get = lambda k, v: cparser.get('extendedtags', k, v, True)
-        add = QColor.fromRgb(*get('add', [255, 255, 0]))
-        edit = QColor.fromRgb(*get('edit', [0, 255, 0]))
-        remove = QColor.fromRgb(*get('remove', [255, 0, 0]))
+        get = lambda k, v: cparser.get("extendedtags", k, v, True)
+        add = QColor.fromRgb(*get("add", [255, 255, 0]))
+        edit = QColor.fromRgb(*get("edit", [0, 255, 0]))
+        remove = QColor.fromRgb(*get("remove", [255, 0, 0]))
 
-        self._colors = {ADD: QBrush(add),
-                        EDIT: QBrush(edit), REMOVE: QBrush(remove)}
+        self._colors = {ADD: QBrush(add), EDIT: QBrush(edit), REMOVE: QBrush(remove)}
 
         item = self.table.item
         for row in range(self.table.rowCount()):
@@ -850,8 +895,7 @@ class ExTags(QDialog):
         get_field = self.get_field
         tags = {}
         lowered = {}
-        listitems = [get_field(row, True) for row
-                     in range(self.table.rowCount())]
+        listitems = [get_field(row, True) for row in range(self.table.rowCount())]
 
         for field, val, status in listitems:
             if status != REMOVE:
@@ -862,7 +906,7 @@ class ExTags(QDialog):
                     tags[lowered[l_field]].append(val)
                 else:
                     lowered[l_field] = field
-                    tags[field] = [z.strip() for z in val.split('\\') if z.strip()]
+                    tags[field] = [z.strip() for z in val.split("\\") if z.strip()]
             else:
                 if field.lower() not in lowered:
                     tags[field] = []
@@ -884,18 +928,18 @@ class ExTags(QDialog):
             self.setWindowTitle(audios[0].filepath)
             self._loadsingle(audio)
         else:
-            self.setWindowTitle(
-                translate('Extended Tags', 'Different files.'))
+            self.setWindowTitle(translate("Extended Tags", "Different files."))
 
             from .tagmodel import status
-            k = status['table'].model().taginfo[0]
+
+            k = status["table"].model().taginfo[0]
             common, numvalues, imagetags = commontags(audios)
-            images = common['__image']
-            del (common['__image'])
+            images = common["__image"]
+            del common["__image"]
             previews = set(audios[0].preview)
             italics = set(audios[0].equal_fields())
             self.piclabel.currentFile = audios[0]
-            self.piclabel.filePattern = self.status['cover_pattern']
+            self.piclabel.filePattern = self.status["cover_pattern"]
 
             for audio in audios[1:]:
                 previews = previews.intersection(audio.preview)
@@ -931,7 +975,7 @@ class ExTags(QDialog):
                 self.piclabel.setImages(None)
                 self.piclabel.setEnabled(True)
                 if images == 0:
-                    self.piclabel.context = 'Cover Varies'
+                    self.piclabel.context = "Cover Varies"
                     self.piclabel.removepic.setEnabled(True)
         self._checkListBox()
 
@@ -940,7 +984,7 @@ class ExTags(QDialog):
         d = tags.usertags.copy()
         italics = tags.equal_fields()
         self.piclabel.currentFile = tags
-        self.piclabel.filePattern = self.status['cover_pattern']
+        self.piclabel.filePattern = self.status["cover_pattern"]
 
         for key, val in sorted(d.items()):
             if key in italics:
@@ -960,8 +1004,8 @@ class ExTags(QDialog):
         if not tags.library:
             self.piclabel.setImageTags(tags.IMAGETAGS)
             if tags.IMAGETAGS:
-                if '__image' in tags.preview:
-                    images = tags.preview['__image']
+                if "__image" in tags.preview:
+                    images = tags.preview["__image"]
                 else:
                     images = tags.images
                 self.piclabel.setEnabled(True)
@@ -1031,8 +1075,7 @@ class ExTags(QDialog):
                 except RuntimeError:
                     pass
             item.reset()
-            if row > max_row:
-                max_row = row
+            max_row = max(max_row, row)
             if item.status == REMOVE:
                 to_remove[row] = item
 
@@ -1045,12 +1088,11 @@ class ExTags(QDialog):
         self._checkListBox()
 
     def removePic(self):
-        if self.piclabel.context == 'Cover Varies':
-            self.piclabel.context = 'No Images'
+        if self.piclabel.context == "Cover Varies":
+            self.piclabel.context = "No Images"
             self.piclabel.removepic.setEnabled(False)
             if not isinstance(self.piclabel.removepic, QAction):
-                self.piclabel.removepic.clicked.disconnect(
-                    self.removePic)
+                self.piclabel.removepic.clicked.disconnect(self.removePic)
             else:
                 self.piclabel.removepic.triggered.disconnect(self.removePic)
 
@@ -1070,28 +1112,30 @@ class ExTags(QDialog):
             return
 
         tags = self.listtotag()
-        if self.piclabel.context != 'Cover Varies':
+        if self.piclabel.context != "Cover Varies":
             if not self.piclabel.images:
-                tags['__image'] = []
+                tags["__image"] = []
             else:
                 tags["__image"] = self.piclabel.images
         newtags = [z for z in tags if z not in self.get_fieldlist]
-        if newtags and newtags != ['__image']:
+        if newtags and newtags != ["__image"]:
             settaglist(newtags + self.get_fieldlist)
         self.extendedtags.emit(tags)
 
-    def _settag(self, row, field, value, status=None, preview=False,
-                check=False, multi=False):
+    def _settag(
+        self, row, field, value, status=None, preview=False, check=False, multi=False
+    ):
 
         tb = self.table
         tb.setSortingEnabled(False)
         if row >= tb.rowCount():
             tb.insertRow(row)
-            field_item = StatusWidgetItem(field, status,
-                                          self._colors, preview)
+            field_item = StatusWidgetItem(field, status, self._colors, preview)
             tb.setItem(row, 0, field_item)
             if not multi and (len(value) == 1 or isinstance(value, str)):
-                valitem = StatusWidgetItem(to_string(value), status, self._colors, preview)
+                valitem = StatusWidgetItem(
+                    to_string(value), status, self._colors, preview
+                )
                 tb.setItem(row, 1, valitem)
             else:
                 valitem = StatusWidgetCombo(value, status, self._colors, preview)
@@ -1125,7 +1169,7 @@ class ExTags(QDialog):
 
 class ConfirmationErrorDialog(QDialog):
     def __init__(self, name, parent=None):
-        super(ConfirmationErrorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.name = name
         self.__label = QLabel()
         icon = QLabel()
@@ -1133,8 +1177,7 @@ class ConfirmationErrorDialog(QDialog):
         msgbox.setIcon(QMessageBox.Icon.Warning)
         icon.setPixmap(msgbox.iconPixmap())
         ok = QPushButton(translate("Defaults", "OK"))
-        checkbox = QCheckBox(
-            translate("Defaults", "Never show this message again."))
+        checkbox = QCheckBox(translate("Defaults", "Never show this message again."))
 
         ok.clicked.connect(partial(self.saveState, name))
 
@@ -1165,13 +1208,15 @@ class ConfirmationErrorDialog(QDialog):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    dirpath = '/home/keith/Desktop/Daft.Punk-Random.Access.Memories-2013-FLAC.-NewsHost-1023'
+    dirpath = (
+        "/home/keith/Desktop/Daft.Punk-Random.Access.Memories-2013-FLAC.-NewsHost-1023"
+    )
     import glob
 
     tags = list(map(audioinfo.Tag, glob.glob(os.path.join(dirpath, "*.flac"))))
     for tag in tags:
         tag.preview = {}
-        tag.equal_fields = lambda: []
+        tag.equal_fields = list
         tag.library = None
     wid = ExTags(files=tags)
     wid.resize(200, 400)

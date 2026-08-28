@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # rhythmbox.py
 
 # Copyright (C) 2008-2009 concentricpuddle
@@ -28,73 +27,88 @@ from os import path
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
 
-from PyQt6.QtCore import QDir, QSettings, QUrl
-from PyQt6.QtWidgets import QFileDialog, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
+from PyQt6.QtCore import QDir, QUrl
+from PyQt6.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
-from .. import audioinfo
-from .. import musiclib
+from .. import audioinfo, musiclib
 from ..util import translate
 
 FILENAME, PATH = audioinfo.FILENAME, audioinfo.PATH
 
 name = "Rhythmbox"
 description = "Rhythmbox Database"
-author = 'concentricpuddle'
+author = "concentricpuddle"
 
 
 def getFilename(filename):
     filename = urllib.request.url2pathname(filename)
 
-    if filename.startswith('file://'):
-        filename = filename[len('file://'):]
-        return {'__dirpath': path.dirname(filename),
-                PATH: filename,
-                FILENAME: path.basename(filename),
-                "__ext": path.splitext(filename)[1][1:],
-                "__dirname": path.basename(path.dirname(filename))}
+    if filename.startswith("file://"):
+        filename = filename[len("file://") :]
+        return {
+            "__dirpath": path.dirname(filename),
+            PATH: filename,
+            FILENAME: path.basename(filename),
+            "__ext": path.splitext(filename)[1][1:],
+            "__dirname": path.basename(path.dirname(filename)),
+        }
 
 
 getTime = lambda date: audioinfo.strtime(int(date))
-getCreated = lambda created: {'__created': getTime(created)}
-getModified = lambda modified: {'__modified': getTime(modified)}
-getLength = lambda length: {'__length': audioinfo.strlength(int(length))}
-getBitRate = lambda bitrate: {'__bitrate': bitrate + ' kb/s'}
+getCreated = lambda created: {"__created": getTime(created)}
+getModified = lambda modified: {"__modified": getTime(modified)}
+getLength = lambda length: {"__length": audioinfo.strlength(int(length))}
+getBitRate = lambda bitrate: {"__bitrate": bitrate + " kb/s"}
 
-CONVERSION = {'title': 'title',
-              'genre': 'genre',
-              'artist': 'artist',
-              'album': 'album',
-              'track-number': 'track',
-              'duration': getLength,
-              'file-size': '__size',
-              'location': getFilename,
-              'first-seen': getCreated,
-              'mtime': getModified,
-              'last-seen': '__last_seen',
-              'bitrate': getBitRate,
-              'disc-number': 'discnumber'}
+CONVERSION = {
+    "title": "title",
+    "genre": "genre",
+    "artist": "artist",
+    "album": "album",
+    "track-number": "track",
+    "duration": getLength,
+    "file-size": "__size",
+    "location": getFilename,
+    "first-seen": getCreated,
+    "mtime": getModified,
+    "last-seen": "__last_seen",
+    "bitrate": getBitRate,
+    "disc-number": "discnumber",
+}
 
-setLength = lambda length: {'duration': str(audioinfo.lnglength(length))}
-setCreated = lambda created: {'first-seen': str(audioinfo.lngtime(created))}
-setBitrate = lambda bitrate: {'bitrate': str(audioinfo.lngfrequency(bitrate) / 1000)}
-setModified = lambda modified: {'last-seen': str(audioinfo.lngtime(modified))}
-setFilename = lambda filename: {'location': 'file://' + str(QUrl.toPercentEncoding(filename, '/()"\'')).encode('utf8')}
+setLength = lambda length: {"duration": str(audioinfo.lnglength(length))}
+setCreated = lambda created: {"first-seen": str(audioinfo.lngtime(created))}
+setBitrate = lambda bitrate: {"bitrate": str(audioinfo.lngfrequency(bitrate) / 1000)}
+setModified = lambda modified: {"last-seen": str(audioinfo.lngtime(modified))}
+setFilename = lambda filename: {
+    "location": "file://"
+    + str(QUrl.toPercentEncoding(filename, "/()\"'")).encode("utf8")
+}
 
 RECONVERSION = {
-    'title': 'title',
-    'artist': 'artist',
-    'album': 'album',
-    'track': 'track-number',
-    'discnumber': 'disc-number',
-    'genre': 'genre',
-    '__length': setLength,
-    '__created': setCreated,
-    '__bitrate': setBitrate,
-    '__modified': setModified,
-    '__filename': setFilename,
-    '__size': 'file-size'}
+    "title": "title",
+    "artist": "artist",
+    "album": "album",
+    "track": "track-number",
+    "discnumber": "disc-number",
+    "genre": "genre",
+    "__length": setLength,
+    "__created": setCreated,
+    "__bitrate": setBitrate,
+    "__modified": setModified,
+    "__filename": setFilename,
+    "__size": "file-size",
+}
 
-SUPPORTEDTAGS = ['artist', 'genre', 'title', 'track', '__size', 'album']
+SUPPORTEDTAGS = ["artist", "genre", "title", "track", "__size", "album"]
 
 
 class DBParser(ContentHandler):
@@ -113,7 +127,7 @@ class DBParser(ContentHandler):
         self.values = {}
         self.current = "#nothing"
         self.tracks = []
-        self.albums = defaultdict(lambda: {})
+        self.albums = defaultdict(dict)
         self.extravalues = []
         self.extras = False
         self.extratype = ""
@@ -136,13 +150,13 @@ class DBParser(ContentHandler):
                     except TypeError:
                         tag[CONVERSION[field]] = value.strip()
                     except KeyError:
-                        tag['#' + field] = value.strip()
+                        tag["#" + field] = value.strip()
 
                 f = ((k, v.strip()) for k, v in tag.items())
                 tag = dict((k, v) for k, v in f if v)
 
-                album = tag.get('album', '')
-                artist = tag.get('artist', '')
+                album = tag.get("album", "")
+                artist = tag.get("artist", "")
 
                 albums = self.albums[artist]
                 if album not in albums:
@@ -153,7 +167,7 @@ class DBParser(ContentHandler):
             else:
                 x = ((k, v.strip()) for k, v in self.values.items())
                 x = dict((k, v) for k, v in x if v)
-                x['name'] = self.extratype
+                x["name"] = self.extratype
                 self.extratype = ""
                 self.extravalues.append(x)
                 self.extras = False
@@ -171,13 +185,13 @@ class DBParser(ContentHandler):
         parser.setContentHandler(self)
         try:
             parser.parse(filename)
-        except ValueError as detail:
+        except ValueError:
             if not os.path.exists(filename):
                 msg = "%s does not exist." % filename
             else:
                 msg = "%s is not a valid Rhythmbox XML database." % filename
             raise musiclib.MusicLibError(0, msg)
-        except (IOError, OSError) as detail:
+        except OSError as detail:
             if not os.path.exists(filename):
                 msg = "%s does not exist." % filename
             else:
@@ -188,21 +202,23 @@ class DBParser(ContentHandler):
 
     def startElement(self, name, attrs):
         def startelement(name, attrs):
-            if name == 'entry':
-                if attrs.get('type') == 'song':
+            if name == "entry":
+                if attrs.get("type") == "song":
                     self.stargetting = True
                 else:
-                    self.extratype = attrs.get('type')
+                    self.extratype = attrs.get("type")
                     self.extras = True
                     self.stargetting = True
-            if self.stargetting and name != 'entry':
+            if self.stargetting and name != "entry":
                 self.current = name
                 self.values[name] = ""
 
-        if name == 'rhythmdb':
-            version = attrs.get('version')
-            self.head = '<?xml version="1.0" standalone="yes"?>\n' \
-                        '  <rhythmdb version="%s">' % str(version)
+        if name == "rhythmdb":
+            version = attrs.get("version")
+            self.head = (
+                '<?xml version="1.0" standalone="yes"?>\n'
+                '  <rhythmdb version="%s">' % str(version)
+            )
             self.startElement = startelement
 
 
@@ -230,13 +246,13 @@ class RhythmDB(ContentHandler):
         parser.setContentHandler(self)
         try:
             parser.parse(filename)
-        except ValueError as detail:
+        except ValueError:
             if not os.path.exists(filename):
                 msg = "%s does not exist." % filename
             else:
                 msg = "%s is not a valid Rhythmbox XML database." % filename
             raise musiclib.MusicLibError(0, msg)
-        except (IOError, OSError) as detail:
+        except OSError as detail:
             if not os.path.exists(filename):
                 msg = "%s does not exist." % filename
             else:
@@ -246,21 +262,23 @@ class RhythmDB(ContentHandler):
 
     def startElement(self, name, attrs):
         def startelement(name, attrs):
-            if name == 'entry':
-                if attrs.get('type') == 'song':
+            if name == "entry":
+                if attrs.get("type") == "song":
                     self.stargetting = True
                 else:
-                    self.extratype = attrs.get('type')
+                    self.extratype = attrs.get("type")
                     self.extras = True
                     self.stargetting = True
-            if self.stargetting and name != 'entry':
+            if self.stargetting and name != "entry":
                 self.current = name
                 self.values[name] = ""
 
-        if name == 'rhythmdb':
-            version = attrs.get('version')
-            self.head = '<?xml version="1.0" standalone="yes"?>\n' \
-                        '  <rhythmdb version="%s">' % str(version)
+        if name == "rhythmdb":
+            version = attrs.get("version")
+            self.head = (
+                '<?xml version="1.0" standalone="yes"?>\n'
+                '  <rhythmdb version="%s">' % str(version)
+            )
             self.startElement = startelement
 
     def characters(self, ch):
@@ -281,20 +299,20 @@ class RhythmDB(ContentHandler):
                         audio[CONVERSION[tag]] = value.strip()
                     except KeyError:
                         audio["___" + tag] = value.strip()
-                audio['__library'] = 'rhythmbox'
+                audio["__library"] = "rhythmbox"
 
-                if audio['artist'] not in self.albums:
-                    self.albums[audio['artist']] = {}
-                albums = self.albums[audio['artist']]
-                if audio['album'] not in albums:
-                    albums[audio['album']] = len(self.tracks)
+                if audio["artist"] not in self.albums:
+                    self.albums[audio["artist"]] = {}
+                albums = self.albums[audio["artist"]]
+                if audio["album"] not in albums:
+                    albums[audio["album"]] = len(self.tracks)
                     self.tracks.append([audio])
                 else:
-                    index = albums[audio['album']]
+                    index = albums[audio["album"]]
                     self.tracks[index].append(audio)
             else:
                 x = dict([(z, v.strip()) for z, v in self.values.items()])
-                x['name'] = self.extratype
+                x["name"] = self.extratype
                 self.extratype = ""
                 self.extravalues.append(x)
                 self.extras = False
@@ -303,7 +321,7 @@ class RhythmDB(ContentHandler):
     def tracksByTag(self, parent, parentvalue, child=None, childval=None):
         if parent not in SUPPORTEDTAGS:
             return
-        if parent == 'artist' and child == 'album':
+        if parent == "artist" and child == "album":
             return self.getTracks(parentvalue, childval)
 
         if (childval is None) or (child is None):
@@ -322,7 +340,7 @@ class RhythmDB(ContentHandler):
         return [musiclib.Tag(self, z) for z in files]
 
     def children(self, parent, parentvalue, child):
-        if parent == 'artist' and child == 'album':
+        if parent == "artist" and child == "album":
             return self.getAlbums(parentvalue)
         else:
             values = set()
@@ -333,7 +351,7 @@ class RhythmDB(ContentHandler):
     def distinctValues(self, tag):
         if tag not in SUPPORTEDTAGS:
             return
-        if tag == 'artist':
+        if tag == "artist":
             return list(self.albums.keys())
         else:
             values = set()
@@ -374,24 +392,24 @@ class RhythmDB(ContentHandler):
         prevalbum = None
         for track in tracks:
             track = audioinfo.stringtags(track)
-            artist = track['artist']
-            album = track['album']
+            artist = track["artist"]
+            album = track["album"]
             if artist != prevartist or album != prevalbum:
                 dbtracks = self.tracks[self.albums[artist][album]]
                 filenames = [z[FILENAME] for z in dbtracks]
-            del (dbtracks[filenames.index(track[FILENAME])])
+            del dbtracks[filenames.index(track[FILENAME])]
             filenames.remove(track[FILENAME])
             if not dbtracks:
-                del (self.albums[artist][album])
+                del self.albums[artist][album]
             if not self.albums[artist]:
-                del (self.albums[artist])
+                del self.albums[artist]
 
     def saveTracks(self, tracks):
         for old, new in tracks:
             old, new = audioinfo.stringtags(old), audioinfo.stringtags(new)
-            artist = new['artist']
-            album = new['album']
-            if old['artist'] != artist:
+            artist = new["artist"]
+            album = new["album"]
+            if old["artist"] != artist:
                 if artist in self.albums:
                     if album in self.albums[artist]:
                         index = self.albums[artist][album]
@@ -402,7 +420,7 @@ class RhythmDB(ContentHandler):
                 else:
                     self.albums[artist] = {album: len(self.tracks)}
                     self.tracks.append([new])
-            elif album != old['album']:
+            elif album != old["album"]:
                 if album in self.albums[artist]:
                     self.albums[artist][album].append(new)
                 else:
@@ -413,16 +431,16 @@ class RhythmDB(ContentHandler):
             self.delTracks([old])
 
     def save(self):
-        filename = path.join(path.dirname(self.filename), 'rhythmbox.xml')
-        f = open(filename, 'w')
+        filename = path.join(path.dirname(self.filename), "rhythmbox.xml")
+        f = open(filename, "w")
         entry = [self.head + "\n"]
         for album in self.tracks:
             for track in album:
                 entry.append('  <entry type="song">\n')
                 for key, tagvalue in track.items():
                     try:
-                        if key.startswith('___'):
-                            tagname = key[len('___'):]
+                        if key.startswith("___"):
+                            tagname = key[len("___") :]
                         else:
                             temp = RECONVERSION[key](tagvalue)
                             tagname = list(temp.keys())[0]
@@ -431,23 +449,38 @@ class RhythmDB(ContentHandler):
                         tagname = RECONVERSION[key]
                     except KeyError:
                         continue
-                    entry.append('    <%s>%s</%s>\n' % (self._escapedText(tagname), self._escapedText(tagvalue), self._escapedText(tagname)))
-                entry.append('  </entry>\n')
-                f.write(("".join(entry)))
+                    entry.append(
+                        "    <%s>%s</%s>\n"
+                        % (
+                            self._escapedText(tagname),
+                            self._escapedText(tagvalue),
+                            self._escapedText(tagname),
+                        )
+                    )
+                entry.append("  </entry>\n")
+                f.write("".join(entry))
                 entry = []
 
         entry = []
         for value in self.extravalues:
-            entry.append('  <entry type ="%s">\n' % value['name'])
-            [entry.append('    <%s>%s</%s>\n' %
-                          (self._escapedText(val), self._escapedText(value[val]),
-                           self._escapedText(val))) for val in value]
+            entry.append('  <entry type ="%s">\n' % value["name"])
+            [
+                entry.append(
+                    "    <%s>%s</%s>\n"
+                    % (
+                        self._escapedText(val),
+                        self._escapedText(value[val]),
+                        self._escapedText(val),
+                    )
+                )
+                for val in value
+            ]
             entry.append("  </entry>\n")
-            f.write(("".join(entry)))
+            f.write("".join(entry))
             entry = []
         f.write("</rhythmdb>")
         f.close()
-        backup = path.join(path.dirname(self.filename), 'oldrhythmdb.xml')
+        backup = path.join(path.dirname(self.filename), "oldrhythmdb.xml")
         if not path.exists(backup):
             os.rename(self.filename, backup)
         os.rename(filename, self.filename)
@@ -478,8 +511,16 @@ class RhythmDB(ContentHandler):
         return [musiclib.Tag(self, z) for z in ret]
 
     def updateSearch(self, term, tracks):
-        tags = ['artist', 'title', FILENAME, '__path', 'album', 'genre',
-                'comment', 'year']
+        tags = [
+            "artist",
+            "title",
+            FILENAME,
+            "__path",
+            "album",
+            "genre",
+            "comment",
+            "year",
+        ]
         term = term.lower()
         ret = []
         for audio in tracks:
@@ -494,10 +535,12 @@ class RhythmDB(ContentHandler):
 class InitWidget(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
-        self.dbpath = QLineEdit(path.join(str(QDir.homePath()), ".gnome2/rhythmbox/rhythmdb.xml"))
+        self.dbpath = QLineEdit(
+            path.join(str(QDir.homePath()), ".gnome2/rhythmbox/rhythmdb.xml")
+        )
 
         vbox = QVBoxLayout()
-        label = QLabel('&Database Path')
+        label = QLabel("&Database Path")
         label.setBuddy(self.dbpath)
         [vbox.addWidget(z) for z in [label, self.dbpath]]
 
@@ -513,8 +556,9 @@ class InitWidget(QWidget):
         self.dbpath.setFocus()
 
     def getFile(self):
-        selectedFile = QFileDialog.getOpenFileName(self,
-                                                   'Select RhythmBox database file.', self.dbpath.text())
+        selectedFile = QFileDialog.getOpenFileName(
+            self, "Select RhythmBox database file.", self.dbpath.text()
+        )
         filename = selectedFile[0]
         if filename:
             self.dbpath.setText(filename)
@@ -526,14 +570,17 @@ class InitWidget(QWidget):
         except musiclib.MusicLibError as e:
             raise e
         except Exception as e:
-            raise musiclib.MusicLibError(0,
-                translate("Rhythmbox", '{} is an invalid Rhythmbox music library file.').format(dbpath)
-                ) from e
+            raise musiclib.MusicLibError(
+                0,
+                translate(
+                    "Rhythmbox", "{} is an invalid Rhythmbox music library file."
+                ).format(dbpath),
+            ) from e
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     k = DBParser()
-    x, y = k.parse_file('rdb.xml')
+    x, y = k.parse_file("rdb.xml")
     # import pdb
     # pdb.set_trace()
     print([i for i, z in enumerate(y) if len(z) > 1])

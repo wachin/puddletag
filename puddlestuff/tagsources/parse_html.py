@@ -20,8 +20,7 @@ def classify(seq, key_func):
     return result
 
 
-class SoupWrapper(object):
-
+class SoupWrapper:
     def __init__(self, element, source=None):
         self.element = element
         self.source = source
@@ -39,7 +38,8 @@ class SoupWrapper(object):
         regular_items = query_items.get(True, [])
         re_items = query_items.get(False, [])
         xpath_query = " and ".join(
-            "contains(concat(' ',normalize-space(@class),' '),' %s ')" % value if key == "class"
+            "contains(concat(' ',normalize-space(@class),' '),' %s ')" % value
+            if key == "class"
             else "@%s='%s'" % (key, value)
             for key, value in regular_items
         )

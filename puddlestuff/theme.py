@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPalette
 
 DARK_STYLESHEET = """
 QMainWindow, QDialog, QDockWidget {
@@ -64,9 +63,10 @@ QMenuBar::item:selected, QMenu::item:selected {
 }
 """
 
+
 def apply_dark_theme(app):
     app.setStyleSheet(DARK_STYLESHEET)
-    
+
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(43, 43, 43))
     palette.setColor(QPalette.ColorRole.WindowText, QColor(239, 239, 239))
@@ -83,9 +83,11 @@ def apply_dark_theme(app):
     palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
     app.setPalette(palette)
 
+
 def apply_default_theme(app):
     app.setStyleSheet("")
     app.setPalette(app.style().standardPalette())
+
 
 def update_theme(app, theme_name):
     if theme_name == "Dark Mode":

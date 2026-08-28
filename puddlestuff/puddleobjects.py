@@ -11,56 +11,104 @@ import sys
 import time
 from bisect import bisect_left, insort_left  # for unique function.
 from collections import defaultdict
+from collections.abc import Callable, Generator
 from copy import copy
 from functools import partial, reduce
 from glob import glob
 from io import StringIO
 from itertools import groupby  # for unique function.
 from operator import or_
-from typing import Any, Callable, Generator, List, Optional, Tuple, Union
+from typing import Any
 
-from PyQt6.QtCore import QBuffer, QByteArray, QCollator, QCollatorSortKey, QDir, QLocale, QObject, QRectF, QSettings, \
-    QSize, QThread, QTimer, Qt, pyqtSignal
-from PyQt6.QtCore import QFile, QIODevice
-from PyQt6.QtGui import QAction, QIcon, QBrush, QPixmap, QImage, \
-    QKeySequence
+from configobj import ConfigObjError
+from PyQt6.QtCore import (
+    QBuffer,
+    QByteArray,
+    QCollator,
+    QCollatorSortKey,
+    QDir,
+    QFile,
+    QIODevice,
+    QLocale,
+    QObject,
+    QRectF,
+    QSettings,
+    QSize,
+    Qt,
+    QThread,
+    QTimer,
+    pyqtSignal,
+)
+from PyQt6.QtGui import QAction, QBrush, QIcon, QImage, QKeySequence, QPixmap
 from PyQt6.QtSvg import QSvgRenderer
 from PyQt6.QtSvgWidgets import QGraphicsSvgItem
-from PyQt6.QtWidgets import QAbstractItemView, QApplication, QComboBox, QDialog, QDialogButtonBox, \
-    QDockWidget, QFileDialog, QFrame, QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QGridLayout, QHBoxLayout, \
-    QHeaderView, QLabel, QLayout, QLineEdit, QListWidget, QMenu, QMessageBox, QProgressBar, QPushButton, QSizePolicy, \
-    QTextEdit, QToolButton, QVBoxLayout, QWidget
-from configobj import ConfigObjError
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QDockWidget,
+    QFileDialog,
+    QFrame,
+    QGraphicsPixmapItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QGridLayout,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLayout,
+    QLineEdit,
+    QListWidget,
+    QMenu,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QSizePolicy,
+    QTextEdit,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import audioinfo
-from .audioinfo import (IMAGETYPES, DESCRIPTION, DATA, IMAGETYPE, DEFAULT_COVER,
-                        INFOTAGS, get_mime)
-from .constants import ACTIONDIR, SAVEDIR, CONFIGDIR
+from .audioinfo import (
+    DATA,
+    DEFAULT_COVER,
+    DESCRIPTION,
+    IMAGETYPE,
+    IMAGETYPES,
+    INFOTAGS,
+    get_mime,
+)
+from .constants import ACTIONDIR, CONFIGDIR, SAVEDIR
 from .translations import translate
 
 path = os.path
 
 # Parameters for string distance function.
 # Words that can be moved to the end of a string using a comma.
-SD_END_WORDS = ['the', 'a', 'an']
+SD_END_WORDS = ["the", "a", "an"]
 # Reduced weights for certain portions of the string.
 SD_PATTERNS = [
-    (r'^the ', 0.1),
-    (r'[\[\(]?(ep|single)[\]\)]?', 0.0),
-    (r'[\[\(]?(featuring|feat|ft)[\. :].+', 0.1),
-    (r'\(.*?\)', 0.3),
-    (r'\[.*?\]', 0.3),
-    (r'(, )?(pt\.|part) .+', 0.2),
+    (r"^the ", 0.1),
+    (r"[\[\(]?(ep|single)[\]\)]?", 0.0),
+    (r"[\[\(]?(featuring|feat|ft)[\. :].+", 0.1),
+    (r"\(.*?\)", 0.3),
+    (r"\[.*?\]", 0.3),
+    (r"(, )?(pt\.|part) .+", 0.2),
 ]
 
 mod_keys = {
-    Qt.KeyboardModifier.ShiftModifier: 'Shift',
-    Qt.KeyboardModifier.MetaModifier: 'Meta',
-    Qt.KeyboardModifier.AltModifier: 'Alt',
-    Qt.KeyboardModifier.ControlModifier: 'Ctrl',
-    Qt.KeyboardModifier.NoModifier: '',
-    Qt.KeyboardModifier.KeypadModifier: '',
-    Qt.KeyboardModifier.GroupSwitchModifier: '', }
+    Qt.KeyboardModifier.ShiftModifier: "Shift",
+    Qt.KeyboardModifier.MetaModifier: "Meta",
+    Qt.KeyboardModifier.AltModifier: "Alt",
+    Qt.KeyboardModifier.ControlModifier: "Ctrl",
+    Qt.KeyboardModifier.NoModifier: "",
+    Qt.KeyboardModifier.KeypadModifier: "",
+    Qt.KeyboardModifier.GroupSwitchModifier: "",
+}
 
 
 def keycmp(modifier):
@@ -80,75 +128,105 @@ modifiers = {}
 for i in range(1, len(mod_keys)):
     for keys in set(itertools.permutations(mod_keys, i)):
         mask = reduce(or_, keys)
-        modifiers[mask] = '+'.join(mod_keys[key] for key in sorted(keys, key=keycmp) if mod_keys[key])
+        modifiers[mask] = "+".join(
+            mod_keys[key] for key in sorted(keys, key=keycmp) if mod_keys[key]
+        )
 
 mod_keys = set((Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Meta, Qt.Key.Key_Alt))
 
 imagetypes = [
-    (translate('Cover Type', 'Other'), translate("Cover Type", 'O')),
-    (translate('Cover Type', 'File Icon'), translate("Cover Type", 'I')),
-    (translate('Cover Type', 'Other File Icon'), translate("Cover Type", 'OI')),
-    (translate('Cover Type', 'Cover (front)'), translate("Cover Type", 'CF')),
-    (translate('Cover Type', 'Cover (back)'), translate("Cover Type", 'CB')),
-    (translate('Cover Type', 'Leaflet page'), translate("Cover Type", 'LF')),
-    (translate('Cover Type', 'Media (e.g. label side of CD)'), translate("Cover Type", 'M')),
-    (translate('Cover Type', 'Lead artist'), translate("Cover Type", 'LA')),
-    (translate('Cover Type', 'Artist'), translate("Cover Type", 'A')),
-    (translate('Cover Type', 'Conductor'), translate("Cover Type", 'C')),
-    (translate('Cover Type', 'Band'), translate("Cover Type", 'B')),
-    (translate("Cover Type", 'Composer'), translate("Cover Type", 'CP')),
-    (translate("Cover Type", 'Lyricist'), translate("Cover Type", 'L')),
-    (translate("Cover Type", 'Recording Location'), translate("Cover Type", 'RL')),
-    (translate("Cover Type", 'During recording'), translate("Cover Type", 'DR')),
-    (translate("Cover Type", 'During performance'), translate("Cover Type", 'DP')),
-    (translate("Cover Type", 'Movie/video screen capture'), translate("Cover Type", 'MC')),
-    (translate("Cover Type", 'A bright coloured fish'), translate("Cover Type", 'F')),
-    (translate("Cover Type", 'Illustration'), translate("Cover Type", 'P')),
-    (translate("Cover Type", 'Band/artist logotype'), translate("Cover Type", 'BL')),
-    (translate("Cover Type", 'Publisher/Studio logotype'), translate("Cover Type", 'PL'))]
+    (translate("Cover Type", "Other"), translate("Cover Type", "O")),
+    (translate("Cover Type", "File Icon"), translate("Cover Type", "I")),
+    (translate("Cover Type", "Other File Icon"), translate("Cover Type", "OI")),
+    (translate("Cover Type", "Cover (front)"), translate("Cover Type", "CF")),
+    (translate("Cover Type", "Cover (back)"), translate("Cover Type", "CB")),
+    (translate("Cover Type", "Leaflet page"), translate("Cover Type", "LF")),
+    (
+        translate("Cover Type", "Media (e.g. label side of CD)"),
+        translate("Cover Type", "M"),
+    ),
+    (translate("Cover Type", "Lead artist"), translate("Cover Type", "LA")),
+    (translate("Cover Type", "Artist"), translate("Cover Type", "A")),
+    (translate("Cover Type", "Conductor"), translate("Cover Type", "C")),
+    (translate("Cover Type", "Band"), translate("Cover Type", "B")),
+    (translate("Cover Type", "Composer"), translate("Cover Type", "CP")),
+    (translate("Cover Type", "Lyricist"), translate("Cover Type", "L")),
+    (translate("Cover Type", "Recording Location"), translate("Cover Type", "RL")),
+    (translate("Cover Type", "During recording"), translate("Cover Type", "DR")),
+    (translate("Cover Type", "During performance"), translate("Cover Type", "DP")),
+    (
+        translate("Cover Type", "Movie/video screen capture"),
+        translate("Cover Type", "MC"),
+    ),
+    (translate("Cover Type", "A bright coloured fish"), translate("Cover Type", "F")),
+    (translate("Cover Type", "Illustration"), translate("Cover Type", "P")),
+    (translate("Cover Type", "Band/artist logotype"), translate("Cover Type", "BL")),
+    (
+        translate("Cover Type", "Publisher/Studio logotype"),
+        translate("Cover Type", "PL"),
+    ),
+]
 
 
 def trans_imagetypes():
     global imagetypes
     imagetypes = [
-        (translate('Cover Type', 'Other'), translate("Cover Type", 'O')),
-        (translate('Cover Type', 'File Icon'), translate("Cover Type", 'I')),
-        (translate('Cover Type', 'Other File Icon'), translate("Cover Type", 'OI')),
-        (translate('Cover Type', 'Cover (front)'), translate("Cover Type", 'CF')),
-        (translate('Cover Type', 'Cover (back)'), translate("Cover Type", 'CB')),
-        (translate('Cover Type', 'Leaflet page'), translate("Cover Type", 'LF')),
-        (translate('Cover Type', 'Media (e.g. label side of CD)'), translate("Cover Type", 'M')),
-        (translate('Cover Type', 'Lead artist'), translate("Cover Type", 'LA')),
-        (translate('Cover Type', 'Artist'), translate("Cover Type", 'A')),
-        (translate('Cover Type', 'Conductor'), translate("Cover Type", 'C')),
-        (translate('Cover Type', 'Band'), translate("Cover Type", 'B')),
-        (translate("Cover Type", 'Composer'), translate("Cover Type", 'CP')),
-        (translate("Cover Type", 'Lyricist'), translate("Cover Type", 'L')),
-        (translate("Cover Type", 'Recording Location'), translate("Cover Type", 'RL')),
-        (translate("Cover Type", 'During recording'), translate("Cover Type", 'DR')),
-        (translate("Cover Type", 'During performance'), translate("Cover Type", 'DP')),
-        (translate("Cover Type", 'Movie/video screen capture'), translate("Cover Type", 'MC')),
-        (translate("Cover Type", 'A bright coloured fish'), translate("Cover Type", 'F')),
-        (translate("Cover Type", 'Illustration'), translate("Cover Type", 'P')),
-        (translate("Cover Type", 'Band/artist logotype'), translate("Cover Type", 'BL')),
-        (translate("Cover Type", 'Publisher/Studio logotype'), translate("Cover Type", 'PL'))]
+        (translate("Cover Type", "Other"), translate("Cover Type", "O")),
+        (translate("Cover Type", "File Icon"), translate("Cover Type", "I")),
+        (translate("Cover Type", "Other File Icon"), translate("Cover Type", "OI")),
+        (translate("Cover Type", "Cover (front)"), translate("Cover Type", "CF")),
+        (translate("Cover Type", "Cover (back)"), translate("Cover Type", "CB")),
+        (translate("Cover Type", "Leaflet page"), translate("Cover Type", "LF")),
+        (
+            translate("Cover Type", "Media (e.g. label side of CD)"),
+            translate("Cover Type", "M"),
+        ),
+        (translate("Cover Type", "Lead artist"), translate("Cover Type", "LA")),
+        (translate("Cover Type", "Artist"), translate("Cover Type", "A")),
+        (translate("Cover Type", "Conductor"), translate("Cover Type", "C")),
+        (translate("Cover Type", "Band"), translate("Cover Type", "B")),
+        (translate("Cover Type", "Composer"), translate("Cover Type", "CP")),
+        (translate("Cover Type", "Lyricist"), translate("Cover Type", "L")),
+        (translate("Cover Type", "Recording Location"), translate("Cover Type", "RL")),
+        (translate("Cover Type", "During recording"), translate("Cover Type", "DR")),
+        (translate("Cover Type", "During performance"), translate("Cover Type", "DP")),
+        (
+            translate("Cover Type", "Movie/video screen capture"),
+            translate("Cover Type", "MC"),
+        ),
+        (
+            translate("Cover Type", "A bright coloured fish"),
+            translate("Cover Type", "F"),
+        ),
+        (translate("Cover Type", "Illustration"), translate("Cover Type", "P")),
+        (
+            translate("Cover Type", "Band/artist logotype"),
+            translate("Cover Type", "BL"),
+        ),
+        (
+            translate("Cover Type", "Publisher/Studio logotype"),
+            translate("Cover Type", "PL"),
+        ),
+    ]
 
 
 class CoverButton(QPushButton):
-    currentIndexChanged = pyqtSignal(int, name='currentIndexChanged')
+    currentIndexChanged = pyqtSignal(int, name="currentIndexChanged")
 
     def __init__(self, *args):
         QPushButton.__init__(self, *args)
         menu = QMenu(self)
 
         def create(title, short, index):
-            text = '[%s] %s' % (short, title)
+            text = "[%s] %s" % (short, title)
             action = QAction(text, self)
             action.triggered.connect(lambda: self.setCurrentIndex(index))
             return action
 
-        actions = [create(title, short, index) for index, (title, short)
-                   in enumerate(imagetypes)]
+        actions = [
+            create(title, short, index)
+            for index, (title, short) in enumerate(imagetypes)
+        ]
 
         list(map(menu.addAction, actions))
         self.setMenu(menu)
@@ -166,7 +244,7 @@ class CoverButton(QPushButton):
         return self._index
 
 
-class PuddleConfig(object):
+class PuddleConfig:
     """Module that allows you to values from INI config files, similar to
     Qt's Settings module (Created it because PyQt5.4.3 has problems with
     saving and loading lists.
@@ -178,7 +256,7 @@ class PuddleConfig(object):
 
     def __init__(self, filename=None):
         if not filename:
-            filename = os.path.join(CONFIGDIR, 'puddletag.conf')
+            filename = os.path.join(CONFIGDIR, "puddletag.conf")
         self.filename = filename
 
         self.setSection = self.set
@@ -192,7 +270,7 @@ class PuddleConfig(object):
             return default
 
         if isinstance(default, bool):
-            if value is True or value == 'True':
+            if value is True or value == "True":
                 return True
             return False
         elif getint or isinstance(default, int):
@@ -217,18 +295,20 @@ class PuddleConfig(object):
         self.save()
 
     def reload(self):
-        self.data = defaultdict(lambda: {})
+        self.data = defaultdict(dict)
         if os.path.exists(self.filename):
             try:
-                with open(self.filename, 'r', encoding='utf-8') as config_file:
+                with open(self.filename, "r", encoding="utf-8") as config_file:
                     self.data.update(json.load(config_file))
             except json.JSONDecodeError as e:
-                print(f'Error parsing config file {self.filename}: {e}')
+                print(f"Error parsing config file {self.filename}: {e}")
             except Exception as e:
-                print(f'Unexpected error while reading config file {self.filename}: {e}')
+                print(
+                    f"Unexpected error while reading config file {self.filename}: {e}"
+                )
 
     def save(self):
-        actions = self.data.get('puddleactions')
+        actions = self.data.get("puddleactions")
         filename = self.filename
         if not os.path.exists(filename):
             dirname = os.path.dirname(filename)
@@ -237,9 +317,8 @@ class PuddleConfig(object):
             except:
                 pass
 
-        with open(filename, 'w') as fo:
+        with open(filename, "w") as fo:
             fo.write(json.dumps(dict(self.data), indent=2))
-
 
     @property
     def filename(self):
@@ -247,7 +326,7 @@ class PuddleConfig(object):
 
     @filename.setter
     def filename(self, filename):
-        logging.debug(f'reading config file {filename}')
+        logging.debug(f"reading config file {filename}")
         self._filename = filename
         self.savedir = os.path.dirname(filename)
         self.reload()
@@ -257,7 +336,7 @@ class PuddleConfig(object):
 
 
 def _getSettings():
-    filename = os.path.join(CONFIGDIR, 'windowsizes')
+    filename = os.path.join(CONFIGDIR, "windowsizes")
     return QSettings(filename, QSettings.Format.IniFormat)
 
 
@@ -277,10 +356,11 @@ def winsettings(name, dialog, settings=_getSettings()):
         else:
             cevent(event)
 
-    setattr(dialog, 'closeEvent', closeEvent)
+    dialog.closeEvent = closeEvent
 
 
 # Next three functions from beets: http://code.google.com/p/beets
+
 
 def _levenshtein(s1, s2):
     """A nice DP edit distance implementation from Wikibooks:
@@ -309,8 +389,8 @@ def _string_dist_basic(str1, str2):
     """Basic edit distance between two strings, ignoring
     non-alphanumeric characters and case. Normalized by string length.
     """
-    str1 = re.sub(r'[^a-z0-9]', '', str1.lower())
-    str2 = re.sub(r'[^a-z0-9]', '', str2.lower())
+    str1 = re.sub(r"[^a-z0-9]", "", str1.lower())
+    str2 = re.sub(r"[^a-z0-9]", "", str2.lower())
     if not str1 and not str2:
         return 0.0
     return _levenshtein(str1, str2) / float(max(len(str1), len(str2)))
@@ -328,10 +408,10 @@ def ratio(str1, str2):
     # example, "the something" should be considered equal to
     # "something, the".
     for word in SD_END_WORDS:
-        if str1.endswith(', %s' % word):
-            str1 = '%s %s' % (word, str1[:-len(word) - 2])
-        if str2.endswith(', %s' % word):
-            str2 = '%s %s' % (word, str2[:-len(word) - 2])
+        if str1.endswith(", %s" % word):
+            str1 = "%s %s" % (word, str1[: -len(word) - 2])
+        if str2.endswith(", %s" % word):
+            str2 = "%s %s" % (word, str2[: -len(word) - 2])
 
     # Change the weight for certain string portions matched by a set
     # of regular expressions. We gradually change the strings and build
@@ -341,8 +421,8 @@ def ratio(str1, str2):
     penalty = 0.0
     for pat, weight in SD_PATTERNS:
         # Get strings that drop the pattern.
-        case_str1 = re.sub(pat, '', str1)
-        case_str2 = re.sub(pat, '', str2)
+        case_str1 = re.sub(pat, "", str1)
+        case_str2 = re.sub(pat, "", str2)
 
         if case_str1 != str1 or case_str2 != str2:
             # If the pattern was present (i.e., it is deleted in the
@@ -365,11 +445,11 @@ def ratio(str1, str2):
     return 1 - dist
 
 
-dirlevels = lambda a: len(a.split('/'))
+dirlevels = lambda a: len(a.split("/"))
 
 
 def removeslash(x):
-    while x.endswith('/'):
+    while x.endswith("/"):
         return removeslash(x[:-1])
     return x
 
@@ -390,8 +470,8 @@ def create_buddy(text, control, box=None):
 
 def dircmp(a, b):
     """Compare function to sort directories via parent.
-So that the child is renamed before parent, thereby not
-giving Permission Denied errors."""
+    So that the child is renamed before parent, thereby not
+    giving Permission Denied errors."""
     a, b = removeslash(a), removeslash(b)
     if a == b:
         return 0
@@ -427,7 +507,9 @@ def issubfolder(parent, child, level=1):
     else:
         sep = os.path.sep
     if level is not None:
-        if child.startswith(parent + sep) and dirlevels(parent) + level == dirlevels(child):
+        if child.startswith(parent + sep) and dirlevels(parent) + level == dirlevels(
+            child
+        ):
             return True
         return False
     else:
@@ -440,7 +522,7 @@ HORIZONTAL = 1
 VERTICAL = 0
 
 
-def get_icon(name: Optional[str] = None, fallback: Optional[str] = None) -> QIcon:
+def get_icon(name: str | None = None, fallback: str | None = None) -> QIcon:
     """Return the icon with the given name from the current icon theme.
 
     If the theme does not contain such icon, fallback to built-in png of
@@ -450,8 +532,8 @@ def get_icon(name: Optional[str] = None, fallback: Optional[str] = None) -> QIco
     if not name and not fallback:
         return QIcon()
 
-    fallback = fallback or f'{name}.png'
-    return QIcon.fromTheme(name, QIcon(f'icons:{fallback}'))
+    fallback = fallback or f"{name}.png"
+    return QIcon.fromTheme(name, QIcon(f"icons:{fallback}"))
 
 
 def get_languages(dirs=None):
@@ -459,29 +541,33 @@ def get_languages(dirs=None):
     if dirs is not None:
         for d in dirs:
             files.extend(glob(os.path.join(d, "*.qm")))
-    d = QDir('translations:./')
+    d = QDir("translations:./")
     if not d.isEmpty():
-        files.extend([os.path.join('translations:./', t) for t in
-                      map(str, d.entryList(['*.qm']))])
+        files.extend(
+            [
+                os.path.join("translations:./", t)
+                for t in map(str, d.entryList(["*.qm"]))
+            ]
+        )
 
     ret = {}
     get_name = lambda s: os.path.splitext(os.path.basename(s))[0]
     for f in files:
         ts_name = get_name(f)
-        if ts_name.startswith('puddletag_'):
-            lang_code = ts_name[len('puddletag_'):]
+        if ts_name.startswith("puddletag_"):
+            lang_code = ts_name[len("puddletag_") :]
             ret[lang_code] = f
-            if '_' in lang_code:
-                ret[lang_code.replace('_', '-')] = f
-            elif '-' in lang_code:
-                ret[lang_code.replace('-', '_')] = f
+            if "_" in lang_code:
+                ret[lang_code.replace("_", "-")] = f
+            elif "-" in lang_code:
+                ret[lang_code.replace("-", "_")] = f
         else:
             ret[ts_name] = f
     return ret
 
 
 def singleerror(parent, msg):
-    QMessageBox.warning(parent, 'Error', msg)
+    QMessageBox.warning(parent, "Error", msg)
 
 
 def errormsg(parent, msg, maximum):
@@ -498,10 +584,15 @@ def errormsg(parent, msg, maximum):
         False if No.
         None if just yes."""
     if maximum > 1:
-        mb = QMessageBox(QMessageBox.Icon.Warning, translate("Defaults", 'Error'),
-                         msg + translate("Defaults", "<br /> Do you want to continue?"),
-                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.YesToAll,
-                         parent)
+        mb = QMessageBox(
+            QMessageBox.Icon.Warning,
+            translate("Defaults", "Error"),
+            msg + translate("Defaults", "<br /> Do you want to continue?"),
+            QMessageBox.StandardButton.Yes
+            | QMessageBox.StandardButton.No
+            | QMessageBox.StandardButton.YesToAll,
+            parent,
+        )
         mb.setDefaultButton(QMessageBox.StandardButton.Yes)
         mb.setEscapeButton(QMessageBox.StandardButton.No)
         ret = mb.exec()
@@ -527,7 +618,8 @@ def safe_name(name, chars=r'/\*?"|:', to=None):
             escaped = escaped + ch
         else:
             escaped = escaped + to
-    if not escaped: return '""'
+    if not escaped:
+        return '""'
     return escaped
 
 
@@ -541,10 +633,12 @@ def unique(seq, stable=False):
     # if uniqueDebug and len(str(seq))<50: print "Input:", seq # For debugging.
 
     # Special case of an empty s:
-    if not seq: return []
+    if not seq:
+        return []
 
     # if it's a set:
-    if isinstance(seq, set): return list(seq)
+    if isinstance(seq, set):
+        return list(seq)
 
     if stable:
         # Try with a set:
@@ -604,7 +698,7 @@ def unique(seq, stable=False):
     return result
 
 
-def natural_sort_key(s: Union[str, List[str]], case_insensitive=True) -> QCollatorSortKey:
+def natural_sort_key(s: str | list[str], case_insensitive=True) -> QCollatorSortKey:
     """Return a sort-key for natural sorting the given string.
 
     Case-insensitive means uppercase- and lowercase-characters are treated equally.
@@ -613,7 +707,7 @@ def natural_sort_key(s: Union[str, List[str]], case_insensitive=True) -> QCollat
     """
     if isinstance(s, list):
         # Join all elements with ascii unit separator
-        s = '\x1f'.join(s)
+        s = "\x1f".join(s)
 
     locale = QLocale.system().collation() if case_insensitive else QLocale.c()
     collator = QCollator(locale)
@@ -625,10 +719,15 @@ def natural_sort_key(s: Union[str, List[str]], case_insensitive=True) -> QCollat
 def dupes(l, method=None):
     if method is None:
         method = lambda a, b: int(a == b)
-    l = [{'key': z, 'index': i} for i, z in enumerate(l)]
+    l = [{"key": z, "index": i} for i, z in enumerate(l)]
     chars = chars = r'/\*?;"|:\''
-    strings = sorted([(safe_name(z['key'].lower(), chars, ''), z['index'])
-                      for z in l if z['key'] is not None])
+    strings = sorted(
+        [
+            (safe_name(z["key"].lower(), chars, ""), z["index"])
+            for z in l
+            if z["key"] is not None
+        ]
+    )
     try:
         last = strings[0][0]
     except IndexError:
@@ -645,7 +744,9 @@ def dupes(l, method=None):
     return [z for z in groups if len(z) > 1]
 
 
-def getfiles(files: Union[str, List[str]], subfolders: bool = False) -> Generator[str, None, None]:
+def getfiles(
+    files: str | list[str], subfolders: bool = False
+) -> Generator[str, None, None]:
     """For the given path(s), yield all the files.
 
     If path does not exist, ignore it.
@@ -678,7 +779,7 @@ def gettag(f):
     try:
         return audioinfo.Tag(f)
     except:
-        logging.exception('Error loading file %s', f)
+        logging.exception("Error loading file %s", f)
         return
 
 
@@ -690,89 +791,91 @@ def translate_filename_pattern(pat):
     # from fnmatch.py with slight modification
     pat = pat.strip()
     i, n = 0, len(pat)
-    res = ''
+    res = ""
     while i < n:
         c = pat[i]
         i = i + 1
-        if c == '*':
-            res = res + '.*'
-        elif c == '?':
-            res = res + '.'
-        elif c == '[':
+        if c == "*":
+            res = res + ".*"
+        elif c == "?":
+            res = res + "."
+        elif c == "[":
             j = i
-            if j < n and pat[j] == '!':
+            if j < n and pat[j] == "!":
                 j = j + 1
-            if j < n and pat[j] == ']':
+            if j < n and pat[j] == "]":
                 j = j + 1
-            while j < n and pat[j] != ']':
+            while j < n and pat[j] != "]":
                 j = j + 1
             if j >= n:
-                res = res + '\\['
+                res = res + "\\["
             else:
-                stuff = pat[i:j].replace('\\', '\\\\')
+                stuff = pat[i:j].replace("\\", "\\\\")
                 i = j + 1
-                if stuff[0] == '!':
-                    stuff = '^' + stuff[1:]
-                elif stuff[0] == '^':
-                    stuff = '\\' + stuff
-                res = '%s[%s]' % (res, stuff)
+                if stuff[0] == "!":
+                    stuff = "^" + stuff[1:]
+                elif stuff[0] == "^":
+                    stuff = "\\" + stuff
+                res = "%s[%s]" % (res, stuff)
         else:
             res = res + re.escape(c)
     # return res + '\Z(?ms)'
-    return res + r'\Z'
+    return res + r"\Z"
 
 
 def fnmatch(pattern, files, matchcase=False):
-    regexp = '|'.join(map(translate_filename_pattern,
-                          [z.strip() for z in pattern.split(';')]))
+    regexp = "|".join(
+        map(translate_filename_pattern, [z.strip() for z in pattern.split(";")])
+    )
     if matchcase:
         match = re.compile(regexp).match
     else:
-        match = re.compile(regexp, re.I).match
+        match = re.compile(regexp, re.IGNORECASE).match
     return list(filter(match, files))
 
 
 def gettaglist():
     cparser = PuddleConfig()
-    filename = os.path.join(cparser.savedir, 'usertags')
+    filename = os.path.join(cparser.savedir, "usertags")
     try:
-        lines = sorted(set([z.strip()
-                            for z in open(filename, 'rt').read().split('\n')]))
-    except (IOError, OSError):
+        lines = sorted(
+            set([z.strip() for z in open(filename, "rt").read().split("\n")])
+        )
+    except OSError:
         lines = audioinfo.FIELDS[::]
     return lines
 
 
 def settaglist(tags):
     cparser = PuddleConfig()
-    filename = os.path.join(cparser.savedir, 'usertags')
-    f = open(filename, 'w')
-    text = '\n'.join(sorted([z for z in tags if not z.startswith('__')]))
+    filename = os.path.join(cparser.savedir, "usertags")
+    f = open(filename, "w")
+    text = "\n".join(sorted([z for z in tags if not z.startswith("__")]))
     f.write(text)
     f.close()
 
 
 def load_actions():
     from . import findfunc
+
     basename = os.path.basename
 
     funcs = {}
     cparser = PuddleConfig()
-    set_value = partial(cparser.set, 'puddleactions')
-    get_value = partial(cparser.get, 'puddleactions')
+    set_value = partial(cparser.set, "puddleactions")
+    get_value = partial(cparser.get, "puddleactions")
 
-    firstrun = get_value('firstrun', True)
-    set_value('firstrun', False)
-    convert = get_value('convert', True)
-    order = get_value('order', [])
+    firstrun = get_value("firstrun", True)
+    set_value("firstrun", False)
+    convert = get_value("convert", True)
+    order = get_value("order", [])
 
     if convert:
-        set_value('convert', False)
+        set_value("convert", False)
         findfunc.convert_actions(SAVEDIR, ACTIONDIR)
         if order:
-            old_order = dict([(basename(z), i) for i, z in
-                              enumerate(order)])
-            files = glob(os.path.join(ACTIONDIR, '*.action'))
+            old_order = dict([(basename(z), i) for i, z in enumerate(order)])
+            files = glob(os.path.join(ACTIONDIR, "*.action"))
             order = {}
             for f in files:
                 try:
@@ -780,23 +883,22 @@ def load_actions():
                 except KeyError:
                     pass
             order = [z[1] for z in sorted(order.items())]
-            set_value('order', order)
+            set_value("order", order)
 
-    files = glob(os.path.join(ACTIONDIR, '*.action'))
+    files = glob(os.path.join(ACTIONDIR, "*.action"))
     if firstrun and not files:
-        filenames = ['data:./caseconversion.action', 'data:./standard.action']
+        filenames = ["data:./caseconversion.action", "data:./standard.action"]
         files = list(map(open_resourcefile, filenames))
-        set_value('firstrun', False)
+        set_value("firstrun", False)
 
         for fileobj, filename in zip(files, filenames):
             filename = os.path.join(ACTIONDIR, filename[2:])
-            f = open(filename, 'w')
+            f = open(filename, "w")
             f.write(fileobj.read())
             f.close()
-        files = glob(os.path.join(ACTIONDIR, '*.action'))
+        files = glob(os.path.join(ACTIONDIR, "*.action"))
 
-    files = [z for z in order if z in files] + \
-            [z for z in files if z not in order]
+    files = [z for z in order if z in files] + [z for z in files if z not in order]
 
     funcs = []
     for f in files:
@@ -808,11 +910,15 @@ def load_actions():
 def open_resourcefile(filename):
     f = QFile(filename)
     f.open(QIODevice.OpenModeFlag.ReadOnly)
-    return StringIO(str(f.readAll().data(), encoding='utf-8'))
+    return StringIO(str(f.readAll().data(), encoding="utf-8"))
 
 
-def progress(func: Callable[..., Generator[Optional[Tuple[str, int]], None, None]],
-             pstring: str, maximum: int, threadfin: Optional[Callable[[], None]] = None) -> Callable[..., None]:
+def progress(
+    func: Callable[..., Generator[tuple[str, int] | None, None, None]],
+    pstring: str,
+    maximum: int,
+    threadfin: Callable[[], None] | None = None,
+) -> Callable[..., None]:
     """To be used for functions that need a threaded progressbar.
 
     Note that this function will only (and is meant to) work on dialogs.
@@ -854,8 +960,7 @@ def progress(func: Callable[..., Generator[Optional[Tuple[str, int]], None, None
 
         if maximum == 1:
             errors = next(f)
-            if errors and \
-                    not isinstance(errors, (str, int)):
+            if errors and not isinstance(errors, (str, int)):
                 errormsg(parent, errors[0], 1)
             if threadfin:
                 threadfin()
@@ -879,8 +984,7 @@ def progress(func: Callable[..., Generator[Optional[Tuple[str, int]], None, None
                     elif isinstance(temp, int):
                         thread.set_max.emit(temp)
                     elif temp is not None:
-                        thread.error.emit(
-                            temp[0], temp[1])
+                        thread.error.emit(temp[0], temp[1])
                         err = True
                         break
                     else:
@@ -951,7 +1055,8 @@ def timemethod(method):
 
 class HeaderSetting(QDialog):
     """A dialog that allows you to edit the header of a TagTable widget."""
-    headerChanged = pyqtSignal([list, list], name='headerChanged')
+
+    headerChanged = pyqtSignal([list, list], name="headerChanged")
 
     def __init__(self, tags=None, parent=None, showok=True, showedits=True):
 
@@ -989,8 +1094,7 @@ class HeaderSetting(QDialog):
         self.grid.setColumnStretch(1, 1)
         self.grid.setColumnStretch(0, 2)
 
-        self.listbox.currentItemChanged.connect(
-            self.fillEdits)
+        self.listbox.currentItemChanged.connect(self.fillEdits)
 
         self.listbox.itemSelectionChanged.connect(self.enableEdits)
 
@@ -1019,7 +1123,8 @@ class HeaderSetting(QDialog):
         self.tag.setEnabled(True)
 
     def remove(self):
-        if len(self.tags) == 1: return
+        if len(self.tags) == 1:
+            return
         self.textname.textChanged.disconnect(self.updateList)
         self.listbox.currentItemChanged.disconnect(self.fillEdits)
         self.listbox.removeSelected(self.tags)
@@ -1157,7 +1262,7 @@ class ListBox(QListWidget):
             self.takeItem(rows[i])
             if yourlist:
                 try:
-                    del (yourlist[rows[i]])
+                    del yourlist[rows[i]]
                 except (KeyError, IndexError):
                     "The list doesn't have enough items or something"
             rows = [z - 1 for z in rows]
@@ -1224,7 +1329,9 @@ class ListBox(QListWidget):
         [self.item(row + 1).setSelected(True) for row in rows]
 
     def selectedItems(self):
-        return [item for item in map(self.item, range(self.count())) if item.isSelected()]
+        return [
+            item for item in map(self.item, range(self.count())) if item.isSelected()
+        ]
 
 
 class ListButtons(QVBoxLayout):
@@ -1236,41 +1343,48 @@ class ListButtons(QVBoxLayout):
     buttons name. e.g. add sends SIGNAL("add").
 
     You can find them all in the widgets attribute."""
-    addSignal = pyqtSignal(name='add')
-    removeSignal = pyqtSignal(name='remove')
-    moveupSignal = pyqtSignal(name='moveup')
-    movedownSignal = pyqtSignal(name='movedown')
-    editSignal = pyqtSignal(name='edit')
-    duplicateSignal = pyqtSignal(name='duplicate')
+
+    addSignal = pyqtSignal(name="add")
+    removeSignal = pyqtSignal(name="remove")
+    moveupSignal = pyqtSignal(name="moveup")
+    movedownSignal = pyqtSignal(name="movedown")
+    editSignal = pyqtSignal(name="edit")
+    duplicateSignal = pyqtSignal(name="duplicate")
 
     def __init__(self, parent=None):
         QVBoxLayout.__init__(self, parent)
         self.addButton = QToolButton()
-        self.addButton.setIcon(get_icon('list-add'))
-        self.addButton.setToolTip(translate("List Buttons", 'Add'))
+        self.addButton.setIcon(get_icon("list-add"))
+        self.addButton.setToolTip(translate("List Buttons", "Add"))
         self.removeButton = QToolButton()
-        self.removeButton.setIcon(get_icon('list-remove'))
-        self.removeButton.setToolTip(translate("List Buttons", 'Remove'))
-        self.removeButton.setShortcut('Delete')
+        self.removeButton.setIcon(get_icon("list-remove"))
+        self.removeButton.setToolTip(translate("List Buttons", "Remove"))
+        self.removeButton.setShortcut("Delete")
         self.moveupButton = QToolButton()
         self.moveupButton.setArrowType(Qt.ArrowType.UpArrow)
-        self.moveupButton.setToolTip(translate("List Buttons", 'Move Up'))
+        self.moveupButton.setToolTip(translate("List Buttons", "Move Up"))
         self.movedownButton = QToolButton()
         self.movedownButton.setArrowType(Qt.ArrowType.DownArrow)
-        self.movedownButton.setToolTip(translate("List Buttons", 'Move Down'))
+        self.movedownButton.setToolTip(translate("List Buttons", "Move Down"))
         self.editButton = QToolButton()
-        self.editButton.setIcon(get_icon('document-edit'))
-        self.editButton.setToolTip(translate("List Buttons", 'Edit'))
+        self.editButton.setIcon(get_icon("document-edit"))
+        self.editButton.setToolTip(translate("List Buttons", "Edit"))
         self.duplicateButton = QToolButton()
-        self.duplicateButton.setIcon(get_icon('edit-copy'))
-        self.duplicateButton.setToolTip(translate("List Buttons", 'Duplicate'))
+        self.duplicateButton.setIcon(get_icon("edit-copy"))
+        self.duplicateButton.setToolTip(translate("List Buttons", "Duplicate"))
         self.copyButton = QToolButton()
-        self.copyButton.setToolTip(translate("List Buttons", 'Copy to clipboard'))
+        self.copyButton.setToolTip(translate("List Buttons", "Copy to clipboard"))
         self.pasteButton = QToolButton()
-        self.pasteButton.setToolTip(translate("List Buttons", 'Paste from clipboard'))
+        self.pasteButton.setToolTip(translate("List Buttons", "Paste from clipboard"))
 
-        self.widgets = [self.addButton, self.editButton, self.duplicateButton,
-                        self.removeButton, self.moveupButton, self.movedownButton]
+        self.widgets = [
+            self.addButton,
+            self.editButton,
+            self.duplicateButton,
+            self.removeButton,
+            self.moveupButton,
+            self.movedownButton,
+        ]
         [self.addWidget(widget) for widget in self.widgets]
         self.insertStretch(4)
         self.insertSpacing(4, 6)
@@ -1284,20 +1398,33 @@ class ListButtons(QVBoxLayout):
         self.editButton.clicked.connect(self.editClicked)
         self.duplicateButton.clicked.connect(self.duplicateClicked)
 
-    def connectToWidget(self, widget, add=None, edit=None, remove=None,
-                        moveup=None, movedown=None, duplicate=None):
-        l = ['add', 'edit', 'remove']
+    def connectToWidget(
+        self,
+        widget,
+        add=None,
+        edit=None,
+        remove=None,
+        moveup=None,
+        movedown=None,
+        duplicate=None,
+    ):
+        l = ["add", "edit", "remove"]
         if moveup:
-            l.append('moveup')
+            l.append("moveup")
         if movedown:
-            l.append('movedown')
+            l.append("movedown")
         if duplicate:
-            l.append('duplicate')
-        connections = dict([(z, v) for z, v in zip(l,
-                                                   [add, edit, remove, moveup, movedown,
-                                                    duplicate]) if v])
+            l.append("duplicate")
+        connections = dict(
+            [
+                (z, v)
+                for z, v in zip(l, [add, edit, remove, moveup, movedown, duplicate])
+                if v
+            ]
+        )
         connect = lambda a: getattr(self, a).connect(
-            connections[a] if a in connections else getattr(widget, a))
+            connections[a] if a in connections else getattr(widget, a)
+        )
         list(map(connect, l))
 
     def addClicked(self):
@@ -1305,7 +1432,7 @@ class ListButtons(QVBoxLayout):
 
     def setEnabled(self, value):
         [w.setEnabled(value) for w in self.widgets]
-        super(ListButtons, self).setEnabled(value)
+        super().setEnabled(value)
 
     def removeClicked(self):
         self.removeSignal.emit()
@@ -1324,12 +1451,12 @@ class ListButtons(QVBoxLayout):
 
 
 class MoveButtons(QWidget):
-    indexChanged = pyqtSignal(int, name='indexChanged')
+    indexChanged = pyqtSignal(int, name="indexChanged")
 
     def __init__(self, arrayname, index=0, orientation=HORIZONTAL, parent=None):
         QWidget.__init__(self, parent)
-        self.next = QPushButton(translate("List Buttons", '&>>'))
-        self.prev = QPushButton(translate("List Buttons", '&<<'))
+        self.next = QPushButton(translate("List Buttons", "&>>"))
+        self.prev = QPushButton(translate("List Buttons", "&<<"))
         if orientation == VERTICAL:
             box = QVBoxLayout()
             box.addWidget(self.next, 0)
@@ -1392,8 +1519,9 @@ class MoveButtons(QWidget):
 
 class OKCancel(QHBoxLayout):
     """Yes, I know about QDialogButtonBox, but I'm not using PyQt5.2 here."""
-    ok = pyqtSignal(name='ok')
-    cancel = pyqtSignal(name='cancel')
+
+    ok = pyqtSignal(name="ok")
+    cancel = pyqtSignal(name="cancel")
 
     def __init__(self, parent=None):
         QHBoxLayout.__init__(self, parent)
@@ -1407,8 +1535,8 @@ class OKCancel(QHBoxLayout):
         self.addStretch()
         self.addWidget(dbox)
 
-        self.okButton.setText(translate('Defaults', 'OK'))
-        self.cancelButton.setText(translate('Defaults', 'Cancel'))
+        self.okButton.setText(translate("Defaults", "OK"))
+        self.cancelButton.setText(translate("Defaults", "Cancel"))
         # self.cancelButton = QPushButton("&Cancel")
         # self.okButton.setDefault(True)
 
@@ -1428,7 +1556,7 @@ class OKCancel(QHBoxLayout):
 class LongInfoMessage(QDialog):
     def __init__(self, title, question, html, parent=None):
         QDialog.__init__(self, parent)
-        winsettings('infomessage', self)
+        winsettings("infomessage", self)
         question = QLabel(question)
 
         text = QTextEdit()
@@ -1454,11 +1582,11 @@ class LongInfoMessage(QDialog):
 
 
 class ArtworkLabel(QGraphicsView):
-    newImages = pyqtSignal(list, name='newImages')
-    clicked = pyqtSignal(name='clicked')
+    newImages = pyqtSignal(list, name="newImages")
+    clicked = pyqtSignal(name="clicked")
 
     def __init__(self, *args, **kwargs):
-        super(ArtworkLabel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         pal = self.palette()
         pal.setBrush(self.backgroundRole(), QBrush(pal.window()))
@@ -1495,16 +1623,16 @@ class ArtworkLabel(QGraphicsView):
         if mime.hasUrls():
             filenames = [str(z.toString()) for z in mime.urls()]
             self.newImages.emit(filenames)
-        super(ArtworkLabel, self).dropEvent(event)
+        super().dropEvent(event)
 
     def mousePressEvent(self, event):
-        super(ArtworkLabel, self).mousePressEvent(event)
+        super().mousePressEvent(event)
         if event.buttons() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
 
     def resizeEvent(self, event=None):
         if event is not None:
-            super(ArtworkLabel, self).resizeEvent(event)
+            super().resizeEvent(event)
         if self._svg.isVisible():
             item = self._svg
         else:
@@ -1514,7 +1642,7 @@ class ArtworkLabel(QGraphicsView):
 
     def setPixmap(self, pixmap, data=None):
         if isinstance(pixmap, str):
-            renderer = QSvgRenderer(QByteArray(bytes(pixmap, 'utf-8')), self._svg)
+            renderer = QSvgRenderer(QByteArray(bytes(pixmap, "utf-8")), self._svg)
             self._svg.setSharedRenderer(renderer)
             self._pixmap.setVisible(False)
             self._svg.setVisible(True)
@@ -1546,10 +1674,12 @@ class PicWidget(QWidget):
     saveToFile -> Save the current image to file.
     showbuttons -> If True, the >> and << buttons are always shown. If False,
                     they are shown depending on context."""
-    imageChanged = pyqtSignal(name='imageChanged')
 
-    def __init__(self, images=None, imagetags=None, parent=None,
-                 readonly=None, buttons=False):
+    imageChanged = pyqtSignal(name="imageChanged")
+
+    def __init__(
+        self, images=None, imagetags=None, parent=None, readonly=None, buttons=False
+    ):
         """Initialises the widget.
 
         images -> A list of images as described in the classes docstring.
@@ -1560,16 +1690,16 @@ class PicWidget(QWidget):
                    If False, then these functions can be found by right clicking
                    on the picture."""
 
-        self._contextFormat = translate('Artwork Context', "{}/{}")
+        self._contextFormat = translate("Artwork Context", "{}/{}")
 
         QWidget.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.sizePolicy().setVerticalStretch(0)
         self.sizePolicy().setHorizontalStretch(3)
 
-        self.lastfilename = '~'
+        self.lastfilename = "~"
         self.currentFile = None
-        self.filePattern = 'folder.jpg'
+        self.filePattern = "folder.jpg"
 
         self.label = ArtworkLabel()
         self.label.setFrameStyle(QFrame.Shape.Box)
@@ -1581,30 +1711,36 @@ class PicWidget(QWidget):
 
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.newImages.connect(
-            lambda filenames: self.addImages(self.loadPics(*filenames)))
+            lambda filenames: self.addImages(self.loadPics(*filenames))
+        )
 
         self._image_size = QLabel()
         self._image_size.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
         self._image_desc = QLineEdit(self)
 
-        if (hasattr(self._image_desc, 'setPlaceholderText')):
-            self._image_desc.setPlaceholderText(translate("Artwork", 'Enter a description'))
+        if hasattr(self._image_desc, "setPlaceholderText"):
+            self._image_desc.setPlaceholderText(
+                translate("Artwork", "Enter a description")
+            )
         else:
-            self._image_desc.setText('')
+            self._image_desc.setText("")
 
         self._image_desc.setToolTip(
-            translate("Artwork",
-                      '<p>Enter a description for the current cover.</p>'
-                      '<p>For ID3 tags the description has to be different for each '
-                      "cover as per the ID3 spec. If they don't differ then spaces "
-                      'are appended to the description when the tag is saved.</p>'))
+            translate(
+                "Artwork",
+                "<p>Enter a description for the current cover.</p>"
+                "<p>For ID3 tags the description has to be different for each "
+                "cover as per the ID3 spec. If they don't differ then spaces "
+                "are appended to the description when the tag is saved.</p>",
+            )
+        )
         self._image_desc.textEdited.connect(self.setDescription)
         controls = QVBoxLayout()
 
         if buttons:
             dbox = QVBoxLayout()
-            label = QLabel(translate("Artwork", '&Description'))
+            label = QLabel(translate("Artwork", "&Description"))
             label.setBuddy(self._image_desc)
             dbox.addWidget(label)
             dbox.addWidget(self._image_desc)
@@ -1612,7 +1748,7 @@ class PicWidget(QWidget):
             self._image_type = QComboBox(self)
             self._image_type.addItems(IMAGETYPES)
             dbox = QVBoxLayout()
-            label = QLabel(translate("Artwork", '&Type'))
+            label = QLabel(translate("Artwork", "&Type"))
             label.setBuddy(self._image_type)
             dbox.addWidget(label)
             dbox.addWidget(self._image_type)
@@ -1624,8 +1760,8 @@ class PicWidget(QWidget):
             hbox.addWidget(self._image_type)
             controls.addLayout(hbox)
         self._image_type.setToolTip(
-            translate("Artwork",
-                      '<p>Select a cover type for the artwork.</p>'))
+            translate("Artwork", "<p>Select a cover type for the artwork.</p>")
+        )
         self._image_type.currentIndexChanged.connect(self.setType)
 
         self.showbuttons = True
@@ -1704,14 +1840,14 @@ class PicWidget(QWidget):
             self.removepic = listbuttons.removeButton
             self.editpic = listbuttons.editButton
             self.savepic = QToolButton()
-            self.savepic.setIcon(get_icon('document-save'))
+            self.savepic.setIcon(get_icon("document-save"))
             self.savepic.setIconSize(QSize(16, 16))
             self.copypic = listbuttons.copyButton
             self.pastepic = listbuttons.pasteButton
             listbuttons.insertWidget(3, self.savepic)
             listbuttons.moveupButton.hide()
             listbuttons.movedownButton.hide()
-            signal = 'clicked'
+            signal = "clicked"
             hbox.addLayout(listbuttons)
 
         else:
@@ -1733,7 +1869,7 @@ class PicWidget(QWidget):
 
             self.editpic = QAction(translate("Artwork", "&Change cover"), self)
             self.label.addAction(self.editpic)
-            signal = 'triggered'
+            signal = "triggered"
 
         getattr(self.addpic, signal).connect(self.addImage)
         getattr(self.removepic, signal).connect(self.removeImage)
@@ -1769,21 +1905,21 @@ class PicWidget(QWidget):
     def context(self, text):
         if not text:
             self._contextlabel.setVisible(False)
-            self._contextlabel.setText('')
+            self._contextlabel.setText("")
         else:
             self._contextlabel.setText(translate("Artwork Context", text))
             self._contextlabel.setVisible(True)
 
     def setDescription(self, text):
-        '''Sets the description of the current image to the text in the
-            description text box.'''
-        self.images[self.currentImage]['description'] = str(text)
+        """Sets the description of the current image to the text in the
+        description text box."""
+        self.images[self.currentImage]["description"] = str(text)
         self.imageChanged.emit()
 
     def setType(self, index):
         """Like setDescription, but for imagetype"""
         try:
-            self.images[self.currentImage]['imagetype'] = index
+            self.images[self.currentImage]["imagetype"] = index
             self.imageChanged.emit()
         except IndexError:
             pass
@@ -1795,11 +1931,16 @@ class PicWidget(QWidget):
         If edit is True, then the current image is changed."""
 
         if not filename:
-            default_fn = os.path.join(
-                os.path.dirname(self.lastfilename), 'folder.jpg')
-            selectedFile = QFileDialog.getOpenFileName(self,
-                                                       translate("Artwork", 'Select Image...'), default_fn,
-                                                       translate("Artwork", "JPEG & PNG Images (*.jpg *.jpeg *.png);;JPEG Images (*.jpg *.jpeg);;PNG Images (*.png);;All Files(*.*)"))
+            default_fn = os.path.join(os.path.dirname(self.lastfilename), "folder.jpg")
+            selectedFile = QFileDialog.getOpenFileName(
+                self,
+                translate("Artwork", "Select Image..."),
+                default_fn,
+                translate(
+                    "Artwork",
+                    "JPEG & PNG Images (*.jpg *.jpeg *.png);;JPEG Images (*.jpg *.jpeg);;PNG Images (*.png);;All Files(*.*)",
+                ),
+            )
             filename = selectedFile[0]
 
         if not filename:
@@ -1835,7 +1976,7 @@ class PicWidget(QWidget):
                 "size": len(data),
                 "mime": get_mime(data),
                 "description": "",
-                "imagetype": 3
+                "imagetype": 3,
             }
             self.addImages([pic])
 
@@ -1878,7 +2019,11 @@ class PicWidget(QWidget):
             else:
                 self.prev.setEnabled(True)
 
-        if not self.showbuttons and not self.next.isEnabled() and not self.prev.isEnabled():
+        if (
+            not self.showbuttons
+            and not self.next.isEnabled()
+            and not self.prev.isEnabled()
+        ):
             self.next.hide()
             self.prev.hide()
         else:
@@ -1888,7 +2033,7 @@ class PicWidget(QWidget):
     @property
     def currentImage(self):
         """Get or set the index of the current image. If the index isn't valid
-           then a blank image is loaded."""
+        then a blank image is loaded."""
         return self._currentImage
 
     @currentImage.setter
@@ -1897,28 +2042,32 @@ class PicWidget(QWidget):
             # A lot of files have corrupt picture data. I just want to
             # skip those and not have the user be any wiser.
             try:
-                data = self.images[num]['data']
+                data = self.images[num]["data"]
             except IndexError:
                 self.setNone()
                 return
 
-            if isinstance(data, bytes) and data.startswith(b'<?xml'):
-                image = data
-                break
-            elif isinstance(data, str) and data.startswith('<?xml'):
+            if (
+                isinstance(data, bytes)
+                and data.startswith(b"<?xml")
+                or isinstance(data, str)
+                and data.startswith("<?xml")
+            ):
                 image = data
                 break
             else:
                 image = QPixmap()
                 if not image.loadFromData(data):
-                    del (self.images[num])
+                    del self.images[num]
                 else:
                     break
 
-        [action.setEnabled(True) for action in
-         (self.editpic, self.savepic, self.removepic, self.copypic)]
+        [
+            action.setEnabled(True)
+            for action in (self.editpic, self.savepic, self.removepic, self.copypic)
+        ]
 
-        if hasattr(self, '_itags'):
+        if hasattr(self, "_itags"):
             self.setImageTags(self._itags)
         if num in self.readonly:
             self.editpic.setEnabled(False)
@@ -1944,13 +2093,14 @@ class PicWidget(QWidget):
 
         self._lastdata = data
         self._image_desc.blockSignals(True)
-        desc = self.images[num].get('description',
-                                    translate("Artwork", 'Enter a description'))
+        desc = self.images[num].get(
+            "description", translate("Artwork", "Enter a description")
+        )
         self._image_desc.setText(desc)
         self._image_desc.blockSignals(False)
         self._image_type.blockSignals(True)
         try:
-            self._image_type.setCurrentIndex(self.images[num]['imagetype'])
+            self._image_type.setCurrentIndex(self.images[num]["imagetype"])
         except KeyError:
             self._image_type.setCurrentIndex(3)
         self._image_type.blockSignals(False)
@@ -1980,30 +2130,37 @@ class PicWidget(QWidget):
         from .functions import save_artwork
 
         if self.currentFile is not None and self.filePattern:
-            tempfilename = save_artwork(self.currentFile,
-                                        self.filePattern, self.currentFile, write=False)
+            tempfilename = save_artwork(
+                self.currentFile, self.filePattern, self.currentFile, write=False
+            )
             if not tempfilename:
-                tempfilename = os.path.join(self.currentFile.dirpath,
-                                            'folder.jpg')
+                tempfilename = os.path.join(self.currentFile.dirpath, "folder.jpg")
         elif self.lastfilename:
-            tempfilename = os.path.join(os.path.dirname(self.lastfilename),
-                                        'folder.jpg')
+            tempfilename = os.path.join(
+                os.path.dirname(self.lastfilename), "folder.jpg"
+            )
         else:
-            tempfilename = 'folder.jpg'
+            tempfilename = "folder.jpg"
         if self.currentImage > -1:
             selectedFile = QFileDialog.getSaveFileName(
                 self,
-                translate("Artwork", 'Save artwork as...'),
+                translate("Artwork", "Save artwork as..."),
                 tempfilename,
-                translate("Artwork", "JPEG Images (*.jpg);;PNG Images (*.png);;All Files(*.*)"))
+                translate(
+                    "Artwork", "JPEG Images (*.jpg);;PNG Images (*.png);;All Files(*.*)"
+                ),
+            )
             filename = selectedFile[0]
             if not filename:
                 return
             if not self.pixmap.save(filename):
-                QMessageBox.critical(self,
-                                     translate('Defaults', "Error"),
-                                     translate('Artwork', "Writing to <b>{}</b> failed.").format(filename)
-                                     )
+                QMessageBox.critical(
+                    self,
+                    translate("Defaults", "Error"),
+                    translate("Artwork", "Writing to <b>{}</b> failed.").format(
+                        filename
+                    ),
+                )
 
     def setNone(self):
         self.label.setFrameStyle(QFrame.Shape.Box)
@@ -2013,9 +2170,11 @@ class PicWidget(QWidget):
         self.images = []
         self._image_desc.setEnabled(False)
         self._image_type.setEnabled(False)
-        [action.setEnabled(False) for action in
-         (self.editpic, self.savepic, self.removepic)]
-        self.context = 'No Images'
+        [
+            action.setEnabled(False)
+            for action in (self.editpic, self.savepic, self.removepic)
+        ]
+        self.context = "No Images"
         self._lastdata = None
 
     def setImages(self, images, imagetags=None, default=0):
@@ -2032,7 +2191,7 @@ class PicWidget(QWidget):
     def removeImage(self):
         """Removes the current image."""
         if len(self.images) >= 1:
-            del (self.images[self.currentImage])
+            del self.images[self.currentImage]
             if self.currentImage >= len(self.images) - 1 and self.currentImage > 0:
                 self.currentImage = len(self.images) - 1
             else:
@@ -2046,6 +2205,7 @@ class PicWidget(QWidget):
         per argument. Lists and tuples need to be unpacked by the caller."""
         # I really need to sort out these circular references.
         from .tagsources import RetrievalError, urlopen
+
         images = []
 
         for filename in filenames:
@@ -2061,16 +2221,20 @@ class PicWidget(QWidget):
                     data = urlopen(filename)
                 except (ValueError, RetrievalError):
                     try:
-                        data = open(filename, 'rb').read()
-                    except EnvironmentError:
+                        data = open(filename, "rb").read()
+                    except OSError:
                         continue
 
             if image.loadFromData(data):
-                pic = {'data': data, 'height': image.height(),
-                       'width': image.width(), 'size': len(data),
-                       'mime': get_mime(data),
-                       'description': "",
-                       'imagetype': 3}
+                pic = {
+                    "data": data,
+                    "height": image.height(),
+                    "width": image.width(),
+                    "size": len(data),
+                    "mime": get_mime(data),
+                    "description": "",
+                    "imagetype": 3,
+                }
                 images.append(pic)
 
         return images
@@ -2079,18 +2243,24 @@ class PicWidget(QWidget):
         images = []
         for d in data:
             image = QImage().fromData(d)
-            pic = {'data': d, 'height': image.height(),
-                   'width': image.width(), 'size': len(data),
-                   'mime': get_mime(d),
-                   'description': "",
-                   'imagetype': 3}
+            pic = {
+                "data": d,
+                "height": image.height(),
+                "width": image.width(),
+                "size": len(data),
+                "mime": get_mime(d),
+                "description": "",
+                "imagetype": 3,
+            }
             images.append(pic)
         return images
 
     def setImageTags(self, itags):
-        tags = {DESCRIPTION: self._image_desc.setEnabled,
-                DATA: self.label.setEnabled,
-                IMAGETYPE: self._image_type.setEnabled}
+        tags = {
+            DESCRIPTION: self._image_desc.setEnabled,
+            DATA: self.label.setEnabled,
+            IMAGETYPE: self._image_type.setEnabled,
+        }
         self.enableButtons()
         if not itags:
             self.addpic.setEnabled(False)
@@ -2126,7 +2296,7 @@ class PicWin(QDialog):
         If you don't want to load an image when the class
         is created, let pixmap = None and call setImage later."""
         QDialog.__init__(self, parent)
-        self.setWindowTitle(QApplication.translate('Dialogs', 'Album Art'))
+        self.setWindowTitle(QApplication.translate("Dialogs", "Album Art"))
         self.label = ArtworkLabel()
 
         vbox = QVBoxLayout()
@@ -2142,7 +2312,7 @@ class PicWin(QDialog):
     def setImage(self, pixmap):
         maxsize = self.screen().availableGeometry().size()
         self.label.setPixmap(pixmap)
-        if hasattr(pixmap, 'size'):
+        if hasattr(pixmap, "size"):
             size = pixmap.size()
             res = ": %sx%s" % (size.width(), size.height())
             self.setWindowTitle(self.windowTitle() + res)
@@ -2156,16 +2326,21 @@ class PicWin(QDialog):
 
 
 class ProgressWin(QDialog):
-    canceled = pyqtSignal(name='canceled')
+    canceled = pyqtSignal(name="canceled")
 
-    def __init__(self, parent: Optional[QObject] = None, maximum: int = 100, progresstext: str = '',
-                 showcancel: bool = True) -> None:
+    def __init__(
+        self,
+        parent: QObject | None = None,
+        maximum: int = 100,
+        progresstext: str = "",
+        showcancel: bool = True,
+    ) -> None:
         QDialog.__init__(self, parent)
         self._infunc = False
         self._cached = 0
         self.setModal(True)
         self.setWindowTitle(translate("Progress Dialog", "Please Wait..."))
-        self._format = translate('Progress Dialog', "{}{} of {}...")
+        self._format = translate("Progress Dialog", "{}{} of {}...")
 
         self.ptext = progresstext
 
@@ -2182,9 +2357,9 @@ class ProgressWin(QDialog):
                 self.label.setVisible(False)
             else:
                 self.label.setText(progresstext)
-            self.ptext = ''
+            self.ptext = ""
 
-        cancel = QPushButton(translate("Defaults", 'Cancel'))
+        cancel = QPushButton(translate("Defaults", "Cancel"))
         cbox = QHBoxLayout()
         cbox.addStretch()
         cbox.addWidget(cancel)
@@ -2220,8 +2395,9 @@ class ProgressWin(QDialog):
         self._infunc = True
         if self.ptext:
             self.pbar.setTextVisible(False)
-            self.label.setText(self._format.format(
-                self.ptext, value, self.pbar.maximum()))
+            self.label.setText(
+                self._format.format(self.ptext, value, self.pbar.maximum())
+            )
         self.pbar.setValue(value)
         self._infunc = False
         if self.pbar.maximum() and value >= self.pbar.maximum():
@@ -2233,9 +2409,9 @@ class ProgressWin(QDialog):
         self.close()
 
     def closeEvent(self, event):
-        if hasattr(self, '_timer'):
+        if hasattr(self, "_timer"):
             self._timer.stop()
-        super(ProgressWin, self).closeEvent(event)
+        super().closeEvent(event)
 
     @property
     def value(self) -> int:
@@ -2243,7 +2419,7 @@ class ProgressWin(QDialog):
 
 
 class PuddleCombo(QWidget):
-    editTextChanged = pyqtSignal(str, name='editTextChanged')
+    editTextChanged = pyqtSignal(str, name="editTextChanged")
 
     def __init__(self, name, default=None, parent=None):
         QWidget.__init__(self, parent)
@@ -2253,8 +2429,8 @@ class PuddleCombo(QWidget):
         self.combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
 
         self.remove = QToolButton()
-        self.remove.setIcon(get_icon('list-remove'))
-        self.remove.setToolTip(translate("Combo Box", 'Remove current item.'))
+        self.remove.setIcon(get_icon("list-remove"))
+        self.remove.setToolTip(translate("Combo Box", "Remove current item."))
         self.remove.setIconSize(QSize(13, 13))
         self.remove.clicked.connect(self.removeCurrent)
 
@@ -2269,16 +2445,15 @@ class PuddleCombo(QWidget):
 
         self.name = name
         cparser = PuddleConfig()
-        self.filename = os.path.join(os.path.dirname(cparser.filename), 'combos')
+        self.filename = os.path.join(os.path.dirname(cparser.filename), "combos")
         if not default:
             default = []
         cparser.filename = self.filename
-        items = cparser.load(self.name, 'values', default)
+        items = cparser.load(self.name, "values", default)
         newitems = []
         [newitems.append(z) for z in items if z not in newitems]
         self.combo.addItems(newitems)
-        self.combo.editTextChanged.connect(
-            self._editTextChanged)
+        self.combo.editTextChanged.connect(self._editTextChanged)
 
     def load(self, name=None, default=None):
         if name:
@@ -2287,14 +2462,16 @@ class PuddleCombo(QWidget):
             default = []
         self.combo.clear()
         cparser = PuddleConfig(self.filename)
-        self.combo.addItems(cparser.load(self.name, 'values', default))
+        self.combo.addItems(cparser.load(self.name, "values", default))
 
     def save(self):
-        values = [str(self.combo.itemText(index)) for index in range(self.combo.count())]
+        values = [
+            str(self.combo.itemText(index)) for index in range(self.combo.count())
+        ]
         values.append(str(self.combo.currentText()))
         cparser = PuddleConfig(self.filename)
         try:
-            cparser.setSection(self.name, 'values', values)
+            cparser.setSection(self.name, "values", values)
         except ConfigObjError:
             pass
 
@@ -2313,8 +2490,9 @@ class PuddleCombo(QWidget):
 class PuddleDock(QDockWidget):
     """A normal QDockWidget that emits a 'visibilitychanged' signal
     when...uhm...it changes visibility."""
+
     _controls = {}
-    visibilitychanged = pyqtSignal(bool, name='visibilitychanged')
+    visibilitychanged = pyqtSignal(bool, name="visibilitychanged")
 
     def __init__(self, title, control=None, parent=None, status=None):
         QDockWidget.__init__(self, translate("Dialogs", title), parent)
@@ -2334,9 +2512,9 @@ class PuddleDock(QDockWidget):
 class PuddleHeader(QHeaderView):
     def __init__(self, orientation=Qt.Orientation.Horizontal, parent=None):
         if parent:
-            super(PuddleHeader, self).__init__(orientation, parent)
+            super().__init__(orientation, parent)
         else:
-            super(PuddleHeader, self).__init__()
+            super().__init__()
 
         self.setSortIndicatorShown(True)
         self.setSortIndicator(0, Qt.SortOrder.AscendingOrder)
@@ -2364,8 +2542,7 @@ class PuddleHeader(QHeaderView):
             action.toggled.connect(change_visibility)
             return action
 
-        header_actions = [create_action(section)
-                          for section in range(self.count())]
+        header_actions = [create_action(section) for section in range(self.count())]
 
         menu = QMenu(self)
         if actions:
@@ -2379,7 +2556,7 @@ class PuddleHeader(QHeaderView):
         menu.exec(event.globalPos())
 
 
-class PuddleStatus(object):
+class PuddleStatus:
     _status = {}
 
     def __init__(self):
@@ -2399,16 +2576,19 @@ class PuddleThread(QThread):
     """puddletag rudimentary threading.
     pass a command to run in another thread. The result
     is stored in retval."""
-    threadfinished = pyqtSignal(object, name='threadfinished')
-    statusChanged = pyqtSignal(str, name='statusChanged')
-    enable_preview_mode = pyqtSignal(name='enable_preview_mode')
-    setpreview = pyqtSignal(dict, name='setpreview')
-    message = pyqtSignal(str, name='message')
-    set_max = pyqtSignal(int, name='set_max')
-    error = pyqtSignal([str, int], name='error')
-    win = pyqtSignal(int, name='win')
 
-    def __init__(self, command: Callable[[], Any], parent: Optional[QObject] = None) -> None:
+    threadfinished = pyqtSignal(object, name="threadfinished")
+    statusChanged = pyqtSignal(str, name="statusChanged")
+    enable_preview_mode = pyqtSignal(name="enable_preview_mode")
+    setpreview = pyqtSignal(dict, name="setpreview")
+    message = pyqtSignal(str, name="message")
+    set_max = pyqtSignal(int, name="set_max")
+    error = pyqtSignal([str, int], name="error")
+    win = pyqtSignal(int, name="win")
+
+    def __init__(
+        self, command: Callable[[], Any], parent: QObject | None = None
+    ) -> None:
         QThread.__init__(self, parent)
         self.finished.connect(self._finish)
         self.command = command
@@ -2419,21 +2599,21 @@ class PuddleThread(QThread):
         try:
             self.retval = self.command()
         except StopIteration:
-            self.retval = 'STOP'
+            self.retval = "STOP"
 
     def _finish(self) -> None:
-        if hasattr(self, 'retval'):
+        if hasattr(self, "retval"):
             self.threadfinished.emit(self.retval)
         else:
             self.threadfinished.emit(None)
 
 
 class ShortcutEditor(QLineEdit):
-    validityChanged = pyqtSignal(bool, name='validityChanged')
+    validityChanged = pyqtSignal(bool, name="validityChanged")
 
     def __init__(self, shortcuts=None, *args, **kwargs):
         QLineEdit.__init__(self, *args, **kwargs)
-        winsettings('shortcutcapture', self)
+        winsettings("shortcutcapture", self)
 
         self.key = ""
         self.modifiers = {}
@@ -2443,19 +2623,19 @@ class ShortcutEditor(QLineEdit):
         self._shortcuts = shortcuts
 
     def clear(self):
-        super(ShortcutEditor, self).clear()
+        super().clear()
         self.valid = False
 
     def keyPressEvent(self, event):
 
-        text = ''
+        text = ""
 
         if event.modifiers():
             text = modifiers[event.modifiers()]
 
         if event.key() not in mod_keys:
             if text:
-                text += '+' + str(QKeySequence(event.key()).toString())
+                text += "+" + str(QKeySequence(event.key()).toString())
             else:
                 text = str(QKeySequence(event.key()).toString())
 
@@ -2479,12 +2659,22 @@ class ShortcutEditor(QLineEdit):
         self.validityChanged.emit(value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     class MainWin(QDialog):
         def __init__(self, parent=None):
             QDialog.__init__(self, parent)
-            self.combo = PuddleCombo('patterncombo',
-                                     ['%artist% - $num(%track%, 2) - %title%', '%artist% - %title%', '%artist% - %album%', '%artist% - Track %track%', '%artist% - %title%', '%artist%'])
+            self.combo = PuddleCombo(
+                "patterncombo",
+                [
+                    "%artist% - $num(%track%, 2) - %title%",
+                    "%artist% - %title%",
+                    "%artist% - %album%",
+                    "%artist% - Track %track%",
+                    "%artist% - %title%",
+                    "%artist%",
+                ],
+            )
 
             hbox = QHBoxLayout()
             hbox.addWidget(self.combo)
@@ -2493,7 +2683,6 @@ if __name__ == '__main__':
         def closeEvent(self, e):
             self.combo.save()
             QDialog.closeEvent(self, e)
-
 
     app = QApplication(sys.argv)
     widget = MainWin()

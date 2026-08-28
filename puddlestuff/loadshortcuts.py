@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 
@@ -11,18 +10,20 @@ from .translations import translate
 
 __version__ = 33
 
-files = [open_resourcefile(filename)
-         for filename in ['data:./caseconversion.action', 'data:./standard.action']]
+files = [
+    open_resourcefile(filename)
+    for filename in ["data:./caseconversion.action", "data:./standard.action"]
+]
 
-SEPARATOR = 'separator'
-ALWAYS = 'always'
-menu_path = os.path.join(CONFIGDIR, 'menus')
-shortcut_path = os.path.join(CONFIGDIR, 'shortcuts')
+SEPARATOR = "separator"
+ALWAYS = "always"
+menu_path = os.path.join(CONFIGDIR, "menus")
+shortcut_path = os.path.join(CONFIGDIR, "shortcuts")
 
 
 def create_file(path, resource):
     text = open_resourcefile(resource).read()
-    f = open(path, 'w')
+    f = open(path, "w")
     f.write(text)
     f.close()
 
@@ -33,15 +34,15 @@ def check_file(path: str, resource: str) -> None:
         create_file(path, resource)
     else:
         cparser = PuddleConfig(path)
-        version = cparser.get('info', 'version', 0)
+        version = cparser.get("info", "version", 0)
         if version < __version__:
-            print(f'Replacing version {version} config file {path} with newer version')
+            print(f"Replacing version {version} config file {path} with newer version")
             create_file(path, resource)
 
 
 def create_files():
-    check_file(menu_path, 'data:./menus')
-    check_file(shortcut_path, 'data:./shortcuts')
+    check_file(menu_path, "data:./menus")
+    check_file(shortcut_path, "data:./shortcuts")
 
 
 def get_menus(section, filepath=None):
@@ -52,7 +53,7 @@ def get_menus(section, filepath=None):
     menus = []
     settings = cparser.data
     temp = settings[section]
-    menus = [(z, temp[z]) for z in settings[section + 'attrs']['order']]
+    menus = [(z, temp[z]) for z in settings[section + "attrs"]["order"]]
     return menus
 
 
@@ -65,11 +66,11 @@ def menubar(menus, actions):
     for title, actionlist in menus:
         menu = menubar.addMenu(translate("Menus", title))
         _menus[title] = [menu]
-        if title == '&Windows':
+        if title == "&Windows":
             winmenu = menu
-            tr_section = 'Dialogs'
+            tr_section = "Dialogs"
         else:
-            tr_section = 'Menus'
+            tr_section = "Menus"
         for action in actionlist:
             if action in texts:
                 shortcut = actions[texts.index(action)]
@@ -86,7 +87,7 @@ def context_menu(section, actions, filepath=None):
     if not filepath:
         filepath = menu_path
         cparser.filename = filepath
-    order = [translate('Menus', z) for z in cparser.get(section, 'order', [])]
+    order = [translate("Menus", z) for z in cparser.get(section, "order", [])]
     if not order:
         return
     texts = [str(action.text()) for action in actions]
@@ -102,8 +103,8 @@ def context_menu(section, actions, filepath=None):
 def toolbar(groups, actions, controls=None):
     texts = [str(action.text()) for action in actions]
     if controls:
-        controls = dict([('widget-' + z, v) for z, v in controls.items()])
-    toolbar = QToolBar('Toolbar')
+        controls = dict([("widget-" + z, v) for z, v in controls.items()])
+    toolbar = QToolBar("Toolbar")
     for name, actionlist in groups:
         for action in actionlist:
             if action in texts:
@@ -114,9 +115,20 @@ def toolbar(groups, actions, controls=None):
     return toolbar
 
 
-def create_action(win, name, control, command, icon=None, enabled=ALWAYS,
-                  tooltip=None, shortcut=None, status=None, togglecheck=None,
-                  checkstate=None, icon_name=None):
+def create_action(
+    win,
+    name,
+    control,
+    command,
+    icon=None,
+    enabled=ALWAYS,
+    tooltip=None,
+    shortcut=None,
+    status=None,
+    togglecheck=None,
+    checkstate=None,
+    icon_name=None,
+):
     if icon or icon_name:
         action = QAction(get_icon(icon_name, icon), name, win)
     else:
@@ -130,7 +142,7 @@ def create_action(win, name, control, command, icon=None, enabled=ALWAYS,
             action.setShortcuts(shortcut)
 
     if tooltip:
-        action.setToolTip(translate('Menus', tooltip))
+        action.setToolTip(translate("Menus", tooltip))
 
     if togglecheck is not None:
         action.setCheckable(True)
@@ -154,16 +166,16 @@ def get_actions(parent, filepath=None):
     setting = cparser.data
     actions = []
     for section in cparser.sections():
-        if section.startswith('shortcut'):
+        if section.startswith("shortcut"):
             values = dict([(str(k), v) for k, v in setting[section].items()])
             actions.append(create_action(parent, **values))
     return actions
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = QMainWindow()
-    win.toolbar = win.addToolBar('toolbar')
+    win.toolbar = win.addToolBar("toolbar")
     loadShortCuts()
     win.show()
     app.exec()

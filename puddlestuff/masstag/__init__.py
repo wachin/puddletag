@@ -5,13 +5,12 @@ from operator import itemgetter
 from ..audioinfo import FILENAME
 from ..constants import VARIOUS
 from ..findfunc import filenametotag
+from ..mainwin.tagsources import DEFAULT_REGEXP, apply_regexps
+from ..mainwin.tagsources import strip as strip_fields
 from ..puddleobjects import natural_sort_key, ratio
 from ..tagsources import RetrievalError
 from ..translations import translate
 from ..util import sorted_split_by_field, split_by_field, to_string
-from ..mainwin.tagsources import (strip as strip_fields,
-                                  DEFAULT_REGEXP,
-                                  apply_regexps)
 
 
 def set_status(v):
@@ -19,18 +18,21 @@ def set_status(v):
 
 
 NO_MATCH_OPTIONS = [
-    translate('Masstagging', 'Continue'),
-    translate('Masstagging', 'Stop')]
+    translate("Masstagging", "Continue"),
+    translate("Masstagging", "Stop"),
+]
 
 SINGLE_MATCH_OPTIONS = [
-    translate('Masstagging', 'Combine and continue'),
-    translate('Masstagging', 'Replace and continue'),
-    translate('Masstagging', 'Combine and stop'),
-    translate('Masstagging', 'Replace and stop')]
+    translate("Masstagging", "Combine and continue"),
+    translate("Masstagging", "Replace and continue"),
+    translate("Masstagging", "Combine and stop"),
+    translate("Masstagging", "Replace and stop"),
+]
 
 AMBIGIOUS_MATCH_OPTIONS = [
-    translate('Masstagging', 'Use best match'),
-    translate('Masstagging', 'Do nothing and continue')]
+    translate("Masstagging", "Use best match"),
+    translate("Masstagging", "Do nothing and continue"),
+]
 
 COMBINE_CONTINUE = 0
 REPLACE_CONTINUE = 1
@@ -44,67 +46,72 @@ USE_BEST = 0
 DO_NOTHING = 1
 RETRY = 2
 
-ALBUM_BOUND = 'album'
-TRACK_BOUND = 'track'
-PATTERN = 'pattern'
-SOURCE_CONFIGS = 'source_configs'
-FIELDS = 'fields'
-JFDI = 'jfdi'
-NAME = 'name'
-DESC = 'description'
-EXISTING_ONLY = 'field_exists'
+ALBUM_BOUND = "album"
+TRACK_BOUND = "track"
+PATTERN = "pattern"
+SOURCE_CONFIGS = "source_configs"
+FIELDS = "fields"
+JFDI = "jfdi"
+NAME = "name"
+DESC = "description"
+EXISTING_ONLY = "field_exists"
 
-DEFAULT_PATTERN = '%artist% - %album%/%track% - %title%'
-DEFAULT_NAME = translate('Masstagging', 'Default Profile')
+DEFAULT_PATTERN = "%artist% - %album%/%track% - %title%"
+DEFAULT_NAME = translate("Masstagging", "Default Profile")
 
 POLLING = translate("Masstagging", "<b>Polling: {}</b>")
-MATCH_ARTIST_ALBUM = translate("Masstagging",
-                               'Retrieving matching album. <b>{} - {}</b>')
-MATCH_ARTIST = translate("Masstagging",
-                         'Retrieving matching album. Artist=<b>{}</b>')
-MATCH_ALBUM = translate("Masstagging",
-                        'Retrieving matching album. Album=<b>{}</b>')
-MATCH_NO_INFO = translate("Masstagging", 'Retrieving matching album.')
+MATCH_ARTIST_ALBUM = translate(
+    "Masstagging", "Retrieving matching album. <b>{} - {}</b>"
+)
+MATCH_ARTIST = translate("Masstagging", "Retrieving matching album. Artist=<b>{}</b>")
+MATCH_ALBUM = translate("Masstagging", "Retrieving matching album. Album=<b>{}</b>")
+MATCH_NO_INFO = translate("Masstagging", "Retrieving matching album.")
 
-SEARCHING_ARTIST_ALBUM = ':insert' + translate("Masstagging",
-                                               'Starting search for: <br />artist=<b>{}</b> '
-                                               '<br />album=<b>{}</b><br />')
-SEARCHING_ARTIST = ':insert' + translate("Masstagging",
-                                         'Starting search for: <br />artist=<b>{}</b>'
-                                         '<br />album=No album name found.')
-SEARCHING_ALBUM = ':insert' + translate("Masstagging",
-                                        'Starting search for: <br />album=<b>{}</b>'
-                                        '<br />artist=No artist found.')
-SEARCHING_NO_INFO = ':insert' + translate("Masstagging",
-                                          'No artist or album info found in files. Starting search.')
+SEARCHING_ARTIST_ALBUM = ":insert" + translate(
+    "Masstagging",
+    "Starting search for: <br />artist=<b>{}</b> <br />album=<b>{}</b><br />",
+)
+SEARCHING_ARTIST = ":insert" + translate(
+    "Masstagging",
+    "Starting search for: <br />artist=<b>{}</b><br />album=No album name found.",
+)
+SEARCHING_ALBUM = ":insert" + translate(
+    "Masstagging",
+    "Starting search for: <br />album=<b>{}</b><br />artist=No artist found.",
+)
+SEARCHING_NO_INFO = ":insert" + translate(
+    "Masstagging", "No artist or album info found in files. Starting search."
+)
 
-RESULTS_FOUND = translate("Masstagging", '<b>{}</b> results found.')
-NO_RESULTS_FOUND = translate("Masstagging", '<b>No results were found.</b>')
-ONE_RESULT_FOUND = translate("Masstagging", '<b>One</b> result found.')
+RESULTS_FOUND = translate("Masstagging", "<b>{}</b> results found.")
+NO_RESULTS_FOUND = translate("Masstagging", "<b>No results were found.</b>")
+ONE_RESULT_FOUND = translate("Masstagging", "<b>One</b> result found.")
 
-MATCHING_ALBUMS_FOUND = translate("Masstagging",
-                                  "<b>{}</b> possibly matching albums found.")
-ONE_MATCHING_ALBUM_FOUND = translate("Masstagging",
-                                     '<b>One</b> possibly matching album found.')
-NO_MATCHES = translate("Masstagging",
-                       "No matches found for tag source <b>{}</b>")
+MATCHING_ALBUMS_FOUND = translate(
+    "Masstagging", "<b>{}</b> possibly matching albums found."
+)
+ONE_MATCHING_ALBUM_FOUND = translate(
+    "Masstagging", "<b>One</b> possibly matching album found."
+)
+NO_MATCHES = translate("Masstagging", "No matches found for tag source <b>{}</b>")
 
-RETRIEVING_NEXT = translate("Masstagging",
-                            'Previously retrieved result does not match. '
-                            'Retrieving next matching album.')
+RETRIEVING_NEXT = translate(
+    "Masstagging",
+    "Previously retrieved result does not match. Retrieving next matching album.",
+)
 
-RECHECKING = translate("Masstagging",
-                       '<br />Rechecking with results from <b>{}</b>.<br />')
+RECHECKING = translate(
+    "Masstagging", "<br />Rechecking with results from <b>{}</b>.<br />"
+)
 
-VALID_FOUND = translate("Masstagging",
-                        '<br />Valid matches were found for the album.')
+VALID_FOUND = translate("Masstagging", "<br />Valid matches were found for the album.")
 
-NO_VALID_FOUND = translate("Masstagging",
-                           '<b>No valid matches were found for the album.</b>')
+NO_VALID_FOUND = translate(
+    "Masstagging", "<b>No valid matches were found for the album.</b>"
+)
 
 
-class MassTagFlag(object):
-
+class MassTagFlag:
     def __init__(self):
         self.stop = False
         object.__init__(self)
@@ -113,8 +120,14 @@ class MassTagFlag(object):
 def brute_force_results(audios, retrieved):
     matched = {}
 
-    audios = sorted(audios, key=lambda f: natural_sort_key(to_string(f.get('track', f['__filename']))))
-    retrieved = sorted(retrieved, key=lambda t: natural_sort_key(to_string(t.get('track', t.get('title', '')))))
+    audios = sorted(
+        audios,
+        key=lambda f: natural_sort_key(to_string(f.get("track", f["__filename"]))),
+    )
+    retrieved = sorted(
+        retrieved,
+        key=lambda t: natural_sort_key(to_string(t.get("track", t.get("title", "")))),
+    )
 
     for audio, result in zip(audios, retrieved):
         matched[audio] = result
@@ -123,7 +136,9 @@ def brute_force_results(audios, retrieved):
 
 
 def check_result(result, audios):
-    track_nums = [_f for _f in [to_string(audio.get('track', None)) for audio in audios] if _f]
+    track_nums = [
+        _f for _f in [to_string(audio.get("track", None)) for audio in audios] if _f
+    ]
 
     if result.tracks is None:
         return True
@@ -135,7 +150,7 @@ def check_result(result, audios):
                 num = int(num)
             except (TypeError, ValueError):
                 continue
-            max_num = num if num > max_num else max_num
+            max_num = max(max_num, num)
         if max_num != 0 and max_num == len(result.tracks):
             return True
 
@@ -145,7 +160,7 @@ def check_result(result, audios):
 
 
 def combine_tracks(track1, track2, repl=None):
-    ret = defaultdict(lambda: [])
+    ret = defaultdict(list)
 
     for key, value in list(track2.items()) + list(track1.items()):
         if isinstance(value, str):
@@ -159,17 +174,17 @@ def combine_tracks(track1, track2, repl=None):
         for key in repl:
             if key in track2:
                 ret[key] = track2[key]
-    if '#exact' in track1:
-        ret['#exact'] = track1['#exact']
-    elif '#exact' in track2:
-        ret['#exact'] = track2['#exact']
+    if "#exact" in track1:
+        ret["#exact"] = track1["#exact"]
+    elif "#exact" in track2:
+        ret["#exact"] = track2["#exact"]
     return ret
 
 
 def fields_from_text(text):
     if not text:
         return []
-    return [_f for _f in map(str.strip, text.split(',')) if _f]
+    return [_f for _f in map(str.strip, text.split(",")) if _f]
 
 
 def dict_difference(dict1, dict2):
@@ -183,18 +198,18 @@ def dict_difference(dict1, dict2):
 
 
 def find_best(matches, files, minimum=0.7):
-    group = split_by_field(files, 'album', 'artist')
+    group = split_by_field(files, "album", "artist")
     album = list(group.keys())[0]
     artists = list(group[album].keys())
     if len(artists) == 1:
         artist = artists[0]
     else:
         artist = VARIOUS
-    d = {'artist': artist, 'album': album}
+    d = {"artist": artist, "album": album}
     scores = {}
 
     for match in matches:
-        if hasattr(match, 'info'):
+        if hasattr(match, "info"):
             info = match.info
         else:
             info = match[0]
@@ -204,20 +219,19 @@ def find_best(matches, files, minimum=0.7):
         if score in scores:
             score = score + 0.01  # For albums that have same name.
         scores[score] = match
-        tracks = match.tracks if hasattr(match, 'tracks') else match[1]
+        tracks = match.tracks if hasattr(match, "tracks") else match[1]
         if tracks and score < minimum:
             if len(tracks) == len(files):
                 scores[minimum + 0.01] = match
 
     if scores:
-        return [scores[z] for z in
-                sorted(scores, reverse=True) if z >= minimum]
+        return [scores[z] for z in sorted(scores, reverse=True) if z >= minimum]
     else:
         return []
 
 
 def get_artist_album(files):
-    tags = split_by_field(files, 'album', 'artist')
+    tags = split_by_field(files, "album", "artist")
     album = list(tags.keys())[0]
     artists = tags[album]
     if len(artists) > 1:
@@ -228,11 +242,11 @@ def get_artist_album(files):
 
 def get_match_str(info):
     artist = album = None
-    if info.get('artist'):
-        artist = to_string(info['artist'])
+    if info.get("artist"):
+        artist = to_string(info["artist"])
 
-    if info.get('album'):
-        album = to_string(info['album'])
+    if info.get("album"):
+        album = to_string(info["album"])
 
     if artist and album:
         return MATCH_ARTIST_ALBUM.format(artist, album)
@@ -244,24 +258,25 @@ def get_match_str(info):
         return MATCH_NO_INFO
 
 
-get_lower = lambda f, key, default = '': to_string(f.get(key, default)).lower()
+get_lower = lambda f, key, default="": to_string(f.get(key, default)).lower()
 
 
 def ratio_compare(d1, d2, key):
-    return ratio(get_lower(d1, key, 'a'), get_lower(d2, key, 'b'))
+    return ratio(get_lower(d1, key, "a"), get_lower(d2, key, "b"))
 
 
-def match_files(files, tracks, minimum=0.7, keys=None, jfdi=False,
-                existing=False, as_index=False):
+def match_files(
+    files, tracks, minimum=0.7, keys=None, jfdi=False, existing=False, as_index=False
+):
     if not keys:
-        keys = ['artist', 'title']
-    if 'track' in keys and len(keys) > 1:
+        keys = ["artist", "title"]
+    if "track" in keys and len(keys) > 1:
         keys = keys[::]
-        keys.remove('track')
+        keys.remove("track")
     ret = {}
     replace_tracknumbers(files, tracks)
     assigned = {}
-    matched = defaultdict(lambda: {})
+    matched = defaultdict(dict)
     b = False
 
     for f_index, f in enumerate(files):
@@ -309,7 +324,7 @@ def match_files(files, tracks, minimum=0.7, keys=None, jfdi=False,
                 get_best(prev_matched, matched[prev_matched])
                 break
             else:
-                del (t_indexes[t_index])
+                del t_indexes[t_index]
                 if not t_indexes:
                     break
                 best_match = max(list(t_indexes.items()), key=itemgetter(1))
@@ -328,13 +343,12 @@ def match_files(files, tracks, minimum=0.7, keys=None, jfdi=False,
             ret_indexes[t_index] = files[f_index]
 
     for t in tracks:
-        if '#exact' in t:
-            ret[t['#exact'].cls] = t
-            del (t['#exact'])
+        if "#exact" in t:
+            ret[t["#exact"].cls] = t
+            del t["#exact"]
 
     if jfdi:
-        unmatched_tracks = [t for i, t in enumerate(tracks) if i
-                            not in assigned]
+        unmatched_tracks = [t for i, t in enumerate(tracks) if i not in assigned]
         unmatched_files = [f.cls for f in files if f.cls not in ret]
         ret.update(brute_force_results(unmatched_files, unmatched_tracks))
 
@@ -350,7 +364,7 @@ def merge_track(audio, info):
     track = {}
 
     for key in info.keys():
-        if not key.startswith('#'):
+        if not key.startswith("#"):
             if isinstance(info[key], str):
                 track[key] = info[key]
             else:
@@ -360,13 +374,13 @@ def merge_track(audio, info):
                     track[key] = info[key]
 
     for key in audio.keys():
-        if not key.startswith('#'):
+        if not key.startswith("#"):
             if isinstance(audio[key], str):
                 track[key] = audio[key]
             else:
                 track[key] = audio[key][::]
-    if '#exact' in audio:
-        track['#exact'] = audio['#exact']
+    if "#exact" in audio:
+        track["#exact"] = audio["#exact"]
     return track
 
 
@@ -381,11 +395,12 @@ def merge_tsp_tracks(profiles, files=None):
             info = strip_fields(tsp.result.info, tsp.fields, leave_exact=True)
             tags = [deepcopy(info) for z in files]
         else:
-            tags = [strip_fields(t, tsp.fields, leave_exact=True)
-                    for t in tsp.result.merged]
+            tags = [
+                strip_fields(t, tsp.fields, leave_exact=True) for t in tsp.result.merged
+            ]
 
         if len(tags) > len(ret):
-            ret.extend(tags[len(ret):])
+            ret.extend(tags[len(ret) :])
         if tsp.replace_fields:
             to_repl.append([tags, tsp.replace_fields])
         for i, t in enumerate(tags):
@@ -398,8 +413,14 @@ def merge_tsp_tracks(profiles, files=None):
     return ret
 
 
-def masstag(mtp, files=None, flag=None, mtp_error_func=None,
-            tsp_error_func=None, print_status=True):
+def masstag(
+    mtp,
+    files=None,
+    flag=None,
+    mtp_error_func=None,
+    tsp_error_func=None,
+    print_status=True,
+):
     not_found = []
     found = []
 
@@ -449,7 +470,7 @@ def masstag(mtp, files=None, flag=None, mtp_error_func=None,
         result = tsp.retrieve(matches[0], errors=tsp_error_func)
 
         while not check_result(result, files):
-            del (matches[0])
+            del matches[0]
             if matches:
                 set_status(RETRIEVING_NEXT)
                 set_status(get_match_str(matches[0].info))
@@ -472,13 +493,16 @@ def masstag(mtp, files=None, flag=None, mtp_error_func=None,
         for t, m in zip(list(map(deepcopy, files)), found[0].result.merged):
             audios_copy.append(combine_tracks(t, m))
 
-        new_mtp = MassTagProfile(translate("Masstagging", 'Rechecking'),
-                                 files=audios_copy, profiles=not_found,
-                                 album_bound=mtp.album_bound, track_bound=mtp.track_bound,
-                                 regexps=mtp.regexps)
+        new_mtp = MassTagProfile(
+            translate("Masstagging", "Rechecking"),
+            files=audios_copy,
+            profiles=not_found,
+            album_bound=mtp.album_bound,
+            track_bound=mtp.track_bound,
+            regexps=mtp.regexps,
+        )
 
-        ret = masstag(new_mtp, audios_copy, flag,
-                      mtp_error_func, tsp_error_func, False)
+        ret = masstag(new_mtp, audios_copy, flag, mtp_error_func, tsp_error_func, False)
 
     if found:
         if not ret and print_status:
@@ -494,10 +518,10 @@ def replace_tracknumbers(files, tracks):
     if len(files) != len(tracks):
         return
 
-    files = sorted(files, key=lambda f: to_string(f.get('track', f[FILENAME])))
+    files = sorted(files, key=lambda f: to_string(f.get("track", f[FILENAME])))
     try:
-        tracks = sorted(tracks, key=itemgetter('track'))
-        tracks = sorted(tracks, key=itemgetter('discnumber'))
+        tracks = sorted(tracks, key=itemgetter("track"))
+        tracks = sorted(tracks, key=itemgetter("discnumber"))
     except KeyError:
         return
 
@@ -508,25 +532,25 @@ def replace_tracknumbers(files, tracks):
         for f, t in zip(files, tracks):
             track_count += 1
             try:
-                new_discnum = to_int(t['discnumber'])
+                new_discnum = to_int(t["discnumber"])
             except (ValueError, TypeError):
                 continue
             if new_discnum > discnum:
                 offset = track_count - 1
                 discnum = new_discnum
             try:
-                f_tracknum = to_int(f['track'])
-                t_tracknum = to_int(t['track'])
+                f_tracknum = to_int(f["track"])
+                t_tracknum = to_int(t["track"])
             except (ValueError, TypeError, KeyError):
                 continue
             if f_tracknum > t_tracknum:
-                f['track'] = [str(f_tracknum - offset)]
+                f["track"] = [str(f_tracknum - offset)]
 
 
 def split_files(audios, pattern):
 
     def copy_audio(f):
-        tags = filenametotag(pattern, f['__path'], True)
+        tags = filenametotag(pattern, f["__path"], True)
         audio_copy = deepcopy(f)
         audio_copy.update(dict_difference(audio_copy, tags))
         audio_copy.cls = f
@@ -534,8 +558,8 @@ def split_files(audios, pattern):
 
     tag_groups = []
 
-    for dirpath, files in sorted_split_by_field(audios, '__dirpath'):
-        album_groups = sorted_split_by_field(files, 'album')
+    for dirpath, files in sorted_split_by_field(audios, "__dirpath"):
+        album_groups = sorted_split_by_field(files, "album")
         for album, album_files in album_groups:
             tag_groups.append(list(map(copy_audio, album_files)))
 
@@ -546,17 +570,27 @@ def to_int(v):
     return int(to_string(v))
 
 
-class MassTagProfile(object):
-
-    def __init__(self, name=DEFAULT_NAME, desc='', fields=None, files=None,
-                 file_pattern=DEFAULT_PATTERN, profiles=None, album_bound=0.50,
-                 track_bound=0.80, jfdi=True, leave_existing=False, regexps=''):
+class MassTagProfile:
+    def __init__(
+        self,
+        name=DEFAULT_NAME,
+        desc="",
+        fields=None,
+        files=None,
+        file_pattern=DEFAULT_PATTERN,
+        profiles=None,
+        album_bound=0.50,
+        track_bound=0.80,
+        jfdi=True,
+        leave_existing=False,
+        regexps="",
+    ):
 
         object.__init__(self)
 
         self.album_bound = album_bound
         self.desc = desc
-        self.fields = ['artist', 'title'] if fields is None else fields
+        self.fields = ["artist", "title"] if fields is None else fields
         self.file_pattern = file_pattern
         self.files = [] if files is None else files
         self.jfdi = jfdi
@@ -581,8 +615,7 @@ class MassTagProfile(object):
         self.files = files
 
         if regexps:
-            changed_files = \
-                [apply_regexps(f, regexps) for f in files]
+            changed_files = [apply_regexps(f, regexps) for f in files]
             rxp_album = changed_files[0][0]
             changed_files = [z[1] for z in changed_files]
 
@@ -593,9 +626,11 @@ class MassTagProfile(object):
                 results = profile.search(files)
                 if regexps and rxp_album:
                     profile.clear_results()
-                    set_status(translate('Masstagging',
-                                         "Retrying search with album name: <b>{}</b>"
-                                         ).format(rxp_album))
+                    set_status(
+                        translate(
+                            "Masstagging", "Retrying search with album name: <b>{}</b>"
+                        ).format(rxp_album)
+                    )
                     rxp_results = profile.search(changed_files)
                     results.extend(rxp_results)
                     profile.clear_results()
@@ -614,8 +649,7 @@ class MassTagProfile(object):
             yield profile.matched, profile.results, profile
 
 
-class Result(object):
-
+class Result:
     def __init__(self, info=None, tracks=None, tag_source=None):
         object.__init__(self)
 
@@ -667,10 +701,15 @@ class Result(object):
         return {}, []
 
 
-class TagSourceProfile(object):
-
-    def __init__(self, files=None, tag_source=None, fields=None,
-                 if_no_result=CONTINUE, replace_fields=None):
+class TagSourceProfile:
+    def __init__(
+        self,
+        files=None,
+        tag_source=None,
+        fields=None,
+        if_no_result=CONTINUE,
+        replace_fields=None,
+    ):
 
         object.__init__(self)
 
@@ -700,7 +739,7 @@ class TagSourceProfile(object):
         return self.matched
 
     def retrieve(self, result, errors=None):
-        info = result.info if hasattr(result, 'info') else result
+        info = result.info if hasattr(result, "info") else result
 
         try:
             index = self.results.index(result)
@@ -730,24 +769,26 @@ class TagSourceProfile(object):
         tag_source = self.tag_source if tag_source is None else tag_source
         files = self.files if files is None else files
 
-        assert hasattr(tag_source, 'search')
+        assert hasattr(tag_source, "search")
         assert files
 
         files = split_by_field(files, *tag_source.group_by)
         search_value = list(files.keys())[0]
-        self.results = [Result(*x) for x in tag_source.search(search_value, files[search_value])]
+        self.results = [
+            Result(*x) for x in tag_source.search(search_value, files[search_value])
+        ]
         for r in self.results:
             r.tag_source = self.tag_source
         return self.results
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from .. import puddletag
 
     puddletag.load_plugins()
     from ..tagsources import tagsources
 
     sources = dict((t.name, t) for t in tagsources)
-    source = sources['Local TSource Plugin']()
-    source.applyPrefs(['/mnt/multimedia/testlib'])
+    source = sources["Local TSource Plugin"]()
+    source.applyPrefs(["/mnt/multimedia/testlib"])
     print(source._dirs)

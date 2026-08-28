@@ -7,7 +7,7 @@ import urllib.parse
 import urllib.request
 from html.parser import HTMLParser
 from importlib import import_module
-from os.path import join, exists
+from os.path import exists, join
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
@@ -27,28 +27,26 @@ class WebServiceError(EnvironmentError):
 
 
 class RetrievalError(WebServiceError):
-
     def __init__(self, msg, code=0):
         WebServiceError.__init__(self, msg)
         self.code = code
 
 
 class SubmissionError(WebServiceError):
-
     def __init__(self, msg, code=0):
         WebServiceError.__init__(self, msg)
         self.code = code
 
 
 class _SignalObject(QObject):
-    statusChanged = pyqtSignal(str, name='statusChanged')
-    logappend = pyqtSignal(str, name='logappend')
+    statusChanged = pyqtSignal(str, name="statusChanged")
+    logappend = pyqtSignal(str, name="logappend")
 
 
 cparser = PuddleConfig()
 
-COVERDIR = cparser.get('tagsources', 'coverdir', join(CONFIGDIR, 'covers'))
-COVER_PATTERN = '%artist% - %album%'
+COVERDIR = cparser.get("tagsources", "coverdir", join(CONFIGDIR, "covers"))
+COVER_PATTERN = "%artist% - %album%"
 SAVECOVERS = False
 
 mapping = {}
@@ -58,10 +56,11 @@ useragent = "puddletag/" + version_string
 
 def get_encoding(page, decode=False, default=None):
     encoding = None
-    match = re.search(r'<\?xml(.+)\?>', page)
+    match = re.search(r"<\?xml(.+)\?>", page)
     if match:
-        enc = re.search(r'''encoding(?:\s*)=(?:\s*)["'](.+?)['"]''',
-                        match.group(), re.I)
+        enc = re.search(
+            r"""encoding(?:\s*)=(?:\s*)["'](.+?)['"]""", match.group(), re.IGNORECASE
+        )
         if enc:
             encoding = enc.groups()[0]
 
@@ -87,26 +86,25 @@ def find_id(tracks, field):
 def iri_to_uri(iri):
     parts = urllib.parse.urlparse(iri)
     return urllib.parse.urlunparse(
-        part.encode('idna') if i == 1
-        else part.encode('utf-8')
+        part.encode("idna") if i == 1 else part.encode("utf-8")
         for i, part in enumerate(parts)
     ).decode()
 
 
 def parse_searchstring(text):
     try:
-        text = [z.split(';') for z in text.split('|') if z]
+        text = [z.split(";") for z in text.split("|") if z]
         return [(z.strip(), v.strip()) for z, v in text]
     except ValueError:
         raise RetrievalError(
-            translate('Tag Sources',
-                      '<b>Error parsing artist/album combinations.</b>'))
+            translate("Tag Sources", "<b>Error parsing artist/album combinations.</b>")
+        )
 
 
 def retrieve_cover(url):
-    write_log(translate('Tag Sources', "Retrieving cover: {}").format(url))
+    write_log(translate("Tag Sources", "Retrieving cover: {}").format(url))
     cover = urlopen(url)
-    return {'__image': [{'data': cover}]}
+    return {"__image": [{"data": cover}]}
 
 
 def save_cover(info, data, filetype):
@@ -117,9 +115,9 @@ def save_cover(info, data, filetype):
 def save_file(filename, data):
     path = join(filename, COVERDIR)
     if exists(path):
-        save_file('%s0' % filename)
+        save_file("%s0" % filename)
         return
-    f = open(filename, 'wb')
+    f = open(filename, "wb")
     f.write(data)
     f.close()
 
@@ -149,7 +147,7 @@ def get_useragent():
     if useragent:
         return useragent
     else:
-        return 'puddetag/' + version_string
+        return "puddetag/" + version_string
 
 
 def set_useragent(agent):
@@ -159,36 +157,34 @@ def set_useragent(agent):
 
 def to_file(data, name):
     if os.path.exists(name):
-        return to_file(data, name + '_')
+        return to_file(data, name + "_")
 
-    f = open(name, 'w')
+    f = open(name, "w")
     f.write(data)
     f.close()
 
 
 def url_encode_non_ascii(b):
-    return re.sub('[\x80-\xFF]', lambda c: '%%%02x' % ord(c.group(0)), b)
+    return re.sub("[\x80-\xff]", lambda c: "%%%02x" % ord(c.group(0)), b)
 
 
 def urlopen(url, mask=True, code=False):
     try:
         request = urllib.request.Request(url)
         if useragent:
-            request.add_header('User-Agent', useragent)
+            request.add_header("User-Agent", useragent)
         page = urllib.request.build_opener().open(request)
         if page.code == 403:
-            raise RetrievalError(
-                translate("Tag Sources", 'HTTPError 403: Forbidden'))
+            raise RetrievalError(translate("Tag Sources", "HTTPError 403: Forbidden"))
         elif page.code == 404:
-            raise RetrievalError(
-                translate("Tag Sources", "Page doesn't exist"))
+            raise RetrievalError(translate("Tag Sources", "Page doesn't exist"))
         if code:
             return page.read(), page.code
         else:
             return page.read()
     except urllib.error.URLError as e:
         try:
-            msg = '%s (%s)' % (e.reason.strerror, e.reason.errno)
+            msg = "%s (%s)" % (e.reason.strerror, e.reason.errno)
         except AttributeError:
             msg = str(e)
 
@@ -197,12 +193,13 @@ def urlopen(url, mask=True, code=False):
         except AttributeError:
             msg = e.args[1] if len(e.args) > 1 else e.args[0]
             raise RetrievalError(
-                translate('Defaults', "Connection Error: {}").format(msg))
-    except socket.error as e:
-        msg = '%s (%s)' % (e.strerror, e.code)
+                translate("Defaults", "Connection Error: {}").format(msg)
+            )
+    except OSError as e:
+        msg = "%s (%s)" % (e.strerror, e.code)
         raise RetrievalError(msg)
-    except EnvironmentError as e:
-        msg = '%s (%s)' % (e.strerror, e.code)
+    except OSError as e:
+        msg = "%s (%s)" % (e.strerror, e.code)
         raise RetrievalError(msg)
 
 
@@ -211,7 +208,6 @@ def write_log(text):
 
 
 class MetaProcessor(HTMLParser):
-
     def reset(self):
         self.pieces = []
         self.encoding = None
@@ -219,26 +215,23 @@ class MetaProcessor(HTMLParser):
 
     def start_meta(self, text):
         text = [tuple([x.lower() for x in z]) for z in text]
-        if text[0] == ('http-equiv', 'content-type'):
+        if text[0] == ("http-equiv", "content-type"):
             d = dict(text)
-            if 'charset' in d:
-                encoding = d['charset']
+            if "charset" in d:
+                encoding = d["charset"]
                 error = FoundEncoding()
                 error.encoding = encoding
                 raise error
-            if text[1][0] == 'content':
-                encoding = re.search('charset.*=(.+)', text[1][1]).group(1)
+            if text[1][0] == "content":
+                encoding = re.search("charset.*=(.+)", text[1][1]).group(1)
                 error = FoundEncoding()
                 error.encoding = encoding
                 raise error
 
 
 tagsources = []
-for source in ('acoust_id', 'amazon', 'amg', 'discogs', 'freedb',
-               'musicbrainz'):
+for source in ("acoust_id", "amazon", "amg", "discogs", "freedb", "musicbrainz"):
     try:
-        tagsources.append(getattr(
-            import_module('puddlestuff.tagsources.' + source),
-            'info'))
+        tagsources.append(import_module("puddlestuff.tagsources." + source).info)
     except ImportError as ie:
         logging.debug(f"error loading source '{source}: error={ie}")

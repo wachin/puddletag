@@ -23,6 +23,7 @@ def iter_plugin_docs(plugins=None):
     """Yield plugin metadata from the bundled plugin registry."""
     if plugins is None:
         from .pluginloader import get_plugins
+
         plugins = get_plugins(BUILTIN_PLUGIN_DIR)
 
     for plugin in plugins:
@@ -61,12 +62,14 @@ def plugins_rst(plugins=None):
     ]
 
     for row in rows:
-        lines.extend([
-            f"   * - {_rst_text(row.name)}",
-            f"     - ``{row.module}``",
-            f"     - {_rst_text(row.version)}",
-            f"     - {_rst_text(row.author)}",
-            f"     - {_rst_text(row.description)}",
-        ])
+        lines.extend(
+            [
+                f"   * - {_rst_text(row.name)}",
+                f"     - ``{row.module}``",
+                f"     - {_rst_text(row.version)}",
+                f"     - {_rst_text(row.author)}",
+                f"     - {_rst_text(row.description)}",
+            ]
+        )
 
     return "\n".join(lines) + "\n"

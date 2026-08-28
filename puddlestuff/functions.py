@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # functions.py
 
 # Copyright (C) 2008-2010 concentricpuddle, GPLv2
@@ -38,22 +37,21 @@ import math
 import os
 import re
 import traceback
-from mutagen.mp3 import HeaderNotFoundError
 from collections import defaultdict
 from functools import partial
-from unidecode import unidecode
 
 import pyparsing
+from unidecode import unidecode
 
 from . import audioinfo
 from .audioinfo import encode_fn
-from .puddleobjects import (safe_name, fnmatch, natural_sort_key)
+from .puddleobjects import fnmatch, natural_sort_key, safe_name
 
 PATH = audioinfo.PATH
 DIRPATH = audioinfo.DIRPATH
 
-true = '1'
-false = '0'
+true = "1"
+false = "0"
 path = os.path
 
 D = decimal.Decimal
@@ -66,7 +64,7 @@ def add(text, text1):
         return
 
 
-_padding = '0'
+_padding = "0"
 
 
 def _pad(text, numlen):
@@ -76,20 +74,20 @@ def _pad(text, numlen):
 
 
 def autonumbering(r_tags, minimum=1, restart=False, padding=1, state=None):
-    '''Autonumbering, "Autonumbering: $0, Start: $1, Restart for dir: $2, Padding: $3"
-Start,spinbox,1
-Restart for dir,check,False
-Padding,spinbox,1'''
+    """Autonumbering, "Autonumbering: $0, Start: $1, Restart for dir: $2, Padding: $3"
+    Start,spinbox,1
+    Restart for dir,check,False
+    Padding,spinbox,1"""
     if restart:
-        if 'autonumbering' not in state:
-            state['autonumbering'] = defaultdict(lambda: 0)
+        if "autonumbering" not in state:
+            state["autonumbering"] = defaultdict(lambda: 0)
 
-        dircount = state['autonumbering']
+        dircount = state["autonumbering"]
 
         counter = dircount.get(r_tags.dirpath, 0) + 1
         dircount[r_tags.dirpath] = counter
     else:
-        counter = int(state.get('__counter', 1))
+        counter = int(state.get("__counter", 1))
 
     tracknum = str(minimum + counter - 1)
 
@@ -102,7 +100,7 @@ Padding,spinbox,1'''
 def check_truth(text):
     if isinstance(text, str):
         text = text.strip()
-    return 0 if ((not text) or (text == '0')) else 1
+    return 0 if ((not text) or (text == "0")) else 1
 
 
 def and_(text, text1):
@@ -119,18 +117,19 @@ def caps2(text):
     # Capitalizes the first letter of each word in string and
     # leaves all other characters unchanged.
     upcase = set(i for i, char in enumerate(text) if char.upper() == char)
-    return "".join(ch.upper() if i in upcase else ch
-                   for i, ch in enumerate(text.title()))
+    return "".join(
+        ch.upper() if i in upcase else ch for i, ch in enumerate(text.title())
+    )
 
 
 def caps3(text):
     # Capitalizes the first letter of the string and converts
     # the rest to lower case.
     try:
-        start = re.search(r"\w", text, re.U).start(0)
+        start = re.search(r"\w", text, re.UNICODE).start(0)
     except AttributeError:
         return
-    return text[:start] + text[start].upper() + text[start + 1:].lower()
+    return text[:start] + text[start].upper() + text[start + 1 :].lower()
 
 
 def ceiling(n_value):
@@ -146,7 +145,7 @@ def char(text):
 
 def changeartist(artist, *files):
     for audio in files:
-        audio['artist'] = artist
+        audio["artist"] = artist
         audio.save()
 
 
@@ -170,20 +169,21 @@ def eql(text, text1):
 
 # Contributed by Stjujsckij Nickolaj
 def enconvert(text, enc_name):
-    ''' Convert from non-standard encoding, "Convert to encoding: $0, Encoding: $1"
+    """ Convert from non-standard encoding, "Convert to encoding: $0, Encoding: $1"
 &Encoding, combo, cp1250, cp1251, cp1252, cp1253, cp1254, cp1255, cp1256, cp1257, cp1258,\
-euc_jp, cp932, euc_jis_2004, shift_jis, johab, big5, big5hkscs, gb2312, gb18030, gbk, hz'''
-    return text.encode("latin1", 'replace').decode(enc_name, 'replace')
+euc_jp, cp932, euc_jis_2004, shift_jis, johab, big5, big5hkscs, gb2312, gb18030, gbk, hz"""
+    return text.encode("latin1", "replace").decode(enc_name, "replace")
 
 
 def filenametotag(m_tags, p_pattern):
     """Filename to Tag, File->Tag '$1'
-&Pattern, text"""
+    &Pattern, text"""
     return findfunc.filenametotag(p_pattern, m_tags[PATH], True)
 
 
-def finddups(tracks, key='title', method=None):
+def finddups(tracks, key="title", method=None):
     from .puddleobjects import dupes
+
     li = []
     for z in tracks:
         try:
@@ -199,7 +199,7 @@ def floor(n_value):
 
 def formatValue(m_tags, p_pattern, state=None):
     """Format value, Format $0 using $1
-&Format string, text"""
+    &Format string, text"""
     ret = findfunc.parsefunc(p_pattern, m_tags, state=state)
     if not ret:
         return
@@ -245,8 +245,8 @@ def grtr(text, text1):
 
 
 def to_num(text):
-    match = re.search(r'[\-\+]?[0-9]+(\.[0-9]+)?', text)
-    return match.group() if match else ''
+    match = re.search(r"[\-\+]?[0-9]+(\.[0-9]+)?", text)
+    return match.group() if match else ""
 
 
 def hasformat(p_pat, tagname="__filename"):
@@ -273,15 +273,15 @@ def iflonger(a, b, text, text1):
 
 
 def import_text(m_tags, p_pattern, r_tags):
-    '''Import text file, "Text File: $0, '$1'"
-&Pattern (can be relative path), text, lyrics.txt'''
+    """Import text file, "Text File: $0, '$1'"
+    &Pattern (can be relative path), text, lyrics.txt"""
     filename = tag_to_filename(p_pattern, m_tags, r_tags, False)
     if not filename:
         return
     try:
-        with open(filename, 'tr', encoding='utf-8') as textfile:
+        with open(filename, "tr", encoding="utf-8") as textfile:
             return textfile.read()
-    except EnvironmentError:
+    except OSError:
         return
     except UnicodeDecodeError:
         return
@@ -352,17 +352,16 @@ def libstuff(dirname):
 
 def _load_image(filename):
     try:
-        return {'data': open(filename, 'rb').read()}
-    except EnvironmentError:
+        return {"data": open(filename, "rb").read()}
+    except OSError:
         traceback.print_exc()
-        pass
 
 
 def load_images(r_tags, filepatterns, desc, matchcase, state=None):
-    '''Load Artwork, "Artwork: Filenames='$1', Description='$2', Case Sensitive=$3"
-"&Filenames to check (;-separated, shell wildcards [eg. *] allowed)", text
-&Default description (can be pattern):, text
-Match filename's &case:, check'''
+    """Load Artwork, "Artwork: Filenames='$1', Description='$2', Case Sensitive=$3"
+    "&Filenames to check (;-separated, shell wildcards [eg. *] allowed)", text
+    &Default description (can be pattern):, text
+    Match filename's &case:, check"""
     tags = r_tags
 
     images = []
@@ -375,29 +374,29 @@ Match filename's &case:, check'''
             continue
         desc = formatValue(tags, desc)
         if desc is None:
-            desc = ''
+            desc = ""
         image[audioinfo.DESCRIPTION] = desc
         image[audioinfo.IMAGETYPE] = 3
         images.append(image)
 
     if images:
-        return {'__image': images}
+        return {"__image": images}
 
 
 def lower(text):
     return text.lower()
 
 
-def merge_values(m_text, separator=';'):
-    '''Merge field, "Merge field: $0, sep='$1'"
-&Separator, text, ;'''
+def merge_values(m_text, separator=";"):
+    """Merge field, "Merge field: $0, sep='$1'"
+    &Separator, text, ;"""
     if isinstance(m_text, str):
         return m_text
     else:
         return separator.join(m_text)
 
 
-def meta_sep(m_tags, p_field, p_sep=', '):
+def meta_sep(m_tags, p_field, p_sep=", "):
     value = m_tags.get(p_field)
     if value is None:
         return None
@@ -416,11 +415,11 @@ def meta(m_tags, field, n_index=None):
         try:
             return value[n_index]
         except IndexError:
-            return ''
+            return ""
     else:
         if isinstance(value, str):
             return value
-        return ', '.join(value)
+        return ", ".join(value)
 
 
 def mid(text, n_start, n_len):
@@ -434,7 +433,7 @@ def mid(text, n_start, n_len):
     except (TypeError, ValueError):
         raise FuncError('Integer expected, got "%s"' % str(n_len))
 
-    return str(text)[n_start: n_start + n_len]
+    return str(text)[n_start : n_start + n_len]
 
 
 def mod(n_x, n_y):
@@ -444,8 +443,7 @@ def mod(n_x, n_y):
         return
 
 
-def tag_to_filename(pattern, m_tags, r_tags, ext=True, state=None,
-                    is_dir=False):
+def tag_to_filename(pattern, m_tags, r_tags, ext=True, state=None, is_dir=False):
     if not pattern:
         return
     if state is None:
@@ -468,14 +466,13 @@ def tag_to_filename(pattern, m_tags, r_tags, ext=True, state=None,
             if start_pos != p:
                 new_dirs.append(safe_name(text[start_pos:p]))
             start_pos = p
-        new_dirs.append(safe_name(text[start_pos + 1:]))
+        new_dirs.append(safe_name(text[start_pos + 1 :]))
     else:
         new_dirs = [safe_name(text)]
 
     if os.path.isabs(pattern):
-        return add_extension('/' + '/'.join(map(safe_name, new_dirs)), tags, ext)
+        return add_extension("/" + "/".join(map(safe_name, new_dirs)), tags, ext)
     else:
-
         subdirs = new_dirs
         count = len(path_seps)
 
@@ -483,30 +480,30 @@ def tag_to_filename(pattern, m_tags, r_tags, ext=True, state=None,
 
         new_fn = encode_fn(path_join(*new_dirs))
 
-        if new_fn.startswith('./'):
-            return add_extension(path_join(dirpath, new_fn[len('./'):]), tags, ext)
-        elif new_fn.startswith('../'):
+        if new_fn.startswith("./"):
+            return add_extension(path_join(dirpath, new_fn[len("./") :]), tags, ext)
+        elif new_fn.startswith("../"):
             parent = dirpath
-            while new_fn.startswith('../'):
+            while new_fn.startswith("../"):
                 parent = os.path.dirname(parent)
-                new_fn = new_fn[len('../'):]
+                new_fn = new_fn[len("../") :]
             return add_extension(path_join(parent, new_fn), tags, ext)
-        elif count and '..' not in subdirs:
-            subdirs = dirpath.split('/')
+        elif count and ".." not in subdirs:
+            subdirs = dirpath.split("/")
             if count >= len(subdirs):
-                parent = ['']
+                parent = [""]
             else:
                 if is_dir:
-                    parent = subdirs[:-(count + 1)]
+                    parent = subdirs[: -(count + 1)]
                 else:
                     parent = subdirs[:-(count)]
         else:
             if is_dir:
                 dirpath = os.path.dirname(r_tags.dirpath)
-            parent = dirpath.split('/')
+            parent = dirpath.split("/")
 
         if not parent[0]:
-            parent.insert(0, '/')
+            parent.insert(0, "/")
         return add_extension(os.path.join(*(parent + [new_fn])), tags, ext)
 
 
@@ -521,7 +518,7 @@ def add_extension(fn, tags, addext=None, extension=None):
 
 def move(m_tags, p_pattern, r_tags, ext=True, state=None):
     """Tag to filename, Tag->File: $1
-&Pattern, text"""
+    &Pattern, text"""
 
     tags = m_tags
     tf = findfunc.tagtofilename
@@ -529,7 +526,7 @@ def move(m_tags, p_pattern, r_tags, ext=True, state=None):
     fn = tag_to_filename(p_pattern, m_tags, r_tags, ext, state)
 
     if fn:
-        return {'__path': fn}
+        return {"__path": fn}
 
 
 def mul(n_x, n_y):
@@ -559,13 +556,13 @@ def num(text, n_len, add_sep=false):
     sep_index = text.find("/")
 
     if sep_index >= 0:
-        total = text[sep_index + 1:]
+        total = text[sep_index + 1 :]
         tracknum = text[:sep_index]
     else:
         total = None
         tracknum = text
 
-    tracknum = tracknum.lstrip('0')
+    tracknum = tracknum.lstrip("0")
 
     if total and check_truth(add_sep):
         return "%s/%s" % (tracknum.zfill(n_len), total)
@@ -583,6 +580,7 @@ def or_(text, text1):
 
 def rand():
     import random
+
     return str(random.random())
 
 
@@ -590,72 +588,79 @@ def _round(n_value):
     return round(n_value)
 
 
-def re_escape(rex, chars=r'^$[]\+*?.(){},|'):
+def re_escape(rex, chars=r"^$[]\+*?.(){},|"):
     escaped = ""
     for ch in rex:
         if ch in chars:
-            escaped = escaped + '\\' + ch
+            escaped = escaped + "\\" + ch
         else:
             escaped = escaped + ch
     return escaped
 
 
 def pat_escape(p_pat):
-    return re_escape(p_pat, '$%\\')
+    return re_escape(p_pat, "$%\\")
 
 
 def remove_fields():
-    '''Remove Fields, <blank> $0'''
-    return ''
+    """Remove Fields, <blank> $0"""
+    return ""
 
 
 def remove_except(tags, fields):
-    '''Remove all fields except, "Remove fields except: $1"
-&Field list (; separated):, text, '''
-    fields = [field for field in fields.split(';')]
-    ret = dict([(field.strip(), '') for field in audioinfo.usertags(tags)
-                if field not in fields])
-    if '__image' not in fields:
-        ret['__image'] = []
+    """Remove all fields except, "Remove fields except: $1"
+    &Field list (; separated):, text,"""
+    fields = [field for field in fields.split(";")]
+    ret = dict(
+        [
+            (field.strip(), "")
+            for field in audioinfo.usertags(tags)
+            if field not in fields
+        ]
+    )
+    if "__image" not in fields:
+        ret["__image"] = []
     if ret:
         return ret
 
 
-import mutagen.id3, mutagen.apev2
+import mutagen.apev2
+import mutagen.id3
 
 _tag_classes = {
-    'APEv2': mutagen.apev2.delete,
-    'ID3v1': partial(mutagen.id3.delete, v1=True, v2=False),
-    'ID3v2': partial(mutagen.id3.delete, v1=False, v2=True),
-    'All ID3': partial(mutagen.id3.delete, v1=True, v2=True)}
+    "APEv2": mutagen.apev2.delete,
+    "ID3v1": partial(mutagen.id3.delete, v1=True, v2=False),
+    "ID3v2": partial(mutagen.id3.delete, v1=False, v2=True),
+    "All ID3": partial(mutagen.id3.delete, v1=True, v2=True),
+}
 
 
-def remove_tag(r_tags, tag='APEv2'):
-    '''Remove Tag, "Remove $1 Tag"
-&Tag, combo, Base, APEv2, ID3v1, ID3v2, All ID3'''
+def remove_tag(r_tags, tag="APEv2"):
+    """Remove Tag, "Remove $1 Tag"
+    &Tag, combo, Base, APEv2, ID3v1, ID3v2, All ID3"""
 
     if tag in _tag_classes:
         _tag_classes[tag](r_tags.filepath)
 
 
 def rename_dirs(tags, state, pattern):
-    '''Rename Directory, "Rename dir: $1"
-&Pattern:, text'''
+    """Rename Directory, "Rename dir: $1"
+    &Pattern:, text"""
     dirname = safe_name(format_value(tags, pattern))
-    old_path = tags['__dirpath']
+    old_path = tags["__dirpath"]
     dirpath = path.join(path.dirname(old_path), dirname)
-    if 'rename_dirs' in state:
-        state['rename_dirs'][old_path] = dirpath
+    if "rename_dirs" in state:
+        state["rename_dirs"][old_path] = dirpath
     else:
-        state['rename_dirs'] = {old_path: dirpath}
+        state["rename_dirs"] = {old_path: dirpath}
 
 
 def replace(text, word, replaceword, matchcase=False, whole=False, chars=None):
-    '''Replace, "Replace $0: '$1' -> '$2', Match Case: $3, Words Only: $4"
-&Replace, text
-w&ith:, text
-Match c&ase:, check
-only as &whole word, check'''
+    """Replace, "Replace $0: '$1' -> '$2', Match Case: $3, Words Only: $4"
+    &Replace, text
+    w&ith:, text
+    Match c&ase:, check
+    only as &whole word, check"""
     matchcase, whole = check_truth(matchcase), check_truth(whole)
     word = re_escape(word)
 
@@ -664,11 +669,11 @@ only as &whole word, check'''
     else:
         matchcase = re.IGNORECASE
     if chars is None:
-        chars = r'\,\.\(\) \!\[\]'
-    replaceword = replaceword.replace('\\', '\\\\')
+        chars = r"\,\.\(\) \!\[\]"
+    replaceword = replaceword.replace("\\", "\\\\")
 
     if whole:
-        pat = re.compile(r'(^|[%s])%s([%s]|$)' % (chars, word, chars), matchcase)
+        pat = re.compile(r"(^|[%s])%s([%s]|$)" % (chars, word, chars), matchcase)
     else:
         pat = re.compile(word, matchcase)
 
@@ -678,7 +683,7 @@ only as &whole word, check'''
         while match:
             start = match.start()
             end = match.end()
-            sub = text[start: end]
+            sub = text[start:end]
             repl = replaceword
             if sub[0] in chars:
                 repl = sub[0] + repl
@@ -695,7 +700,7 @@ only as &whole word, check'''
     return text
 
 
-class RegHelper(object):
+class RegHelper:
     def __init__(self, groups, repl):
         self.groups = groups
         self._repl = repl
@@ -703,7 +708,7 @@ class RegHelper(object):
     def repl(self, match):
         v = int(match.group()[1:])
         try:
-            if re.search(r'\$[\w\d_]+\(', self._repl):
+            if re.search(r"\$[\w\d_]+\(", self._repl):
                 return re_escape(self.groups[v], '"\\,')
             else:
                 return self.groups[v]
@@ -711,11 +716,13 @@ class RegHelper(object):
             return '""'
 
 
-def replaceWithReg(m_tags, text, regex, repl=None, matchcase=False, m_text=None, state=None):
+def replaceWithReg(
+    m_tags, text, regex, repl=None, matchcase=False, m_text=None, state=None
+):
     """Replace with RegExp, "RegReplace $0: RegExp '$1' with '$2', Match Case: $3"
-&Regular Expression, text
-Replace &matches with:, text
-Match &Case, check"""
+    &Regular Expression, text
+    Replace &matches with:, text
+    Match &Case, check"""
 
     if not regex:
         return text
@@ -724,7 +731,7 @@ Match &Case, check"""
         m_text = [text]
 
     if not check_truth(matchcase):
-        flags = re.UNICODE | re.I
+        flags = re.UNICODE | re.IGNORECASE
     else:
         flags = re.UNICODE
 
@@ -739,7 +746,7 @@ Match &Case, check"""
         else:
             d = {1: group, 0: group}
 
-        ret = re.sub(r'(?i)\$\d+', RegHelper(d, repl).repl, repl, 0)
+        ret = re.sub(r"(?i)\$\d+", RegHelper(d, repl).repl, repl, 0)
         return findfunc.parsefunc(ret, m_tags)
 
     def replace_matches(value):
@@ -758,13 +765,13 @@ replace_regex = replaceWithReg
 # Improved by David Gessel
 def to_ascii(t_fn):
     """Converts all unicode chars to ASCII."""
-    cleaned_fn = unidecode(t_fn, 'ignore')
-    return ''.join(c for c in cleaned_fn if c.isprintable())
+    cleaned_fn = unidecode(t_fn, "ignore")
+    return "".join(c for c in cleaned_fn if c.isprintable())
 
 
 def remove_dupes(m_text, matchcase=False):
     """Remove duplicate values, "Remove Dupes: $0, Match Case $1"
-Match &Case, check"""
+    Match &Case, check"""
     text = m_text
     if isinstance(text, str):
         return text
@@ -790,12 +797,12 @@ def right(text, n):
     except (TypeError, ValueError):
         raise FuncError('Integer expected, got "%s"' % str(n))
     if n == 0:
-        return ''
-    return text[-int(n):]
+        return ""
+    return text[-int(n) :]
 
 
 def gain_to_watts(gain):
-    return 10 ** (-gain * .1)
+    return 10 ** (-gain * 0.1)
 
 
 def to_hexstring(x):
@@ -805,7 +812,7 @@ def to_hexstring(x):
 
 def rg2sc(gain, peak=None):
     if peak is None:
-        gain = gain.split(':')
+        gain = gain.split(":")
         if len(gain) == 2:  # gain:peak
             peak = float(gain[1])
             gain = float(gain[0])
@@ -831,20 +838,20 @@ def rg2sc(gain, peak=None):
         " 00024CA8",  # bogus
     ]
 
-    return str(''.join(values))
+    return str("".join(values))
 
 
 def save_artwork(m_tags, pattern, r_tags, state=None, write=True):
     """Export artwork to file, "Export Art: pattern='$1'"
-&Pattern (extension not required), text, folder_%img_counter%"""
+    &Pattern (extension not required), text, folder_%img_counter%"""
     if state is None:
         state = {}
 
-    if 'artwork_data' not in state:
-        state['artwork_data'] = set()
+    if "artwork_data" not in state:
+        state["artwork_data"] = set()
 
-    if '__image' in m_tags:
-        images = m_tags['__image']
+    if "__image" in m_tags:
+        images = m_tags["__image"]
     else:
         images = r_tags.images
 
@@ -852,62 +859,62 @@ def save_artwork(m_tags, pattern, r_tags, state=None, write=True):
         return
 
     new_state = state.copy()
-    new_state['img_count'] = str(len(images))
+    new_state["img_count"] = str(len(images))
     for i, image in enumerate(images):
         data = image[audioinfo.DATA]
-        new_state['img_desc'] = image.get(audioinfo.DESCRIPTION, '')
-        new_state['img_type'] = audioinfo.IMAGETYPES[
-            image.get(audioinfo.IMAGETYPE, 3)]
-        mime = image.get(audioinfo.MIMETYPE, '')
+        new_state["img_desc"] = image.get(audioinfo.DESCRIPTION, "")
+        new_state["img_type"] = audioinfo.IMAGETYPES[image.get(audioinfo.IMAGETYPE, 3)]
+        mime = image.get(audioinfo.MIMETYPE, "")
         if not mime:
             mime = audioinfo.get_mime(data)
             if not mime:
                 continue
 
-        extension = '.png' if 'png' in mime.lower() else '.jpg'
+        extension = ".png" if "png" in mime.lower() else ".jpg"
 
-        new_state['img_mime'] = mime
-        new_state['img_counter'] = str(i + 1)
-        fn = tag_to_filename(pattern, m_tags, r_tags,
-                             False, new_state) + extension
+        new_state["img_mime"] = mime
+        new_state["img_counter"] = str(i + 1)
+        fn = tag_to_filename(pattern, m_tags, r_tags, False, new_state) + extension
 
         if not fn:
             continue
 
-        if data not in state['artwork_data']:
-            state['artwork_data'].add(data)
+        if data not in state["artwork_data"]:
+            state["artwork_data"].add(data)
         elif path.exists(fn):
             continue
 
         i = 1
         while path.exists(fn):
-            fn = path.splitext(fn)[0] + '_' + str(i) + extension
+            fn = path.splitext(fn)[0] + "_" + str(i) + extension
             i += 1
 
         if write:
-            fobj = open(fn, 'w+b')
+            fobj = open(fn, "w+b")
             fobj.write(data)
             fobj.close()
         else:
             return fn
 
 
-def sort_field(m_text, order='Ascending', matchcase=False):
+def sort_field(m_text, order="Ascending", matchcase=False):
     """Sort values, "Sort $0, order='$1', Match Case='$2'"
-&Order, combo, Ascending, Descending,
-Match &Case, check"""
+    &Order, combo, Ascending, Descending,
+    Match &Case, check"""
     text = m_text
 
     if isinstance(text, str):
         return text
-    return sorted(text,
-                  key=lambda x: natural_sort_key(x, case_insensitive=not matchcase),
-                  reverse=order != 'Ascending')
+    return sorted(
+        text,
+        key=lambda x: natural_sort_key(x, case_insensitive=not matchcase),
+        reverse=order != "Ascending",
+    )
 
 
 def split_by_sep(m_text, sep):
     """Split fields using separator, "Split using separator $0: sep='$1'"
-&Separator, text, ;"""
+    &Separator, text, ;"""
     if isinstance(m_text, str):
         return m_text
     else:
@@ -921,7 +928,7 @@ def split_by_sep(m_text, sep):
 
 
 def strip(text):
-    '''Trim whitespace, Trim $0'''
+    """Trim whitespace, Trim $0"""
     return text.strip()
 
 
@@ -929,7 +936,7 @@ def find(text, text1):
     val = text.find(text1)
     if val >= 0:
         return str(val)
-    return '-1'
+    return "-1"
 
 
 def sub(n_1, n_2):
@@ -937,61 +944,59 @@ def sub(n_1, n_2):
 
 
 def tag_dir(m_tags, pattern, r_tags, state=None):
-    '''Tag to Dir, "Tag->Dir: $1"
-&Pattern (can be relative path), text, %artist% - %album%'''
+    """Tag to Dir, "Tag->Dir: $1"
+    &Pattern (can be relative path), text, %artist% - %album%"""
     if state is None:
-        state = {'tag_dir': set()}
+        state = {"tag_dir": set()}
 
-    elif 'tag_dir' not in state:
-        state['tag_dir'] = set()
+    elif "tag_dir" not in state:
+        state["tag_dir"] = set()
 
-    if r_tags.dirpath in state['tag_dir']:
+    if r_tags.dirpath in state["tag_dir"]:
         return
 
     dirpath = r_tags.dirpath
-    if pattern.endswith('/') and len(pattern) > 1:
+    if pattern.endswith("/") and len(pattern) > 1:
         pattern = pattern[:-1]
 
     filename = tag_to_filename(pattern, m_tags, r_tags, False, state, True)
     if filename:
-        state['tag_dir'].add(encode_fn(filename))
+        state["tag_dir"].add(encode_fn(filename))
         return {DIRPATH: filename}
 
 
 def testfunction(tags, t_text, p_pattern, n_number):
-    text = '%s - %s' % (tags['artist'], tags['title'])
+    text = "%s - %s" % (tags["artist"], tags["title"])
     assert t_text == text
-    assert p_pattern == '%artist% - %title%'
+    assert p_pattern == "%artist% - %title%"
     assert n_number == 23
-    return 'Passed'
+    return "Passed"
 
 
 def texttotag(tags, input_text, p_pattern, output, state=None):
     """Text to Tag, "Text to Tag: $0 -> $1, $2"
-&Text, text
-&Pattern, text
-&Output, text"""
-    tagpattern = pyparsing.Literal('%').suppress() + \
-                 pyparsing.Word(pyparsing.nums)
+    &Text, text
+    &Pattern, text
+    &Output, text"""
+    tagpattern = pyparsing.Literal("%").suppress() + pyparsing.Word(pyparsing.nums)
     input_text = findfunc.parsefunc(input_text, tags, state=state)
     d = findfunc.tagtotag(p_pattern, input_text, tagpattern)
     if d:
         for key in d:
-            output = output.replace('%' +
-                                    str(key), pat_escape(str(d[key])))
+            output = output.replace("%" + str(key), pat_escape(str(d[key])))
         return findfunc.parsefunc(output, tags, state=state)
     return None
 
 
 def titleCase(text, ctype=None, characters=None):
     '''Case conversion, "Convert Case: $0: $1"
-&Type, combo, Mixed Case,UPPER CASE,lower case
-"For &Mixed Case, after any of:", text, "., !"'''
+    &Type, combo, Mixed Case,UPPER CASE,lower case
+    "For &Mixed Case, after any of:", text, "., !"'''
     if characters is None:
-        characters = ['.', '(', ')', ' ', '!']
+        characters = [".", "(", ")", " ", "!"]
     if ctype == "UPPER CASE":
         return text.upper()
-    elif ctype == 'lower case':
+    elif ctype == "lower case":
         return text.lower()
 
     text = [z for z in text]
@@ -1010,31 +1015,29 @@ def titleCase(text, ctype=None, characters=None):
     return "".join(text)
 
 
-_update = {'APEv2': audioinfo.apev2.Tag, 'ID3': audioinfo.id3.Tag}
+_update = {"APEv2": audioinfo.apev2.Tag, "ID3": audioinfo.id3.Tag}
 
 
-def update_from_tag(r_tags, fields, tag='APEv2'):
-    '''Update from tag, "Update from $2, Fields: $1"
-&Field list (; separated):, text,
-&Tag, combo, APEv2, ID3'''
+def update_from_tag(r_tags, fields, tag="APEv2"):
+    """Update from tag, "Update from $2, Fields: $1"
+    &Field list (; separated):, text,
+    &Tag, combo, APEv2, ID3"""
     try:
         tag = _update[tag]().link(r_tags.filepath)
         if tag is None:
             return
-    except EnvironmentError:
+    except OSError:
         return
     except mutagen.mp3.HeaderNotFoundError:
         return
-    fields = [_f for _f in [z.strip() for z in fields.split(';')] if _f]
+    fields = [_f for _f in [z.strip() for z in fields.split(";")] if _f]
     if not fields:
         return tag.usertags
     else:
-        if fields[0].startswith('~'):
-            return dict([(k, v) for k, v in tag.usertags.items()
-                         if k not in fields])
+        if fields[0].startswith("~"):
+            return dict([(k, v) for k, v in tag.usertags.items() if k not in fields])
         else:
-            return dict([(k, v) for k, v in tag.usertags.items()
-                         if k in fields])
+            return dict([(k, v) for k, v in tag.usertags.items() if k in fields])
 
 
 def upper(text):
@@ -1043,6 +1046,7 @@ def upper(text):
 
 def validate(text, to=None, chars=None):
     from .puddleobjects import safe_name
+
     if chars is None:
         return safe_name(text, to=to)
     else:
@@ -1052,8 +1056,8 @@ def validate(text, to=None, chars=None):
 functions = {
     "add": add,
     "and": and_,
-    'artwork': load_images,
-    'autonumbering': autonumbering,
+    "artwork": load_images,
+    "autonumbering": autonumbering,
     "caps": caps,
     "caps2": caps2,
     "caps3": caps3,
@@ -1062,7 +1066,7 @@ functions = {
     "div": div,
     "enconvert": enconvert,
     "equals": eql,
-    'filenametotag': filenametotag,
+    "filenametotag": filenametotag,
     "find": find,
     "floor": floor,
     "format": formatValue,
@@ -1072,21 +1076,21 @@ functions = {
     "if": if_,
     "iflonger": iflonger,
     # 'image_to_file': image_to_file,
-    'import_text': import_text,
+    "import_text": import_text,
     "isdigit": isdigit,
     "left": left,
     "len": len_,
     "leql": leql,
     "less": less,
     "lower": lower,
-    'merge_values': merge_values,
-    'meta_sep': meta_sep,
-    'meta': meta,
+    "merge_values": merge_values,
+    "meta_sep": meta_sep,
+    "meta": meta,
     "mid": mid,
     "mod": mod,
     "move": move,
     "mul": mul,
-    'remove_dupes': remove_dupes,
+    "remove_dupes": remove_dupes,
     "neql": neql,
     "not": not_,
     "num": num,
@@ -1094,31 +1098,38 @@ functions = {
     "or": or_,
     "rand": rand,
     "re_escape": re_escape,
-    'remove_except': remove_except,
+    "remove_except": remove_except,
     # 'remove_tag': remove_tag,
     "replace": replace,
     "regex": replaceWithReg,
     "right": right,
     "round": _round,
-    'save_artwork': save_artwork,
-    'sort': sort_field,
-    'split_by_sep': split_by_sep,
+    "save_artwork": save_artwork,
+    "sort": sort_field,
+    "split_by_sep": split_by_sep,
     "strip": strip,
     "sub": sub,
-    'tag_dir': tag_dir,
+    "tag_dir": tag_dir,
     "texttotag": texttotag,
-    'testfunction': testfunction,
+    "testfunction": testfunction,
     "titleCase": titleCase,
-    'remove_fields': remove_fields,
+    "remove_fields": remove_fields,
     "upper": upper,
-    'update_from_tag': update_from_tag,
+    "update_from_tag": update_from_tag,
     "validate": validate,
-    'to_ascii': to_ascii,
-    'to_num': to_num
+    "to_ascii": to_ascii,
+    "to_num": to_num,
 }
 
-no_fields = [filenametotag, load_images, move, remove_except,
-             save_artwork, tag_dir, update_from_tag]
+no_fields = [
+    filenametotag,
+    load_images,
+    move,
+    remove_except,
+    save_artwork,
+    tag_dir,
+    update_from_tag,
+]
 no_preview = [autonumbering, load_images, remove_tag, save_artwork]
 
 from . import findfunc

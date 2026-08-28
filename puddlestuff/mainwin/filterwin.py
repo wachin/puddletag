@@ -1,13 +1,13 @@
 from PyQt6.QtCore import QTimer, pyqtSignal
-from PyQt6.QtWidgets import (QWidget, QLineEdit, QPushButton)
+from PyQt6.QtWidgets import QLineEdit, QPushButton, QWidget
 
 from ..constants import BOTTOMDOCK
-from ..puddleobjects import create_buddy, PuddleCombo
+from ..puddleobjects import PuddleCombo, create_buddy
 from ..translations import translate
 
 
 class DelayedEdit(QLineEdit):
-    delayedText = pyqtSignal(str, name='delayedText')
+    delayedText = pyqtSignal(str, name="delayedText")
 
     def __init__(self, text=None, parent=None):
         if parent is None and text is None:
@@ -34,27 +34,25 @@ class DelayedEdit(QLineEdit):
 
 
 class FilterView(QWidget):
-    filter = pyqtSignal(str, name='filter')
+    filter = pyqtSignal(str, name="filter")
 
     def __init__(self, parent=None, status=None):
         QWidget.__init__(self, parent)
-        self.emits = ['filter']
+        self.emits = ["filter"]
         self.receives = []
         edit = QLineEdit()
-        self.combo = PuddleCombo('filter_text')
-        self.combo.setEditText('')
+        self.combo = PuddleCombo("filter_text")
+        self.combo.setEditText("")
         self.combo.combo.setLineEdit(edit)
         hbox = create_buddy(translate("Defaults", "Filter: "), self.combo)
-        go_button = QPushButton(translate('Defaults', 'Go'))
+        go_button = QPushButton(translate("Defaults", "Go"))
         hbox.addWidget(go_button)
         self.setLayout(hbox)
 
-        emit_filter = lambda: self.filter.emit(
-            str(edit.text()))
+        emit_filter = lambda: self.filter.emit(str(edit.text()))
         go_button.clicked.connect(emit_filter)
         edit.returnPressed.connect(emit_filter)
-        self.combo.combo.activated.connect(
-            lambda i: emit_filter())
+        self.combo.combo.activated.connect(lambda i: emit_filter())
 
     def saveSettings(self):
         self.combo.save()

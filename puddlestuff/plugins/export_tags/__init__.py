@@ -2,6 +2,7 @@
 audioinfo.Tag objects).
 
 Data is stored as json."""
+
 import json
 import logging
 import os
@@ -25,7 +26,7 @@ def tags_to_json(dirpath, fields=None):
 
 
 def backup_dir(dirpath, fn, fields=None):
-    fo = open(fn, 'w')
+    fo = open(fn, "w")
     fo.write(json.dumps(tags_to_json(dirpath, fields)))
     fo.close()
 
@@ -34,20 +35,34 @@ def main():
     usage = "Usage: %prog [-f FIELDS] [-b dirpath | -r] filename"
     parser = OptionParser(usage=usage)
 
-    parser.add_option("-b", "--backup", dest="backup",
-                      default='',
-                      help="Backs up all audio tags in dirpath to filename.",
-                      metavar="BACKUP")
-    parser.add_option("-r", "--restore", dest="restore",
-                      default='',
-                      help="Restores audio tags found in filename.",
-                      metavar="RESTORE", action="store_true")
-    parser.add_option("-f", "--fields", dest="fields",
-                      default='',
-                      help="Comma separated list of fields. "
-                           "Backed up data will be restricted to this list, but if "
-                           "restored will overwrite the complete file.",
-                      metavar="FIELDS", action='store')
+    parser.add_option(
+        "-b",
+        "--backup",
+        dest="backup",
+        default="",
+        help="Backs up all audio tags in dirpath to filename.",
+        metavar="BACKUP",
+    )
+    parser.add_option(
+        "-r",
+        "--restore",
+        dest="restore",
+        default="",
+        help="Restores audio tags found in filename.",
+        metavar="RESTORE",
+        action="store_true",
+    )
+    parser.add_option(
+        "-f",
+        "--fields",
+        dest="fields",
+        default="",
+        help="Comma separated list of fields. "
+        "Backed up data will be restricted to this list, but if "
+        "restored will overwrite the complete file.",
+        metavar="FIELDS",
+        action="store",
+    )
 
     options, filenames = parser.parse_args()
     if not (options.backup or options.restore):
@@ -62,12 +77,12 @@ def main():
     filename = filenames[0]
 
     if os.path.exists(filename) and options.backup:
-        logging.error('Fatal Error: Backup file, %s already exists' % filename)
+        logging.error("Fatal Error: Backup file, %s already exists" % filename)
         exit(2)
 
     fields = options.fields if options.fields else None
     if fields:
-        fields = [z.strip() for z in fields.split(',')]
+        fields = [z.strip() for z in fields.split(",")]
 
     if options.backup:
         backup_dir(options.backup, filename, fields)
@@ -76,23 +91,23 @@ def main():
 
 
 def restore_backup(fn):
-    for i, tag in enumerate(json.loads(open(fn, 'r').read())):
+    for i, tag in enumerate(json.loads(open(fn, "r").read())):
         try:
-            fn = tag['__path']
+            fn = tag["__path"]
         except KeyError:
-            'Error: A file was backed up without a file path.'
+            "Error: A file was backed up without a file path."
         try:
             audio = audioinfo.Tag(fn)
-        except EnvironmentError as e:
+        except OSError as e:
             "Error: Couldn't restore", fn, str(e)
             continue
         except Exception as e:
             "Error: Couldn't restore", fn, str(e)
             continue
 
-        if '__image' in tag:
-            images = tag['__image']
-            del (tag['__image'])
+        if "__image" in tag:
+            images = tag["__image"]
+            del tag["__image"]
             audio.images = list(map(b64_to_img, images))
 
         audio.clear()
@@ -100,5 +115,5 @@ def restore_backup(fn):
         audio.save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

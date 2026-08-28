@@ -1,13 +1,12 @@
 import csv
 import os
-import sys
 from os.path import abspath, dirname, normcase, normpath, splitdrive
 from os.path import join as path_join
 
-from PyQt6.QtWidgets import QFileDialog, QApplication
+from PyQt6.QtWidgets import QFileDialog
 
 from . import audioinfo
-from .audioinfo.util import lnglength, encode_fn
+from .audioinfo.util import encode_fn
 from .findfunc import tagtofilename
 
 
@@ -49,7 +48,7 @@ def relpath(target, base_path=os.curdir):
     target = normcase(abspath(normpath(target)))
 
     if base_path == target:
-        return '.'
+        return "."
 
     # On the windows platform the target may be on a different drive.
     if splitdrive(base_path)[0] != splitdrive(target)[0]:
@@ -70,14 +69,14 @@ def relpath(target, base_path=os.curdir):
 
     ret = os.sep.join([os.pardir] * dirs_up)
     if len(target) > common_path_len:
-        ret = path_join(ret, target[common_path_len + 1:])
+        ret = path_join(ret, target[common_path_len + 1 :])
 
     return ret
 
 
 def readm3u(path):
     # From http://forums.fedoraforum.org/showthread.php?p=1224109
-    fileHandle = open(path, 'r')
+    fileHandle = open(path, "r")
     reader = csv.reader(open(path, "r"))
     olddir = os.path.abspath(os.curdir)
     os.chdir(os.path.dirname(path))
@@ -94,7 +93,7 @@ def readm3u(path):
             continue
         else:
             # store rule
-            mp3Files.append(normpath(abspath(','.join(row))))
+            mp3Files.append(normpath(abspath(",".join(row))))
 
     fileHandle.close()
     os.chdir(olddir)
@@ -102,7 +101,7 @@ def readm3u(path):
 
 
 def exportm3u(tags, tofile, format=None, reldir=False, winsep=False):
-    header = ['#EXTM3U']
+    header = ["#EXTM3U"]
 
     if reldir:
         reldir = os.path.dirname(os.path.abspath(tofile))
@@ -111,18 +110,21 @@ def exportm3u(tags, tofile, format=None, reldir=False, winsep=False):
         filenames = [f.filepath for f in tags]
 
     if winsep:
-        filenames = [f.replace('/', '\\') for f in filenames]
+        filenames = [f.replace("/", "\\") for f in filenames]
 
     if format is None:
-        text = '\n'.join(header + filenames)
+        text = "\n".join(header + filenames)
     else:
         text = header
-        extinfo = ('#EXTINF: %d, %s' % (int(f.length),
-                                        encode_fn(tagtofilename(format, f, False))) for f in tags)
+        extinfo = (
+            "#EXTINF: %d, %s"
+            % (int(f.length), encode_fn(tagtofilename(format, f, False)))
+            for f in tags
+        )
         [text.extend([z, y]) for z, y in zip(extinfo, filenames)]
-        text = '\n'.join(text)
+        text = "\n".join(text)
 
-    playlist = open(tofile, 'w')
+    playlist = open(tofile, "w")
     playlist.write(text)
     playlist.close()
 
@@ -131,7 +133,7 @@ def auto_update_playlist(tags):
     """Automatically updates playlists in the directories of the given tags
     if the setting is enabled."""
     cparser = PuddleConfig()
-    if not cparser.get('playlist', 'auto_update', False):
+    if not cparser.get("playlist", "auto_update", False):
         return
 
     # Group tags by directory
@@ -139,37 +141,41 @@ def auto_update_playlist(tags):
     for t in tags:
         dirs[os.path.dirname(t.filepath)].append(t)
 
-    filepattern = cparser.get('playlist', 'filepattern', 'puddletag.m3u')
-    extinfo = cparser.get('playlist', 'extinfo', True)
-    extpattern = cparser.get('playlist', 'extpattern', '%artist% - %title%')
-    reldir_setting = cparser.get('playlist', 'reldir', False)
-    winsep = cparser.get('playlist', 'windows_separator', False)
+    filepattern = cparser.get("playlist", "filepattern", "puddletag.m3u")
+    extinfo = cparser.get("playlist", "extinfo", True)
+    extpattern = cparser.get("playlist", "extpattern", "%artist% - %title%")
+    reldir_setting = cparser.get("playlist", "reldir", False)
+    winsep = cparser.get("playlist", "windows_separator", False)
 
     for dirname, dir_tags in dirs.items():
         # In Mp3tag, auto-playlist usually means a playlist for all files in that dir
         # We'll look for all tags in that directory from status['alltags']
         from .puddletag import status
-        all_dir_tags = [t for t in status['alltags'] if os.path.dirname(t.filepath) == dirname]
-        
+
+        all_dir_tags = [
+            t for t in status["alltags"] if os.path.dirname(t.filepath) == dirname
+        ]
+
         if not all_dir_tags:
             continue
-            
+
         # Use the first tag to generate the playlist filename if it has placeholders
         playlist_name = tagtofilename(filepattern, all_dir_tags[0])
         playlist_path = os.path.join(dirname, playlist_name)
-        
+
         pattern = extpattern if extinfo else None
         exportm3u(all_dir_tags, playlist_path, pattern, reldir_setting, winsep)
 
+
 from collections import defaultdict
+
 from .puddleobjects import PuddleConfig
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     filedlg = QFileDialog()
     filedlg.setFileMode(QFileDialog.FileMode.Directory)
     filedlg.setOption(QFileDialog.Option.ShowDirsOnly)
-    filename = str(filedlg.getExistingDirectory(None,
-                                                'Open Folder'))
+    filename = str(filedlg.getExistingDirectory(None, "Open Folder"))
     tags = []
     for z in os.listdir(filename):
         try:
@@ -178,6 +184,5 @@ if __name__ == '__main__':
                 tags.append(tag)
         except Exception as e:
             str(e)
-    folder = str(filedlg.getSaveFileName(None,
-                                         'Save File'))
+    folder = str(filedlg.getSaveFileName(None, "Save File"))
     exportm3u(tags, folder)

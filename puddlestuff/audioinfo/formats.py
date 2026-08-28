@@ -48,9 +48,14 @@ def iter_supported_formats(tag_modules=None):
 
             mutagen_type, tag_type, tag_format, extensions = filetype[:4]
             extension_list = _extension_list(extensions)
-            key = (str(tag_format),
-                   str(_audio_format_name(mutagen_type, tag_type, tag_format,
-                                          extension_list)))
+            key = (
+                str(tag_format),
+                str(
+                    _audio_format_name(
+                        mutagen_type, tag_type, tag_format, extension_list
+                    )
+                ),
+            )
             rows.setdefault(key, set()).update(extension_list)
 
     for (tag_format, audio_format), extensions in rows.items():
@@ -59,8 +64,10 @@ def iter_supported_formats(tag_modules=None):
 
 def supported_formats_summary(tag_modules=None):
     """Return a compact human-readable supported formats summary."""
-    rows = sorted(iter_supported_formats(tag_modules),
-                  key=lambda row: (row[0].lower(), row[1].lower(), row[2]))
+    rows = sorted(
+        iter_supported_formats(tag_modules),
+        key=lambda row: (row[0].lower(), row[1].lower(), row[2]),
+    )
     parts = []
     for tag_format, audio_format, extensions in rows:
         ext_text = ", ".join(extensions)

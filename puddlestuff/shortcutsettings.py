@@ -3,8 +3,18 @@ import sys
 
 from PyQt6.QtCore import QEvent, QLineF, QRectF, Qt, pyqtRemoveInputHook
 from PyQt6.QtGui import QBrush, QKeySequence, QPainter, QPalette, QPen
-from PyQt6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QApplication, QFrame, QItemDelegate, QLabel, \
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QAbstractItemDelegate,
+    QAbstractItemView,
+    QApplication,
+    QFrame,
+    QItemDelegate,
+    QLabel,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import loadshortcuts as ls
 from .constants import CONFIGDIR
@@ -15,7 +25,6 @@ pyqtRemoveInputHook()
 
 
 class ActionEditorWidget(QLabel):
-
     def __init__(self, text, parent):
 
         QLabel.__init__(self, text, parent)
@@ -23,7 +32,9 @@ class ActionEditorWidget(QLabel):
         self.modifiers = {}
         self.setAutoFillBackground(True)
         palette = self.palette()
-        palette.setBrush(QPalette.ColorRole.Base, palette.brush(QPalette.ColorRole.AlternateBase))
+        palette.setBrush(
+            QPalette.ColorRole.Base, palette.brush(QPalette.ColorRole.AlternateBase)
+        )
         self.setPalette(palette)
         self.valid = False
         self.setFrameStyle(QFrame.Shape.Panel)
@@ -41,10 +52,17 @@ class ActionEditorWidget(QLabel):
         elif event.key() == Qt.Key.Key_Alt:
             self.modifiers[Qt.Key.Key_Alt] = "Alt"
         else:
-            other = QKeySequence(event.key()).toString(QKeySequence.SequenceFormat.NativeText)
+            other = QKeySequence(event.key()).toString(
+                QKeySequence.SequenceFormat.NativeText
+            )
 
         if other:
-            key_string = "+".join(list(self.modifiers.values()) + [str(other), ])
+            key_string = "+".join(
+                list(self.modifiers.values())
+                + [
+                    str(other),
+                ]
+            )
             self.valid = True
         else:
             key_string = "+".join(list(self.modifiers.values()))
@@ -105,10 +123,12 @@ class ActionEditorWidget(QLabel):
             left = self.width() - 4
 
             painter.drawRect(QRectF(left - size, size * 0.5, size, size))
-            painter.drawLine(QLineF(left - size * 0.75, size * 0.75,
-                             left - size * 0.25, size * 1.25))
-            painter.drawLine(QLineF(left - size * 0.25, size * 0.75,
-                             left - size * 0.75, size * 1.25))
+            painter.drawLine(
+                QLineF(left - size * 0.75, size * 0.75, left - size * 0.25, size * 1.25)
+            )
+            painter.drawLine(
+                QLineF(left - size * 0.25, size * 0.75, left - size * 0.75, size * 1.25)
+            )
             painter.end()
 
         QLabel.paintEvent(self, event)
@@ -119,7 +139,6 @@ class ActionEditorWidget(QLabel):
 
 
 class ActionEditorDelegate(QItemDelegate):
-
     def __init__(self, parent=None):
 
         QItemDelegate.__init__(self, parent)
@@ -139,20 +158,26 @@ class ActionEditorDelegate(QItemDelegate):
                 obj.keyPressEvent(event)
                 if obj.valid:
                     self.commitData.emit(self.editor)
-                    self.closeEditor.emit(self.editor, QAbstractItemDelegate.EndEditHint.NoHint)
+                    self.closeEditor.emit(
+                        self.editor, QAbstractItemDelegate.EndEditHint.NoHint
+                    )
                 return True
 
             elif event.type() == QEvent.Type.KeyRelease:
                 obj.keyReleaseEvent(event)
                 if not obj.text():
-                    self.closeEditor.emit(self.editor, QAbstractItemDelegate.EndEditHint.NoHint)
+                    self.closeEditor.emit(
+                        self.editor, QAbstractItemDelegate.EndEditHint.NoHint
+                    )
                 return True
 
             elif event.type() == QEvent.Type.MouseButtonPress:
                 obj.mousePressEvent(event)
                 if obj.valid:
                     self.commitData.emit(self.editor)
-                    self.closeEditor.emit(self.editor, QAbstractItemDelegate.EndEditHint.NoHint)
+                    self.closeEditor.emit(
+                        self.editor, QAbstractItemDelegate.EndEditHint.NoHint
+                    )
                 return True
 
         return False
@@ -165,9 +190,13 @@ class ActionEditorDelegate(QItemDelegate):
 
         painter.fillRect(option.rect, option.palette.brush(QPalette.ColorRole.Base))
         painter.setPen(QPen(option.palette.color(QPalette.ColorRole.Text)))
-        painter.drawText(option.rect.adjusted(4, 4, -4, -4),
-                         Qt.TextFlag.TextShowMnemonic | Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                         str(index.data()))
+        painter.drawText(
+            option.rect.adjusted(4, 4, -4, -4),
+            Qt.TextFlag.TextShowMnemonic
+            | Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignVCenter,
+            str(index.data()),
+        )
 
     def setEditorData(self, editor, index):
 
@@ -183,22 +212,30 @@ class ActionEditorDelegate(QItemDelegate):
 
 
 class ActionEditorDialog(QWidget):
-
     def __init__(self, actions, parent=None):
 
-        super(ActionEditorDialog, self).__init__(parent)
+        super().__init__(parent)
         self.actions = actions
 
-        help = QLabel(translate("Shortcut Settings", '<b>Double click a cell in the Shortcut Column'
-                                                     ' to <br />modify the key sequence.</b>'))
+        help = QLabel(
+            translate(
+                "Shortcut Settings",
+                "<b>Double click a cell in the Shortcut Column"
+                " to <br />modify the key sequence.</b>",
+            )
+        )
 
         self.actionTable = QTableWidget(self)
-        self.actionTable.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.actionTable.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
         self.actionTable.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked)
         self.actionTable.setColumnCount(2)
         self.actionTable.setHorizontalHeaderLabels(
-            [translate("Shortcut Settings", "Description"),
-             translate("Shortcut Settings", "Shortcut")]
+            [
+                translate("Shortcut Settings", "Description"),
+                translate("Shortcut Settings", "Shortcut"),
+            ]
         )
         self.actionTable.horizontalHeader().setStretchLastSection(True)
         self.actionTable.verticalHeader().hide()
@@ -208,7 +245,6 @@ class ActionEditorDialog(QWidget):
 
         row = 0
         for action in self.actions:
-
             if not action.text():
                 continue
 
@@ -221,7 +257,11 @@ class ActionEditorDialog(QWidget):
 
             item = QTableWidgetItem()
             item.setText(action.shortcut().toString())
-            item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsSelectable)
+            item.setFlags(
+                Qt.ItemFlag.ItemIsEnabled
+                | Qt.ItemFlag.ItemIsEditable
+                | Qt.ItemFlag.ItemIsSelectable
+            )
             item.oldShortcutText = item.text()
             self.actionTable.setItem(row, 1, item)
 
@@ -247,7 +287,6 @@ class ActionEditorDialog(QWidget):
 
         row = 0
         for action in self.actions:
-
             if action.text():
                 action.setText(self.actionTable.item(row, 0).text())
                 action.setShortcut(QKeySequence(self.actionTable.item(row, 1).text()))
@@ -257,10 +296,10 @@ class ActionEditorDialog(QWidget):
 
     def _loadSettings(self, actions):
 
-        cparser = PuddleConfig(os.path.join(CONFIGDIR, 'user_shortcuts'))
+        cparser = PuddleConfig(os.path.join(CONFIGDIR, "user_shortcuts"))
 
         for action in actions:
-            shortcut = cparser.get('shortcuts', str(action.text()), '')
+            shortcut = cparser.get("shortcuts", str(action.text()), "")
             if shortcut:
                 action.setShortcut(QKeySequence(shortcut))
 
@@ -268,10 +307,10 @@ class ActionEditorDialog(QWidget):
 
     def saveSettings(self, actions):
 
-        cparser = PuddleConfig(os.path.join(CONFIGDIR, 'user_shortcuts'))
+        cparser = PuddleConfig(os.path.join(CONFIGDIR, "user_shortcuts"))
         for action in actions:
             shortcut = str(action.shortcut().toString())
-            cparser.set('shortcuts', str(action.text()), shortcut)
+            cparser.set("shortcuts", str(action.text()), shortcut)
 
     saveSettings = classmethod(saveSettings)
 
@@ -301,7 +340,7 @@ class ActionEditorDialog(QWidget):
         self.actionTable.resizeColumnToContents(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     # win = ShortcutSettings()
     # win = EditShortcut('Open', 'Ctrl+O')
