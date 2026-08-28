@@ -481,14 +481,14 @@ class RhythmDB(ContentHandler):
         tags = ['artist', 'title', FILENAME, '__path', 'album', 'genre',
                 'comment', 'year']
         term = term.lower()
-        tracks = []
-        for audio in files:
+        ret = []
+        for audio in tracks:
             temp = audioinfo.stringtags(audio)
             for tag in tags:
                 if term in temp[tag].lower():
-                    tracks.append(audio)
+                    ret.append(audio)
                     break
-        return tracks
+        return ret
 
 
 class InitWidget(QWidget):

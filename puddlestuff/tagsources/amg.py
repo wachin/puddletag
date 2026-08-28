@@ -381,7 +381,7 @@ def parse_searchpage(page, artist=None, album=None, id_field=ALBUM_ID):
     elif artist:
         d = {'artist': artist}
         top = [album for album in albums if equal(d, album, True, ['artist'])]
-        if not ret:
+        if not top:
             top = [album for album in albums if
                    equal(d, album, False, ['artist'])]
     else:

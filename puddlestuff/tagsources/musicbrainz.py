@@ -94,7 +94,7 @@ def convert_dict(d, fm):
 
 def fix_xml(xml):
     c = XMLEscaper()
-    c.feed(album_xml)
+    c.feed(xml)
     return c.xml
 
 

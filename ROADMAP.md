@@ -25,6 +25,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Automated Tag Source & Plugin Documentation**: Tag source and bundled plugin reference tables are generated from their live registries.
 - [x] **Comprehensive Plugin API Docs**: Detailed plugin API reference for community developers covering module attributes, action functions, tag sources, dockable dialogs, music libraries, and helper APIs.
 - [x] **Plugin Loader Fix**: User plugins in `~/.puddletag/plugins` load again; the `puddlestuff.plugins.` import prefix introduced for issue #41 had made them unloadable.
+- [x] **Undefined Name Bug Fixes**: First code-cleanup pass fixed five runtime NameError bugs in live code found by pyflakes (id3, amg, musicbrainz, rhythmbox and the id3_tools plugin).
 
 ## Planned Features & Improvements
 
@@ -35,7 +36,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 
 ### Core Functionality
 - [ ] **Missing Formats**: Implement support for remaining formats like Matroska/WebM (pending Mutagen updates).
-- [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
+- [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability. First pass done (undefined-name bugs in live code fixed); remaining pyflakes warnings are in dead code (demo `__main__` blocks, `mainwin/teststuff.py`, the unloadable `export_tags` plugin), plus unused-import and unused-variable sweeps still to do.
 
 ### Distribution & Documentation
 - [ ] **AppImage Package**: Official support for AppImage. Build script (`create_appimage.sh`) and AppStream metainfo (`puddletag.appdata.xml`) are in place; a first build is pending testing (requires `python3-pyinstaller` and the auto-downloaded `appimagetool`).

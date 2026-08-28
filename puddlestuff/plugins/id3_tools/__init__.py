@@ -56,7 +56,7 @@ def update_to_24(parent=None):
     rows = status['selectedrows']
 
     def func():
-        for f in files:
+        for row, f in zip(rows, files):
             try:
                 if isinstance(f, id3_tag):
                     f.save(v1=1)
