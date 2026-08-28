@@ -42,4 +42,115 @@ The :download:`Function plugin example <functionplugin.tar.gz>` contains a short
 
 The :download:`Tag Source Example <tagsource.tar.gz>` contains puddletag's Amazon tag source with a lot of comments.
 
+Plugin API Reference
+--------------------
+
+This section describes everything a plugin module can expose to puddletag. When a plugin is loaded, puddletag imports its module and looks for the attributes below. All of them are optional.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Attribute
+     - Type
+     - Used for
+   * - ``functions``
+     - dict
+     - Action functions, keyed by registry key. Added to the Functions available in the Actions dialog.
+   * - ``functions_no_preview``
+     - list
+     - Function objects from ``functions`` that shouldn't be previewed while editing an Action.
+   * - ``tagsources``
+     - list
+     - Tag source classes added to the Tag Sources window.
+   * - ``dialogs``
+     - list
+     - Dockable dialogs added to the main window.
+   * - ``musiclibs``
+     - list
+     - Music library modules added to **Import Music Library**.
+   * - ``init``
+     - callable
+     - Called once after the plugin is loaded. Use it to add menu items and shortcuts.
+
+Plugins are enabled and disabled in **Edit->Preferences->Plugins**. Loading and unloading plugins requires a restart of puddletag.
+
+init(parent=None)
+^^^^^^^^^^^^^^^^^
+
+If defined, ``init`` is called once after all plugins have been loaded, with the main window passed as ``parent``. Errors raised here are logged and don't prevent other plugins from loading. This is the place to add menu entries using ``add_shortcuts`` (see below).
+
+Action Functions
+^^^^^^^^^^^^^^^^
+
+Action functions are callables that are merged into the function registry used by the Actions dialog. The ``functions`` attribute should be a dict mapping a registry key (a short, unique string) to the function.
+
+The conventions are the same as for puddletag's built-in functions (see the module docstring of ``puddlestuff/functions.py``):
+
++ The first parameter should be named either ``text`` or ``tags``. If it's named ``text``, the value of the field being processed is passed to it. If it's named ``tags``, the file's tags are passed as a dict-like object.
++ Return ``None`` if the function isn't successful.
++ The function's docstring is used as metadata to build the function's dialog in the Actions editor.
+
+The first line of the docstring contains the function's display name and the preview text, separated by a comma. ``$0``, ``$1``, etc. in the preview text are replaced with the values the user enters. Each following line describes one extra parameter (after the first) using three comma-separated parts: the label shown above the control, the control type and the default value. Control types are ``text``, ``combo``, ``check`` and ``spinbox``.
+
+An example::
+
+    def my_function(text, prefix=''):
+        '''Add Prefix, "Add Prefix: $1"
+    Prefix,text,'''
+        return prefix + text
+
+    functions = {'add_prefix': my_function}
+
+Tag Sources
+^^^^^^^^^^^
+
+A tag source is a class following the interface described in ``puddlestuff/tagsources/TagSource.py``. Set the ``tagsources`` attribute to a list of these classes.
+
+The class attributes that define a tag source are:
+
++ **name**: The name of the tag source as shown in the Tag Sources window.
++ **group_by**: A list of tags to group album releases by, eg. ``['album', 'artist']``.
++ **tooltip**: An HTML tooltip displayed when hovering above the Search box.
++ **preferences**: A list of preferences shown in the tag source's config dialog. Each preference is ``[label, control_type, default]`` where ``control_type`` is one of ``TEXT``, ``COMBO``, ``CHECKBOX`` or ``SPINBOX`` from ``puddlestuff.constants``.
+
+And its methods:
+
++ **search(files_or_group, files=None)**: Called when Search is clicked and the Search box is empty. Returns a list of ``(album_info, tracks)`` tuples.
++ **keyword_search(text)**: Called when Search is clicked and the Search box contains text.
++ **retrieve(release)**: Called when a release is expanded, returning a 2-tuple of a dict of album fields and a list of dicts of track fields.
++ **submit(files)**: If defined, a Submit button is shown for submitting file data to the web database.
++ **applyPrefs(values)**: Called with the preference values when the user changes the tag source's settings.
+
+The bundled tag sources in ``puddlestuff/tagsources/`` (eg. ``amazon.py``) double as example implementations.
+
+Dockable Dialogs
+^^^^^^^^^^^^^^^^
+
+The ``dialogs`` attribute is a list of tuples describing dockable windows::
+
+    from puddlestuff.constants import LEFTDOCK
+    dialogs = [('Extended Tags', MyDialog, LEFTDOCK, False)]
+
+Each tuple is ``(name, dialog, position[, visibility])`` where ``dialog`` is the widget (or widget class) to dock and ``position`` is one of ``LEFTDOCK``, ``RIGHTDOCK``, ``TOPDOCK`` or ``BOTTOMDOCK`` from ``puddlestuff.constants``. ``visibility`` defaults to ``True``.
+
+Music Libraries
+^^^^^^^^^^^^^^^
+
+The ``musiclibs`` attribute is a list of modules that make a music library available in **Import Music Library**. Each module should define:
+
++ **name**: The name of the library.
++ **InitWidget**: A widget class used to let the user set the options required for loading the library.
+
+See the modules in ``puddlestuff/libraries/`` for example implementations.
+
+Useful puddletag APIs
+^^^^^^^^^^^^^^^^^^^^^
+
+These are the helpers bundled plugins use, and are available to your plugin too.
+
++ ``puddlestuff.puddletag.add_shortcuts(menu_title, actions)``: Adds the list of ``QAction`` objects to the menu named ``menu_title`` (eg. ``'&Plugins'``). The menu is created if it doesn't exist. Typically called from ``init``.
++ ``puddlestuff.puddlesettings.add_config_widget(widget_class)``: Registers a settings page shown in the Preferences dialog. The widget class should define a ``title`` attribute and an ``applySettings`` method.
++ ``puddlestuff.plugins.status``: A dict-like object shared with puddletag's main window. Useful keys include ``status['table']`` (the file table), ``status['selectedfiles']`` (the selected files' tags) and ``status['allfiles']`` (all loaded files).
++ ``puddlestuff.plugins.connect_control(control)``: Connects a QObject that defines ``emits`` and ``receives`` lists to the signals of puddletag's docked controls, allowing your plugin to react to eg. file selection changes. See the bundled ``dupe_fields`` plugin for an example.
+
 .. include:: generated_plugins.txt

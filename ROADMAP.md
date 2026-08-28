@@ -23,6 +23,8 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [x] **Automated Format Documentation**: Supported format help text is generated from the live audio format registry.
 - [x] **Automated Function Documentation**: Action function reference docs are generated from the live action function registry.
 - [x] **Automated Tag Source & Plugin Documentation**: Tag source and bundled plugin reference tables are generated from their live registries.
+- [x] **Comprehensive Plugin API Docs**: Detailed plugin API reference for community developers covering module attributes, action functions, tag sources, dockable dialogs, music libraries, and helper APIs.
+- [x] **Plugin Loader Fix**: User plugins in `~/.puddletag/plugins` load again; the `puddlestuff.plugins.` import prefix introduced for issue #41 had made them unloadable.
 
 ## Planned Features & Improvements
 
@@ -37,7 +39,6 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 
 ### Distribution & Documentation
 - [ ] **AppImage Package**: Official support for AppImage.
-- [ ] **Comprehensive Plugin API Docs**: Detailed documentation for community developers.
 
 ### Disabled (available for fork developers)
 - [ ] **Flatpak Package**: Official support for Flatpak. Disabled because the maintainer no longer uses Flatpak and cannot test it. Developers who fork this repository are welcome to pick this up.

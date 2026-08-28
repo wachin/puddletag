@@ -23,6 +23,7 @@ This repository has recently received renewed maintenance work, including:
 - Dark mode, a built-in log viewer, library statistics, and duplicate-finder improvements.
 - CLI commands for export and tag editing.
 - Generated documentation for supported audio formats, action functions, tag sources, and bundled plugins.
+- A comprehensive plugin API reference for plugin developers, and a fix so user plugins in `~/.puddletag/plugins` load again.
 
 ## Dependencies
 
