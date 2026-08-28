@@ -46,6 +46,16 @@ def get_plugins(plugindir):
     return infos
 
 
+def _import_plugin(module_name):
+    # Bundled plugins are imported as package submodules so their relative
+    # imports work (see issue #41). User plugins live outside the package
+    # and are imported by module name via the PLUGIN_DIRS sys.path entries.
+    try:
+        return import_module('puddlestuff.plugins.' + module_name)
+    except ImportError:
+        return import_module(module_name)
+
+
 def load_plugins(plugins=None, parent=None):
     [sys.path.insert(0, d) for d in PLUGIN_DIRS]
     cparser = PuddleConfig()
@@ -75,7 +85,7 @@ def load_plugins(plugins=None, parent=None):
     for plugin in plugins:
         if plugin[MODULE_NAME] in to_load:
             try:
-                module = import_module('puddlestuff.plugins.' + plugin[MODULE_NAME])
+                module = _import_plugin(plugin[MODULE_NAME])
                 for attribute, action in plugin_actions.items():
                     if hasattr(module, attribute):
                         action(getattr(module, attribute))
