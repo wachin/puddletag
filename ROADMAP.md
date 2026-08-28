@@ -36,5 +36,8 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 
 ### Distribution & Documentation
-- [ ] **Universal Packages**: Official support for Flatpak and AppImage.
+- [ ] **AppImage Package**: Official support for AppImage.
 - [ ] **Comprehensive Plugin API Docs**: Detailed documentation for community developers.
+
+### Disabled (available for fork developers)
+- [ ] **Flatpak Package**: Official support for Flatpak. Disabled because the maintainer no longer uses Flatpak and cannot test it. Developers who fork this repository are welcome to pick this up.
