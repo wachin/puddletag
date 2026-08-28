@@ -38,7 +38,7 @@ Our goal is to make PuddleTag the premier audio metadata editor for the Linux co
 - [ ] **Massive Code Cleanup**: Refactor legacy code to improve performance and maintainability.
 
 ### Distribution & Documentation
-- [ ] **AppImage Package**: Official support for AppImage.
+- [ ] **AppImage Package**: Official support for AppImage. Build script (`create_appimage.sh`) and AppStream metainfo (`puddletag.appdata.xml`) are in place; a first build is pending testing (requires `python3-pyinstaller` and the auto-downloaded `appimagetool`).
 
 ### Disabled (available for fork developers)
 - [ ] **Flatpak Package**: Official support for Flatpak. Disabled because the maintainer no longer uses Flatpak and cannot test it. Developers who fork this repository are welcome to pick this up.

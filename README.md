@@ -24,6 +24,7 @@ This repository has recently received renewed maintenance work, including:
 - CLI commands for export and tag editing.
 - Generated documentation for supported audio formats, action functions, tag sources, and bundled plugins.
 - A comprehensive plugin API reference for plugin developers, and a fix so user plugins in `~/.puddletag/plugins` load again.
+- AppImage packaging: `create_appimage.sh` build script and AppStream metainfo (`puddletag.appdata.xml`).
 
 ## Dependencies
 

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>puddletag</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>puddletag</name>
+  <summary>Powerful, simple, audio tag editor</summary>
+  <description>
+    <p>
+      puddletag is an audio tag editor for GNU/Linux similar to the Windows
+      program Mp3tag. Unlike most taggers for GNU/Linux, it uses a
+      spreadsheet-like layout so that all the tags you want to edit by hand
+      are visible and easily editable.
+    </p>
+    <p>
+      The usual tag editor features are supported like extracting tag
+      information from filenames, renaming files based on their tags by using
+      patterns and basic tag editing. Functions can do things like replace
+      text, trim it, do case conversions, etc. Actions can automate repetitive
+      tasks. Web lookups using AcoustID, Amazon, Discogs, FreeDB and
+      MusicBrainz are also supported.
+    </p>
+  </description>
+  <developer id="net.puddletag">
+    <name>puddletag developers</name>
+  </developer>
+  <launchable type="desktop-id">puddletag.desktop</launchable>
+  <url type="homepage">https://docs.puddletag.net/</url>
+  <url type="bugtracker">https://github.com/puddletag/puddletag/issues</url>
+  <url type="vcs-browser">https://github.com/puddletag/puddletag</url>
+  <keywords>
+    <keyword>tagger</keyword>
+    <keyword>mp3tag</keyword>
+    <keyword>music</keyword>
+  </keywords>
+  <provides>
+    <mediatype>audio/mpeg</mediatype>
+    <mediatype>audio/ogg</mediatype>
+    <mediatype>audio/flac</mediatype>
+    <mediatype>audio/mp4</mediatype>
+    <mediatype>audio/x-m4a</mediatype>
+    <mediatype>audio/x-ape</mediatype>
+    <mediatype>audio/x-wavpack</mediatype>
+    <mediatype>audio/x-musepack</mediatype>
+    <mediatype>audio/x-aiff</mediatype>
+    <mediatype>audio/x-dsf</mediatype>
+    <mediatype>audio/x-dff</mediatype>
+    <mediatype>audio/x-opus+ogg</mediatype>
+    <mediatype>audio/x-ms-wma</mediatype>
+    <mediatype>video/mp4</mediatype>
+    <mediatype>video/x-m4v</mediatype>
+    <mediatype>video/x-ms-wmv</mediatype>
+    <mediatype>video/x-ms-asf</mediatype>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="2.5.0" date="2026-05-21"/>
+  </releases>
+</component>

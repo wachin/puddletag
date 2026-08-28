@@ -155,3 +155,8 @@ Thumbs.db
 
 # screenshot bugs
 /screenshot-bugs
+
+# AppImage build artifacts
+/puddletag.AppDir/
+/tools/
+*.AppImage
