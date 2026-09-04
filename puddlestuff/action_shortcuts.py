@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import puddleobjects as puddleobjects
+from . import puddleobjects
 from . import puddletag
 from .constants import ACTIONDIR
 from .findfunc import load_macro_info as load_action
@@ -56,7 +56,7 @@ def create_action_shortcut(
 
 
 def create_action_shortcuts(method, parent=None):
-    actions, shortcuts = load_settings()
+    _actions, shortcuts = load_settings()
     menu_shortcuts = []
     for name, filenames in shortcuts:
         menu_shortcuts.append(Shortcut(name, filenames, method, parent))
@@ -136,7 +136,6 @@ class Shortcut(QAction):
         # Nor does using blockSignals
 
         self._watcher.fileChanged.disconnect(self._checkFile)
-        filename = filename
         if not os.path.exists(filename):
             self.filenames.remove(filename)
         self.funcs = self.get_funcs()
@@ -236,13 +235,13 @@ class Editor(QDialog):
         if actions:
             self.setActions(actions)
 
-    def _addAction(self, item=None):
-        if item is None:
+    def _addAction(self, current=None):
+        if current is None:
             for item in self._actionList.selectedItems():
                 self._addAction(item)
             return
-        new_item = QListWidgetItem(item)
-        new_item._action = item._action
+        new_item = QListWidgetItem(current)
+        new_item._action = current._action
         self._newActionList.addItem(new_item)
         self._newActionList.setCurrentItem(
             new_item, QItemSelectionModel.SelectionFlag.ClearAndSelect
@@ -278,7 +277,7 @@ class Editor(QDialog):
         self._name.setText(name)
 
     def setAttrs(self, name, actions, filenames, shortcut=""):
-        names = dict([(z[2], z[1]) for z in actions])
+        names = {z[2]: z[1] for z in actions}
         self.setActions(actions)
         self.setName(name)
         self._newActionList.clear()
@@ -358,8 +357,8 @@ class ShortcutEditor(QDialog):
 
         remove_shortcuts("&Actions", self._names)
 
-        f = open(FILENAME, "w")
-        f.close()
+        with open(FILENAME, "w"):
+            pass
 
         cparser = PuddleConfig(FILENAME)
         for i, item in enumerate(self._listbox.items()):
@@ -442,9 +441,9 @@ class ShortcutEditor(QDialog):
         from .puddletag import status
 
         if status["actions"]:
-            shortcuts = dict(
-                (str(a.text()), str(a.shortcut().toString())) for a in status["actions"]
-            )
+            shortcuts = {
+                str(a.text()): str(a.shortcut().toString()) for a in status["actions"]
+            }
         else:
             shortcuts = {}
 
