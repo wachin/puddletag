@@ -6,6 +6,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from copy import deepcopy
+from typing import ClassVar
 
 from puddlestuff.audioinfo import DATA, isempty
 from puddlestuff.constants import CHECKBOX, COMBO, TEXT
@@ -123,7 +124,7 @@ def parse_tracklist(tlist):
             elif person.get("role", "") == "Featuring":
                 featuring.append(name)
             else:
-                people.append("%s:%s" % (person["name"], person["role"]))
+                people.append(f"{person['name']}:{person['role']}")
 
         if featuring:
             title = title + " featuring " + ", ".join(featuring)
@@ -133,10 +134,10 @@ def parse_tracklist(tlist):
         a_len = len(t.get("artists", []))
         for i, a in enumerate(t.get("artists", [])):
             if a_len > 1 and a.get("join"):
-                artist.append("%s %s " % (a["name"], a["join"]))
+                artist.append(f"{a['name']} {a['join']} ")
             else:
                 if i < a_len - 1:
-                    artist.append("%s & " % a["name"])
+                    artist.append(f"{a['name']} & ")
                 else:
                     artist.append(a["name"])
         info["artist"] = "".join(artist).strip()
@@ -168,7 +169,7 @@ def parse_album_json(data):
     info["artist"] = [z["name"] for z in data.get("artists", [])]
     info["artist"] = " & ".join([_f for _f in info["artist"] if _f])
     info["involvedpeople_album"] = ":".join(
-        "%s;%s" % (z["name"], z["role"]) for z in data.get("extraartists", [])
+        f"{z['name']};{z['role']}" for z in data.get("extraartists", [])
     )
     info["label"] = [z["name"] for z in data.get("labels", [])]
     info["catno"] = [
@@ -176,7 +177,7 @@ def parse_album_json(data):
     ]
 
     info["companies"] = ";".join(
-        "%s %s" % (z["entity_type_name"], z["name"]) for z in data.get("companies", [])
+        f"{z['entity_type_name']} {z['name']}" for z in data.get("companies", [])
     )
     info["album"] = data["title"]
     cleaned_data = convert_dict(capture_dict_values(data), ALBUM_KEYS)
@@ -268,15 +269,12 @@ def urlopen(url):
         data = urllib.request.urlopen(request).read()
     except urllib.error.URLError as e:
         try:
-            msg = "%s (%s)" % (e.reason.strerror, e.reason.errno)
+            msg = f"{e.reason.strerror} ({e.reason.errno})"
         except AttributeError:
             msg = str(e)
         raise RetrievalError(msg)
     except OSError as e:
-        msg = "%s (%s)" % (e.strerror, e.errno)
-        raise RetrievalError(msg)
-    except OSError as e:
-        msg = "%s (%s)" % (e.strerror, e.errno)
+        msg = f"{e.strerror} ({e.errno})"
         raise RetrievalError(msg)
 
     try:
@@ -289,7 +287,7 @@ def urlopen(url):
 
 class Discogs:
     name = "Discogs.com"
-    group_by = ["album", "artist"]
+    group_by: ClassVar[list[str]] = ["album", "artist"]
     tooltip = translate(
         "Discogs",
         """<p><b>Discogs only support searching by release id</b></p>
@@ -330,16 +328,10 @@ class Discogs:
 
         try:
             return [self.retrieve(r_id)]
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise RetrievalError(str(e))
 
     def search(self, album, artists):
-
-        if len(artists) > 1:
-            artist = "Various Artists"
-        else:
-            artist = [z for z in artists][0]
-
         if hasattr(artists, "values"):
             write_log(translate("Discogs", "Checking tracks for Discogs Album ID."))
             tracks = []
@@ -354,7 +346,7 @@ class Discogs:
         return []
 
     def retrieve(self, info):
-        if False and self._getcover:  # retrieving images is broken by Discogs
+        if self._getcover:  # retrieving images is broken by Discogs
             return retrieve_album(info, self.covertype)
         else:
             return retrieve_album(info, None)
