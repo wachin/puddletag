@@ -2,7 +2,6 @@ import logging
 import os
 import platform
 import sys
-import traceback
 import urllib.parse
 from collections import defaultdict
 from errno import EEXIST
@@ -59,6 +58,8 @@ from .puddlesettings import SettingsDialog, load_gen_settings, update_settings
 from .tagmodel import TagTable
 from .translations import translate
 from .util import rename_error_msg
+
+logger = logging.getLogger(__name__)
 
 status = PuddleStatus()
 
@@ -204,7 +205,7 @@ def connect_actions(actions, controls):
                 for c in emits[action.enabled]
             ]
         else:
-            logging.debug("No enable signal found for " + action.text())
+            logger.debug("No enable signal found for " + action.text())
             action.setEnabled(False)
             continue
         if action.togglecheck and action.togglecheck in emits:
@@ -227,7 +228,7 @@ def connect_actions(actions, controls):
             if hasattr(c, command):
                 action.triggered.connect(action_triggered_slot(c, command))
             else:
-                logging.debug(action.command + " slot not found for " + action.text())
+                logger.debug(action.command + " slot not found for " + action.text())
 
 
 def connect_action_shortcuts(actions):
@@ -258,7 +259,7 @@ def get_os():
             ),
             "",
         )
-        return "%s %s" % (name, version)
+        return f"{name} {version}"
 
     def read_osrelease():
         """Naive re-implementation of freedesktop_os_release."""
@@ -299,7 +300,7 @@ def get_os():
         if hasattr(platform, "linux_distribution"):
             linux_dist = platform.linux_distribution()
             if any(x for x in linux_dist if x):
-                return "%s %s" % (linux_dist[0], linux_dist[1])
+                return f"{linux_dist[0]} {linux_dist[1]}"
 
         # Fourth try: read the os-release file directly (to fill the gap btw. 3.7 and 3.10)
         try:
@@ -317,12 +318,12 @@ def get_os():
         # else fall through to the fallback
     if "Windows" == platform.system():
         win_info = platform.win32_ver()
-        return "Windows %s" % (win_info[0])
+        return f"Windows {win_info[0]}"
     if "Darwin" == platform.system():
-        return "macOS %s" % (platform.mac_ver()[0])
+        return f"macOS {platform.mac_ver()[0]}"
 
     # In case of emergency, hope for the best
-    return "%s %s %s" % (platform.system(), platform.release(), platform.version())
+    return f"{platform.system()} {platform.release()} {platform.version()}"
 
 
 def get_display_server():
@@ -366,7 +367,7 @@ def create_bug_report_issue():
         {
             "template": "bug_report.yaml",
             "labels": "bug",
-            "system": "\n".join(map(lambda x: f"{x[0]}: {x[1]}", system_list)),
+            "system": "\n".join(f"{x[0]}: {x[1]}" for x in system_list),
         }
     )
     url = f"https://github.com/puddletag/puddletag/issues/new?{params}"
@@ -566,15 +567,15 @@ class MainWin(QMainWindow):
             if hasattr(m, "init"):
                 try:
                     m.init(parent=self)
-                except:
-                    traceback.print_exc()
+                except Exception:
+                    logger.exception("Error while loading plugin %s", m)
                     continue
 
         for win in plugin_dialogs:
             try:
                 self.addDock(*win, connect=False)
-            except:
-                logging.exception("Error while loading Plugin dialog.")
+            except Exception:
+                logger.exception("Error while loading Plugin dialog.")
 
         self.restoreSettings()
         self.always.emit(True)
@@ -687,7 +688,6 @@ class MainWin(QMainWindow):
         if tagmodel.has_previews(parent=self, msg=preview_msg):
             e.ignore()
             return False
-        controls = PuddleDock._controls
         for control in PuddleDock._controls.values():
             if hasattr(control, "saveSettings"):
                 try:
@@ -737,7 +737,6 @@ class MainWin(QMainWindow):
         statusbar.messageChanged.connect(statuslabel.setText)
 
     def loadPlayList(self):
-        dirname = self._lastdir[0] if self._lastdir else QDir.homePath()
         selectedFile = QFileDialog.getOpenFileName(
             self,
             translate("Playlist", translate("Playlist", "Select m3u file...")),
@@ -754,21 +753,13 @@ class MainWin(QMainWindow):
                 translate("Defaults", "Error"),
                 translate(
                     "Playlist", "An error occured while reading <b>{}</b> ({})"
-                ).format(filename, e.strerror),
+                ).format(filename, str(e)),
             )
         except UnicodeError:
             QMessageBox.information(
                 self._table,
                 translate("Defaults", "Error"),
                 translate("Playlist", "The playlist is not encoded in UTF-8"),
-            )
-        except Exception as e:
-            QMessageBox.information(
-                self._table,
-                translate("Defaults", "Error"),
-                translate(
-                    "Playlist", "An error occured while reading <b>{}</b> ({})"
-                ).format(filename, str(e)),
             )
 
     def openDir(self, filename=None, append=False):
@@ -807,7 +798,7 @@ class MainWin(QMainWindow):
         if menu_title in self._menus:
             menu = self._menus[menu_title][0]
         if actions:
-            children = dict([(str(z.text()), z) for z in menu.actions()])
+            children = {str(z.text()): z for z in menu.actions()}
             for action in actions:
                 if isinstance(action, str):
                     action = children[action]
@@ -949,7 +940,7 @@ class MainWin(QMainWindow):
         totallength = strlength(sum([z[1] for z in stats]))
 
         sizetext = str_filesize(totalsize)
-        return "%d (%s | %s)" % (numfiles, totallength, sizetext)
+        return f"{numfiles} ({totallength} | {sizetext})"
 
     def lockLayout(self):
         for dw in self._docks:
@@ -1074,7 +1065,7 @@ class MainWin(QMainWindow):
         setRowData = model.setRowData
 
         [setRowData(row, d, undo=False, temp=True) for row in rows]
-        columns = set(idx for idx, field in model.columns.items() if field in d)
+        columns = {idx for idx, field in model.columns.items() if field in d}
         if columns:
             start = model.index(min(rows), min(columns))
             end = model.index(max(rows), max(columns))
@@ -1088,13 +1079,13 @@ class MainWin(QMainWindow):
         setRowData = model.setRowData
 
         [setRowData(row, d, undo=False, temp=True) for row, d in zip(rows, tags)]
-        columns = set(
+        columns = {
             idx
             for idx, field in model.columns.items()
             for tag in tags
             for tagname in tag
             if field == tagname
-        )
+        }
         if columns:
             start = model.index(min(rows), min(columns))
             end = model.index(max(rows), max(columns))
