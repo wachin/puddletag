@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 from puddlestuff.audioinfo import CaselessDict
 from puddlestuff.functions import replace_regex
 
-conditionals = set(["if", "ifnot"])
+conditionals = {"if", "ifnot"}
 
 
 def debug(cursor, flag, filename=None, maxsize=None):
@@ -40,10 +40,9 @@ def endif(cursor):
 
 
 def findinline(cursor, text, n=1, exit=None):
-    cursor.log("findinline %s %d\n" % (text, n))
+    cursor.log(f"findinline {text} {n}\n")
     line = cursor.line[cursor.charno :]
     i = 1
-    t_len = len(text)
     start = 0
     while line.find(text, start) != -1:
         pos = line.find(text, start) + len(text)
@@ -69,7 +68,7 @@ def findline(cursor, text, index=1, exit=None, no_case=False):
         for i, line in enumerate(lines):
             if text in line:
                 if num_found == index:
-                    cursor.log("Found %s at line %d\n" % (text, i))
+                    cursor.log(f"Found {text} at line {i}\n")
                     cursor.lineno = cursor.lineno - i - 1
                     cursor.charno = 0
                     return
@@ -83,7 +82,7 @@ def findline(cursor, text, index=1, exit=None, no_case=False):
         for i, line in enumerate(lines):
             if text in line:
                 if num_found == index:
-                    cursor.log("Found %s at line %d\n" % (text, i))
+                    cursor.log(f"Found {text} at line {i}\n")
                     cursor.lineno = cursor.lineno + i
                     cursor.charno = 0
                     return
@@ -173,20 +172,20 @@ def joinuntil(cursor, text):
 
 def killtag(cursor, tag, repl=" "):
     if repl:
-        cursor.log("Killing HTML tag %s with %s\n" % (tag, repl))
+        cursor.log(f"Killing HTML tag {tag} with {repl}\n")
     else:
-        cursor.log("Killing HTML tag %s\n" % tag)
+        cursor.log(f"Killing HTML tag {tag}\n")
 
     if tag == "*":
         parser = TagProcessor()
         parser.feed(cursor.line)
-        text = "%s%s%s" % (" ", repl.join(parser.pieces), " ")
+        text = f" {repl.join(parser.pieces)} "
         cursor.log(cursor.line + " becomes " + text + "\n")
         cursor.line = text
         return
     else:
         leave, to_rep = cursor.line[: cursor.charno], cursor.line[cursor.charno :]
-        cursor.line = leave + to_rep.replace("<%s>" % tag, repl)
+        cursor.line = leave + to_rep.replace(f"<{tag}>", repl)
 
 
 def movechar(cursor, num):
@@ -194,7 +193,7 @@ def movechar(cursor, num):
 
 
 def moveline(cursor, num, exit=None):
-    cursor.log("Moving to line %d" % (cursor.lineno + num))
+    cursor.log(f"Moving to line {cursor.lineno + num}")
     cursor.lineno = cursor.lineno + num
     cursor.charno = 0
 
@@ -219,10 +218,10 @@ def outputto(cursor, text):
     elif not cursor.num_loop:
         if cursor.output is not cursor.album:
             cursor.output = cursor.album
-        cursor.log("Outputting %s" % text)
+        cursor.log(f"Outputting {text}")
         cursor.field = text
     else:
-        cursor.log("Outputting %s" % text)
+        cursor.log(f"Outputting {text}")
         cursor.field = text
 
 
@@ -240,7 +239,7 @@ def regexpreplace(cursor, regexp, s):
 
 
 def say(cursor, text):
-    cursor.log("say %s" % text)
+    cursor.log(f"say {text}")
     cursor.cache += text
 
 
@@ -256,7 +255,7 @@ def saynewline(cursor):
 def saynextnumber(cursor):
     try:
         number = re.search(r"\d+", cursor.line[cursor.charno :]).group()
-        cursor.log("Saying number %s\n" % number)
+        cursor.log(f"Saying number {number}\n")
         cursor.cache += number
         cursor.charno += len(number)
     except AttributeError:
@@ -311,25 +310,25 @@ def sayregexp(cursor, rexp, separator=None, check=None):
 
 
 def sayrest(cursor):
-    cursor.log("Saying the rest of line from position %d." % cursor.charno)
-    cursor.log("Line: %s." % cursor.line)
-    cursor.log("Saying: %s\n" % cursor.line[cursor.charno :])
+    cursor.log(f"Saying the rest of line from position {cursor.charno}.")
+    cursor.log(f"Line: {cursor.line}.")
+    cursor.log(f"Saying: {cursor.line[cursor.charno :]}\n")
     cursor.cache += cursor.line[cursor.charno :]
     cursor.charno = len(cursor.line) - 1
 
 
 def sayuntil(cursor, text):
-    cursor.log("SayUntil start: %d" % cursor.charno)
-    cursor.log("Line: %s." % cursor.line)
+    cursor.log(f"SayUntil start: {cursor.charno}")
+    cursor.log(f"Line: {cursor.line}.")
     line = cursor.line[cursor.charno :]
     index = line.find(text)
     if index != -1:
         cursor.cache += line[:index]
-        cursor.log("Saying: %s\n" % line[:index])
+        cursor.log(f"Saying: {line[:index]}\n")
         cursor.charno = cursor.charno + index
     else:
-        cursor.log("%s not found.\n" % text)
-        cursor.log("Saying: %s\n" % line)
+        cursor.log(f"{text} not found.\n")
+        cursor.log(f"Saying: {line}\n")
         cursor.cache += line
         cursor.charno = len(cursor.line) - 1
 
