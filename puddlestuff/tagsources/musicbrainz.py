@@ -7,6 +7,7 @@ import urllib.request
 from collections import defaultdict
 from html.parser import HTMLParser
 from itertools import chain
+from typing import ClassVar
 from xml.dom import Node, minidom
 from xml.sax.saxutils import escape, quoteattr
 
@@ -98,7 +99,7 @@ def children_to_text(node):
 
 
 def convert_dict(d, fm):
-    return dict((fm.get(k, k), v) for k, v in d.items() if not isempty(v))
+    return {fm.get(k, k): v for k, v in d.items() if not isempty(v)}
 
 
 def fix_xml(xml):
@@ -184,9 +185,9 @@ def parse_artist_relation(relations):
                 desc = r["artist"]["name"]
             else:
                 if r["direction"] == "backward":
-                    field = "%s %s" % (desc, field)
+                    field = f"{desc} {field}"
                 else:
-                    field = "%s %s" % (field, desc)
+                    field = f"{field} {desc}"
                 desc = r["artist"]["name"]
         if desc:
             ret[field].append(desc)
@@ -242,10 +243,10 @@ def parse_medium_list(r_node):
 def parse_node(node, header_tag, sub_tag, check_tag):
     ret = []
     nodes = [z for z in node.childNodes if getattr(z, "tagName", "") == header_tag]
-    for node in nodes:
-        info = children_to_text(node)
-        for ch in node.getElementsByTagName(sub_tag):
-            if ch not in node.childNodes:
+    for current in nodes:
+        info = children_to_text(current)
+        for ch in current.getElementsByTagName(sub_tag):
+            if ch not in current.childNodes:
                 continue
             info = info.copy()
             info.update(rec_children_to_text(ch))
@@ -300,7 +301,7 @@ def parse_release(node):
             del info[k]
 
     if "disambiguation" in info:
-        info["album"] = "%s (%s)" % (info["album"], info["disambiguation"])
+        info["album"] = f"{info['album']} ({info['disambiguation']})"
         del info["disambiguation"]
 
     tracks = []
@@ -328,7 +329,7 @@ def parse_track_list(node):
         if feat:
             names = [(z["artist"]["name"], z.get("joinphrase", "")) for z in feat]
 
-            track["artist"] = "".join("%s%s" % a for a in names)
+            track["artist"] = "".join(f"{a[0]}{a[1]}" for a in names)
 
         for k, v in list(track.items()):
             if (
@@ -391,7 +392,7 @@ def retrieve_cover_links(album_id, extra=None):
     if extra is None:
         url = "http://coverartarchive.org/release/" + album_id
     else:
-        url = "http://coverartarchive.org/release/%s/%s" % (album_id, extra)
+        url = f"http://coverartarchive.org/release/{album_id}/{extra}"
     write_log(translate("MusicBrainz", "Retrieving cover: {}").format(url))
     try:
         data, code = urlopen(url, code=True)
@@ -400,7 +401,7 @@ def retrieve_cover_links(album_id, extra=None):
             raise RetrievalError(
                 translate("MusicBrainz", "No images exist for this album."), 404
             )
-        raise e
+        raise
 
     if code == 200:
         if extra is None:
@@ -464,7 +465,7 @@ def search_album(album=None, artist=None, limit=25, offset=0, own=False):
             SERVER
             + "release/?query="
             + urllib.parse.quote_plus(album)
-            + "&limit=%d&offset=%d" % (limit, offset)
+            + f"&limit={limit}&offset={offset}"
         )
 
     if artist:
@@ -482,7 +483,7 @@ def search_album(album=None, artist=None, limit=25, offset=0, own=False):
         SERVER
         + "release/?query="
         + query.replace("%3A", "")
-        + "&limit=%d&offset=%d" % (limit, offset)
+        + f"&limit={limit}&offset={offset}"
     )
 
 
@@ -515,11 +516,11 @@ class XMLEscaper(HTMLParser):
         self._xml.append(escape(data))
 
     def unknown_starttag(self, tag, attributes):
-        attrib_str = " ".join("%s=%s" % (k, quoteattr(v)) for k, v in attributes)
-        self._xml.append("<%s %s>" % (tag, attrib_str))
+        attrib_str = " ".join(f"{k}={quoteattr(v)}" for k, v in attributes)
+        self._xml.append(f"<{tag} {attrib_str}>")
 
     def unknown_endtag(self, tag):
-        self._xml.append("</%s>" % tag)
+        self._xml.append(f"</{tag}>")
 
     @property
     def xml(self):
@@ -529,7 +530,7 @@ class XMLEscaper(HTMLParser):
 class MusicBrainz:
     name = "MusicBrainz"
 
-    group_by = ["album", "artist"]
+    group_by: ClassVar[list[str]] = ["album", "artist"]
 
     def __init__(self):
         super().__init__()
@@ -604,22 +605,20 @@ class MusicBrainz:
         if time.time() - self.__lasttime < 1000:
             time.sleep(1)
 
-        ret = []
-        check_matches = False
         if isempty(artists):
             artist = None
         if len(artists) > 1:
             artist = "Various Artists"
         elif artists:
             if hasattr(artists, "items"):
-                artist = list(artists.keys())[0]
+                artist = next(iter(artists.keys()))
             else:
                 artist = artists[0]
 
         if not album and not artist:
             raise RetrievalError("Album or Artist required.")
 
-        write_log("Searching for %s" % album)
+        write_log(f"Searching for {album}")
 
         if hasattr(artists, "items"):
             album_id = find_id(chain(*list(artists.values())), "mbrainz_album_id")
@@ -640,7 +639,7 @@ class MusicBrainz:
         try:
             xml = urlopen(search_album(album, artist, limit))
         except urllib.error.URLError as e:
-            write_log("Error: While retrieving search page %s" % str(e))
+            write_log(f"Error: While retrieving search page {e}")
             raise RetrievalError(str(e))
         write_log("Retrieved search results.")
         self.__lasttime = time.time()
@@ -693,7 +692,8 @@ info = MusicBrainz
 if __name__ == "__main__":
     # retrieve_album('f504ebe7-8fb4-40e5-aa55-b6384bdf863e')
     # c = MusicBrainz()
-    xml = open("/home/keith/Desktop/mb.xml", "r").read()
+    with open("/home/keith/Desktop/mb.xml") as f:
+        xml = f.read()
     # x = c.search('New Again', 'Taking Back Sunday')
     tracks = parse_album(xml)[1]
     for z in tracks:
