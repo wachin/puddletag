@@ -1,5 +1,6 @@
 import contextlib
 import http.client
+import logging
 import os
 import time
 import traceback
@@ -7,6 +8,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from itertools import chain, product, starmap
+from typing import ClassVar
 
 import acoustid
 
@@ -16,7 +18,9 @@ from puddlestuff.constants import SPINBOX, TEXT
 from puddlestuff.tagsources import SubmissionError, set_status, write_log
 from puddlestuff.tagsources.musicbrainz import retrieve_album
 from puddlestuff.translations import translate
-from puddlestuff.util import escape_html, isempty, to_string
+from puddlestuff.util import isempty, to_string
+
+logger = logging.getLogger(__name__)
 
 CALCULATE_MSG = translate("AcoustID", "Calculating ID")
 RETRIEVE_MSG = translate("AcoustID", "Retrieving AcoustID data: {} of {}.")
@@ -58,7 +62,7 @@ def best_match(albums, tracks):
     ret = []
 
     for key in sorted(hashed, key=lambda i: hashed[i][1], reverse=True):
-        album, count, tracks = hashed[key]
+        album, _count, tracks = hashed[key]
         new_tracks = []
 
         for t in tracks:
@@ -82,26 +86,24 @@ def convert_for_submit(tags):
         "musicip_puid": "puid",
     }
 
-    valid_keys = set(
-        [
-            "artist",
-            "album",
-            "title",
-            "track",
-            "discno",
-            "mbid",
-            "year",
-            "bitrate",
-            "puid",
-            "trackno",
-        ]
-    )
+    valid_keys = {
+        "artist",
+        "album",
+        "title",
+        "track",
+        "discno",
+        "mbid",
+        "year",
+        "bitrate",
+        "puid",
+        "trackno",
+    }
 
-    ret = dict(
-        (cipher.get(k, k), v)
+    ret = {
+        cipher.get(k, k): v
         for k, v in stringtags(tags).items()
         if cipher.get(k, k) in valid_keys and v
-    )
+    }
     bitrate = ret["bitrate"].split(" ")[0]
     if bitrate == 0:
         del ret["bitrate"]
@@ -158,12 +160,12 @@ def parse_release_data(rel):
     info["mbrainz_album_id"] = rel["id"]
     if "mediums" in rel:
         info["track"] = str(rel["mediums"][0]["tracks"][0].get("position", ""))
-    return dict((k, v) for k, v in info.items() if not isempty(v))
+    return {k: v for k, v in info.items() if not isempty(v)}
 
 
 def parse_lookup_result(data, albums=False, fp=None):
     if data["status"] != "ok":
-        raise acoustid.WebServiceError("status: %s" % data["status"])
+        raise acoustid.WebServiceError(f"status: {data['status']}")
     if "results" not in data:
         raise acoustid.WebServiceError("results not included")
 
@@ -210,7 +212,7 @@ def parse_recording_data(data, info=None):
     else:
         album_info = []
 
-    track = dict((k, v) for k, v in track.items() if not isempty(v))
+    track = {k: v for k, v in track.items() if not isempty(v)}
 
     if "artist" in track:
         for album in album_info:
@@ -223,7 +225,7 @@ def parse_recording_data(data, info=None):
 def retrieve_album_info(album, tracks):
     if not album:
         return album, tracks
-    msg = "<b>%s - %s</b>" % tuple(map(escape_html, (album["artist"], album["album"])))
+    msg = f"<b>{album['artist']} - {album['album']}</b>"
     msg = RETRIEVE_MB_MSG.format(msg)
     write_log(msg)
     set_status(msg)
@@ -248,7 +250,7 @@ def which(program):
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(program)
+    fpath, _fname = os.path.split(program)
     if fpath:
         if is_exe(program):
             return program
@@ -263,7 +265,7 @@ def which(program):
 
 class AcoustID:
     name = "AcoustID"
-    group_by = ["album", None]
+    group_by: ClassVar[list] = ["album", None]
 
     def __init__(self):
         object.__init__(self)
@@ -286,7 +288,7 @@ class AcoustID:
             with contextlib.closing(urllib.request.urlopen(req)) as f:
                 return f.read(), f.info()
         except urllib.error.HTTPError as exc:
-            raise acoustid.WebServiceError("HTTP status %i" % exc.code, exc.read())
+            raise acoustid.WebServiceError(f"HTTP status {exc.code}", exc.read())
         except http.client.BadStatusLine:
             raise acoustid.WebServiceError("bad HTTP status line")
         except OSError:
@@ -414,6 +416,6 @@ if __name__ == "__main__":
             tag = audioinfo.Tag(fn)
             if tag is not None:
                 files.append(tag)
-        except:
-            pass
+        except Exception:
+            logger.exception("Error while loading tag for %s", fn)
     x.submit(files)
