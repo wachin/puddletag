@@ -1,3 +1,6 @@
+import logging
+from typing import ClassVar
+
 import tags
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QPushButton, QVBoxLayout, QWidget
@@ -18,6 +21,8 @@ from ..audioinfo.util import (
 from ..constants import RIGHTDOCK
 from ..puddleobjects import PuddleDock
 
+logger = logging.getLogger(__name__)
+
 ATTRIBUTES = (
     "frequency",
     "length",
@@ -32,11 +37,11 @@ ATTRIBUTES = (
 class Tag(audioinfo.MockTag):
     """Use as base for all tag classes."""
 
-    IMAGETAGS = ()
-    mapping = {}
-    revmapping = {}
+    IMAGETAGS: ClassVar[tuple] = ()
+    mapping: ClassVar[dict] = {}
+    revmapping: ClassVar[dict] = {}
 
-    _hash = {
+    _hash: ClassVar[dict] = {
         PATH: "filepath",
         FILENAME: "filename",
         EXTENSION: "ext",
@@ -65,7 +70,7 @@ class Tag(audioinfo.MockTag):
         self.filepath = dictionary["__filename"]
 
     def save(self):
-        logging.info("saving " + self.filename)
+        logger.info("saving " + self.filename)
 
     def copy(self):
         return Tag(self._tags.copy())
@@ -157,7 +162,7 @@ class TestWidget(QWidget):
 
     def _loadMany(self):
         model = PuddleDock._controls["table"].model()
-        num, ok = QInputDialog.getInt(
+        num, _ok = QInputDialog.getInt(
             self,
             "puddletag",
             "Enter the number of files to fill the file-view with.",
@@ -170,12 +175,12 @@ class TestWidget(QWidget):
 
     def _saveTags(self):
         files = self._status["allfiles"]
-        f = open("savedfiles", "w")
-        f.write(
-            "# -*- coding: utf-8 -*-\ntags = [%s]"
-            % ",\n".join(str(z.tags) for z in files)
-        )
-        f.close()
+        with open("savedfiles", "w") as f:
+            f.write(
+                "# -*- coding: utf-8 -*-\ntags = [{}]".format(
+                    ",\n".join(str(z.tags) for z in files)
+                )
+            )
 
 
 control = ("Puddle Testing", TestWidget, RIGHTDOCK, False)
