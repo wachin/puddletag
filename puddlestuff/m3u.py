@@ -76,26 +76,24 @@ def relpath(target, base_path=os.curdir):
 
 def readm3u(path):
     # From http://forums.fedoraforum.org/showthread.php?p=1224109
-    fileHandle = open(path, "r")
-    reader = csv.reader(open(path, "r"))
     olddir = os.path.abspath(os.curdir)
     os.chdir(os.path.dirname(path))
 
     # List of mp3files
     mp3Files = []
+    with open(path, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) < 1:
+                # Skip blanks
+                continue
+            elif row[0].startswith("#"):
+                # Ignore comments
+                continue
+            else:
+                # store rule
+                mp3Files.append(normpath(abspath(",".join(row))))
 
-    for row in reader:
-        if len(row) < 1:
-            # Skip blanks
-            continue
-        elif row[0].startswith("#"):
-            # Ignore comments
-            continue
-        else:
-            # store rule
-            mp3Files.append(normpath(abspath(",".join(row))))
-
-    fileHandle.close()
     os.chdir(olddir)
     return mp3Files
 
@@ -117,16 +115,14 @@ def exportm3u(tags, tofile, format=None, reldir=False, winsep=False):
     else:
         text = header
         extinfo = (
-            "#EXTINF: %d, %s"
-            % (int(f.length), encode_fn(tagtofilename(format, f, False)))
+            f"#EXTINF: {int(f.length)}, {encode_fn(tagtofilename(format, f, False))}"
             for f in tags
         )
         [text.extend([z, y]) for z, y in zip(extinfo, filenames)]
         text = "\n".join(text)
 
-    playlist = open(tofile, "w")
-    playlist.write(text)
-    playlist.close()
+    with open(tofile, "w") as playlist:
+        playlist.write(text)
 
 
 def auto_update_playlist(tags):
@@ -147,13 +143,13 @@ def auto_update_playlist(tags):
     reldir_setting = cparser.get("playlist", "reldir", False)
     winsep = cparser.get("playlist", "windows_separator", False)
 
-    for dirname, dir_tags in dirs.items():
+    for d in dirs:
         # In Mp3tag, auto-playlist usually means a playlist for all files in that dir
         # We'll look for all tags in that directory from status['alltags']
         from .puddletag import status
 
         all_dir_tags = [
-            t for t in status["alltags"] if os.path.dirname(t.filepath) == dirname
+            t for t in status["alltags"] if os.path.dirname(t.filepath) == d
         ]
 
         if not all_dir_tags:
@@ -161,7 +157,7 @@ def auto_update_playlist(tags):
 
         # Use the first tag to generate the playlist filename if it has placeholders
         playlist_name = tagtofilename(filepattern, all_dir_tags[0])
-        playlist_path = os.path.join(dirname, playlist_name)
+        playlist_path = os.path.join(d, playlist_name)
 
         pattern = extpattern if extinfo else None
         exportm3u(all_dir_tags, playlist_path, pattern, reldir_setting, winsep)
@@ -182,7 +178,7 @@ if __name__ == "__main__":
             tag = audioinfo.Tag(os.path.join(filename, z))
             if tag:
                 tags.append(tag)
-        except Exception as e:
-            str(e)
+        except Exception:  # noqa: BLE001, S110
+            pass
     folder = str(filedlg.getSaveFileName(None, "Save File"))
     exportm3u(tags, folder)
