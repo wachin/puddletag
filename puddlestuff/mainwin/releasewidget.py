@@ -63,15 +63,13 @@ def get_tagsources():
 def strip(audio, taglist, reverse=False, mapping=None):
     if not taglist:
         if mapping:
-            return dict(
-                [
-                    (mapping.get(key, key), audio[key])
-                    for key in audio
-                    if not key.startswith("#")
-                ]
-            )
+            return {
+                mapping.get(key, key): audio[key]
+                for key in audio
+                if not key.startswith("#")
+            }
         else:
-            return dict([(key, audio[key]) for key in audio if not key.startswith("#")])
+            return {key: audio[key] for key in audio if not key.startswith("#")}
     tags = taglist[::]
     if tags and tags[0].startswith("~"):
         reverse = True
@@ -80,38 +78,30 @@ def strip(audio, taglist, reverse=False, mapping=None):
         reverse = False
     if reverse:
         if mapping:
-            return dict(
-                [
-                    (mapping.get(key, key), audio[key])
-                    for key in audio
-                    if key not in tags and not key.startswith("#")
-                ]
-            )
+            return {
+                mapping.get(key, key): audio[key]
+                for key in audio
+                if key not in tags and not key.startswith("#")
+            }
         else:
-            return dict(
-                [
-                    (key, audio[key])
-                    for key in audio
-                    if key not in tags and not key.startswith("#")
-                ]
-            )
+            return {
+                key: audio[key]
+                for key in audio
+                if key not in tags and not key.startswith("#")
+            }
     else:
         if mapping:
-            return dict(
-                [
-                    (mapping.get(key, key), audio[key])
-                    for key in taglist
-                    if key in audio and not key.startswith("#")
-                ]
-            )
+            return {
+                mapping.get(key, key): audio[key]
+                for key in taglist
+                if key in audio and not key.startswith("#")
+            }
         else:
-            return dict(
-                [
-                    (key, audio[key])
-                    for key in taglist
-                    if key in audio and not key.startswith("#")
-                ]
-            )
+            return {
+                key: audio[key]
+                for key in taglist
+                if key in audio and not key.startswith("#")
+            }
 
 
 def tooltip(tag, mapping=None):
@@ -119,7 +109,7 @@ def tooltip(tag, mapping=None):
     if not tag:
         return translate("Tag Sources", "<b>Error in pattern</b>")
     mapping = {} if mapping is None else mapping
-    tag = dict((mapping.get(k, k), v) for k, v in tag.items() if not k.startswith("#"))
+    tag = {mapping.get(k, k): v for k, v in tag.items() if not k.startswith("#")}
 
     return pprint_tag(tag)
 
@@ -361,9 +351,9 @@ class TreeModel(QtCore.QAbstractItemModel):
 
     def canFetchMore(self, index):
         item = index.internalPointer()
-        if item in self.rootItem.childItems and not item.childItems and item.hasTracks:
-            return True
-        return False
+        return (
+            item in self.rootItem.childItems and not item.childItems and item.hasTracks
+        )
 
     def columnCount(self, parent):
         if parent.isValid():
@@ -412,7 +402,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                     translate("Tag Sources", "An error occured: {}").format(str(e))
                 )
                 return
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 traceback.print_exc()
                 self.statusChanged.emit(
                     translate("Tag Sources", "An unhandled error occured: {}").format(
@@ -444,15 +434,12 @@ class TreeModel(QtCore.QAbstractItemModel):
             return True
         if not item.hasTracks:
             return False
-        if (item == self.rootItem) or (item in self.rootItem.childItems):
-            if not item.retrieving:
-                return True
-        return False
+        return (
+            item == self.rootItem or item in self.rootItem.childItems
+        ) and not item.retrieving
 
     def isTrack(self, item):
-        if (item == self.rootItem) or (item in self.rootItem.childItems):
-            return False
-        return True
+        return item != self.rootItem and item not in self.rootItem.childItems
 
     def flags(self, index):
         item = index.internalPointer()
@@ -522,7 +509,7 @@ class TreeModel(QtCore.QAbstractItemModel):
                     translate("Tag Sources", "An error occured: {}").format(str(e))
                 )
                 return None
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 traceback.print_exc()
                 self.statusChanged.emit(
                     translate("Tag Sources", "An unhandled error occured: {}").format(
@@ -654,7 +641,6 @@ class ReleaseWidget(QTreeView):
     def emitExactMatches(self, item, files):
         if not item.hasTracks:
             return
-        preview = {}
         from ..masstag import match_files
 
         tracks = item.tracks()
@@ -729,7 +715,7 @@ class ReleaseWidget(QTreeView):
             for item in albums:
                 if "#extrainfo" in item.itemData:
                     desc, url = item.itemData["#extrainfo"]
-                    self.infoChanged.emit('<a href="%s">%s</a>' % (url, desc))
+                    self.infoChanged.emit(f'<a href="{url}">{desc}</a>')
                     break
         self.emitTracks(tracks)
         self.itemSelectionChanged.emit()
@@ -811,7 +797,7 @@ class ReleaseWidget(QTreeView):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     model = TreeModel()
-    model.setupModelData(data)
+    model.setupModelData(data)  # noqa: F821
 
     view = ReleaseWidget(1, get_tagsources()[0])
     view.setModel(model)
