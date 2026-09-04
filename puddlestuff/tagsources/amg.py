@@ -6,6 +6,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import ClassVar
 
 from puddlestuff.audioinfo import CaselessDict, isempty
 from puddlestuff.constants import CHECKBOX
@@ -130,9 +131,7 @@ def equal(audio1, audio2, play=False, tags=("artist", "album")):
                 return False
         else:
             return False
-    if play and ("#play" not in audio2):
-        return False
-    return True
+    return not (play and "#play" not in audio2)
 
 
 def parse_cover(soup):
@@ -217,7 +216,7 @@ def parse_albumpage(page, artist=None, album=None):
 
     # info.update(parse_similar(swipe))
 
-    info = dict((spanmap.get(k, k), v) for k, v in info.items() if not isempty(v))
+    info = {spanmap.get(k, k): v for k, v in info.items() if not isempty(v)}
 
     return [info, parse_tracks(album_soup, info)]
 
@@ -277,7 +276,7 @@ def parse_sidebar(sidebar):
             info["#cover-url"] = cover_url
 
     basic_info = sidebar.find("section", {"class": "basic-info"})
-    invalids = set(["affiliates", "advertising medium-rectangle", "partner-buttons"])
+    invalids = {"affiliates", "advertising medium-rectangle", "partner-buttons"}
     for div in basic_info.find_all("div"):
         class_name = div.element.attrib.get("class")
         if class_name in invalids:
@@ -351,7 +350,7 @@ def parse_search_element(td, id_field=ALBUM_ID):
 
     info[id_field] = re.search(r"-(mw\d+)$", info["#albumurl"]).groups()[0]
 
-    return dict((k, v) for k, v in info.items() if not isempty(v))
+    return {k: v for k, v in info.items() if not isempty(v)}
 
 
 def parse_searchpage(page, artist=None, album=None, id_field=ALBUM_ID):
@@ -427,7 +426,7 @@ def parse_track_table(table, discnum=None):
 
 def parse_track(tr, fields, performance_title=None):
     track = {}
-    ignore = set(["pick-prefix", "sample", "stream", "pick-suffix"])
+    ignore = {"pick-prefix", "sample", "stream", "pick-suffix"}
 
     if tr.element.attrib.get("class") == "perfomance-title":
         return convert(tr.string)
@@ -448,7 +447,7 @@ def parse_track(tr, fields, performance_title=None):
                     sub_field = field
                 elif field == "performer" and sub_field != "primary":
                     if sub_field == "featuring":
-                        track[field] = "%s %s" % (
+                        track[field] = "{} {}".format(
                             track.get(field, ""),
                             convert(div.string),
                         )
@@ -463,11 +462,11 @@ def parse_track(tr, fields, performance_title=None):
         track["title"] = performance_title + ": " + track["title"]
     if "artist" not in track and "performer" in track:
         track["artist"] = track["performer"]
-    return dict(
-        (spanmap.get(k, k), v)
+    return {
+        spanmap.get(k, k): v
         for k, v in track.items()
         if spanmap.get(k, k) and not isempty(v)
-    )
+    }
 
 
 def replace_feat(album_info, track_info):
@@ -507,8 +506,8 @@ def parse_tracks(content, album_info):
 
 
 def retrieve_album(url, coverurl=None, id_field=ALBUM_ID):
-    write_log("Opening Album Page - %s" % url)
-    album_page, code = urlopen(url, False, True)
+    write_log(f"Opening Album Page - {url}")
+    album_page, _code = urlopen(url, False, True)
     if album_page.find(b"featured new releases") >= 0:
         raise OldURLError("Old AMG URL used.")
 
@@ -521,15 +520,13 @@ def retrieve_album(url, coverurl=None, id_field=ALBUM_ID):
 
     if coverurl:
         try:
-            write_log("Retrieving Cover - %s" % info["#cover-url"])
+            write_log(f"Retrieving Cover - {info['#cover-url']}")
             cover = retrieve_cover(info["#cover-url"])
         except KeyError:
             write_log("No cover found.")
             cover = None
         except urllib.error.URLError as e:
-            write_log(
-                "Error: While retrieving cover %s - %s" % (info["#cover-url"], str(e))
-            )
+            write_log(f"Error: While retrieving cover {info['#cover-url']} - {e}")
             cover = None
     else:
         cover = None
@@ -538,7 +535,7 @@ def retrieve_album(url, coverurl=None, id_field=ALBUM_ID):
 
 def search(album):
     search_url = create_search(album.replace("/", " "))
-    write_log("Search URL - %s" % search_url)
+    write_log(f"Search URL - {search_url}")
     return urlopen(iri_to_uri(search_url))
 
 
@@ -551,15 +548,14 @@ def to_file(data, name):
     if os.path.exists(name):
         return to_file(data, name + "_")
 
-    f = open(name, "w")
-    f.write(data)
-    f.close()
+    with open(name, "w") as f:
+        f.write(data)
 
 
 class AllMusic:
     name = "AllMusic.com"
     tooltip = "Enter search parameters here. If empty, the selected files are used. <ul><li><b>artist;album</b> searches for a specific album/artist combination.</li> <li>To list the albums by an artist leave off the album part, but keep the semicolon (eg. <b>Ratatat;</b>). For a album only leave the artist part as in <b>;Resurrection.</li><li>By prefacing the search text with <b>:id</b> you can search for an albums using it's AllMusic sql id eg. <b>:id 10:nstlgr7nth</b> (extraneous spaces are discarded.)<li></ul>"
-    group_by = ["album", "artist"]
+    group_by: ClassVar[list[str]] = ["album", "artist"]
 
     def __init__(self):
         super().__init__()
@@ -596,7 +592,7 @@ class AllMusic:
             artist = "Various Artists"
         else:
             if hasattr(artists, "items"):
-                artist = list(artists.keys())[0]
+                artist = next(iter(artists.keys()))
             else:
                 artist = artists[0]
 
@@ -614,20 +610,20 @@ class AllMusic:
                     break
 
             if not isempty(album_id):
-                write_log("Found Album ID %s" % album_id)
+                write_log(f"Found Album ID {album_id}")
                 try:
-                    return self.keyword_search(":id %s" % album_id)
+                    return self.keyword_search(f":id {album_id}")
                 except OldURLError:
                     write_log("Invalid URL used. Doing normal search.")
 
         if not album:
             raise RetrievalError("Album name required.")
 
-        write_log("Searching for %s" % album)
+        write_log(f"Searching for {album}")
         try:
             searchpage = search(album)
         except urllib.error.URLError as e:
-            write_log("Error: While retrieving search page %s" % str(e))
+            write_log(f"Error: While retrieving search page {e}")
             raise RetrievalError(str(e))
         write_log("Retrieved search results.")
 
@@ -640,10 +636,10 @@ class AllMusic:
         if matched and len(matches) == 1:
             ret = [(matches[0], [])]
         elif matched:
-            write_log("Ambiguous matches found for: %s - %s" % (artist, album))
+            write_log(f"Ambiguous matches found for: {artist} - {album}")
             ret.extend([(z, []) for z in matches])
         else:
-            write_log("No exact matches found for: %s - %s" % (artist, album))
+            write_log(f"No exact matches found for: {artist} - {album}")
             ret.extend([(z, []) for z in matches])
         return ret
 
@@ -651,12 +647,12 @@ class AllMusic:
         try:
             artist = albuminfo["artist"]
             album = albuminfo["album"]
-            set_status("Retrieving %s - %s" % (artist, album))
-            write_log("Retrieving %s - %s" % (artist, album))
+            set_status(f"Retrieving {artist} - {album}")
+            write_log(f"Retrieving {artist} - {album}")
         except KeyError:
             set_status("Retrieving album.")
             write_log("Retrieving album.")
-        write_log("Album URL - %s" % albuminfo["#albumurl"])
+        write_log(f"Album URL - {albuminfo['#albumurl']}")
         url = albuminfo["#albumurl"]
         try:
             if self._useid:
@@ -664,7 +660,7 @@ class AllMusic:
             else:
                 info, tracks, cover = retrieve_album(url, self._getcover)
         except urllib.error.URLError as e:
-            write_log("Error: While retrieving album URL %s - %s" % (url, str(e)))
+            write_log(f"Error: While retrieving album URL {url} - {e}")
             raise RetrievalError(str(e))
         if cover:
             info.update(cover)
@@ -680,6 +676,6 @@ class AllMusic:
 info = AllMusic
 
 if __name__ == "__main__":
-    f = get_encoding(open(sys.argv[1], "r").read(), True)[1]
-    x = parse_albumpage(f)
+    with open(sys.argv[1]) as f:
+        x = parse_albumpage(get_encoding(f.read(), True)[1])
     print(x)
