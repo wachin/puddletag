@@ -154,9 +154,7 @@ def check_result(result, audios):
         if max_num != 0 and max_num == len(result.tracks):
             return True
 
-    if len(audios) == len(result.tracks):
-        return True
-    return False
+    return len(audios) == len(result.tracks)
 
 
 def combine_tracks(track1, track2, repl=None):
@@ -199,7 +197,7 @@ def dict_difference(dict1, dict2):
 
 def find_best(matches, files, minimum=0.7):
     group = split_by_field(files, "album", "artist")
-    album = list(group.keys())[0]
+    album = next(iter(group))
     artists = list(group[album].keys())
     if len(artists) == 1:
         artist = artists[0]
@@ -220,9 +218,8 @@ def find_best(matches, files, minimum=0.7):
             score = score + 0.01  # For albums that have same name.
         scores[score] = match
         tracks = match.tracks if hasattr(match, "tracks") else match[1]
-        if tracks and score < minimum:
-            if len(tracks) == len(files):
-                scores[minimum + 0.01] = match
+        if tracks and score < minimum and len(tracks) == len(files):
+            scores[minimum + 0.01] = match
 
     if scores:
         return [scores[z] for z in sorted(scores, reverse=True) if z >= minimum]
@@ -232,12 +229,12 @@ def find_best(matches, files, minimum=0.7):
 
 def get_artist_album(files):
     tags = split_by_field(files, "album", "artist")
-    album = list(tags.keys())[0]
+    album = next(iter(tags))
     artists = tags[album]
     if len(artists) > 1:
         return VARIOUS, album
     else:
-        return list(artists)[0], album
+        return next(iter(artists)), album
 
 
 def get_match_str(info):
@@ -277,7 +274,6 @@ def match_files(
     replace_tracknumbers(files, tracks)
     assigned = {}
     matched = defaultdict(dict)
-    b = False
 
     for f_index, f in enumerate(files):
         scores = {}
@@ -353,7 +349,7 @@ def match_files(
         ret.update(brute_force_results(unmatched_files, unmatched_tracks))
 
     if existing:
-        ret = dict((f, dict_difference(f, r)) for f, r in ret.items())
+        ret = {f: dict_difference(f, r) for f, r in ret.items()}
 
     if as_index:
         return ret, ret_indexes
@@ -363,7 +359,7 @@ def match_files(
 def merge_track(audio, info):
     track = {}
 
-    for key in info.keys():
+    for key in info:
         if not key.startswith("#"):
             if isinstance(info[key], str):
                 track[key] = info[key]
@@ -373,7 +369,7 @@ def merge_track(audio, info):
                 elif isinstance(info[key], dict):
                     track[key] = info[key]
 
-    for key in audio.keys():
+    for key in audio:
         if not key.startswith("#"):
             if isinstance(audio[key], str):
                 track[key] = audio[key]
@@ -637,9 +633,9 @@ class MassTagProfile:
                 profile.results = results
             except RetrievalError as e:
                 if errors is None:
-                    raise e
+                    raise
                 if errors(e, profile):
-                    raise e
+                    raise
                 yield [], [], profile
                 continue
 
@@ -694,7 +690,7 @@ class Result:
                 if errors is None:
                     raise
                 if errors(e):
-                    raise e
+                    raise
                 else:
                     return {}, []
             return self.info, self.tracks
@@ -757,7 +753,7 @@ class TagSourceProfile:
             if errors is None:
                 raise
             if errors(e, self):
-                raise e
+                raise
             else:
                 self.result = Result({}, [])
         self.result.tag_source = self.tag_source
@@ -773,7 +769,7 @@ class TagSourceProfile:
         assert files
 
         files = split_by_field(files, *tag_source.group_by)
-        search_value = list(files.keys())[0]
+        search_value = next(iter(files))
         self.results = [
             Result(*x) for x in tag_source.search(search_value, files[search_value])
         ]
@@ -788,7 +784,7 @@ if __name__ == "__main__":
     puddletag.load_plugins()
     from ..tagsources import tagsources
 
-    sources = dict((t.name, t) for t in tagsources)
+    sources = {t.name: t for t in tagsources}
     source = sources["Local TSource Plugin"]()
     source.applyPrefs(["/mnt/multimedia/testlib"])
     print(source._dirs)
