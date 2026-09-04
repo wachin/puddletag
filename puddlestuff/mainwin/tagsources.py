@@ -51,6 +51,8 @@ from ..tagsources import (
 from ..util import isempty, pprint_tag, split_by_field, to_string, translate
 from .releasewidget import ReleaseWidget
 
+logger = logging.getLogger(__name__)
+
 pyqtRemoveInputHook()
 
 TAGSOURCE_CONFIG = os.path.join(CONFIGDIR, "tagsources.conf")
@@ -104,9 +106,7 @@ def apply_regexps(audio, regexps=None):
 
 def display_tag(tag):
     """Used to display tags in in a human parseable format."""
-    tag = dict(
-        (k, v) for k, v in tag.items() if not k.startswith("#") and not isempty(v)
-    )
+    tag = {k: v for k, v in tag.items() if not k.startswith("#") and not isempty(v)}
 
     if not tag:
         return translate("Tag Sources", "<b>Nothing to display.</b>")
@@ -124,8 +124,8 @@ def load_mp3tag_sources(dirpath=MTAG_SOURCE_DIR):
         try:
             idents, search, album = mp3tag.open_script(f)
             classes.append(mp3tag.Mp3TagSource(idents, search, album))
-        except:
-            logging.exception(
+        except Exception:
+            logger.exception(
                 translate("Tag Sources", "Couldn't load Mp3tag Tag Source {}").format(f)
             )
             continue
@@ -144,7 +144,7 @@ def strip(audio, field_list, reverse=False, leave_exact=False):
     Any fields starting with '#' will be removed.
     """
     if not field_list:
-        ret = dict([(key, audio[key]) for key in audio if not key.startswith("#")])
+        ret = {key: audio[key] for key in audio if not key.startswith("#")}
         if leave_exact and "#exact" in audio:
             ret["#exact"] = audio["#exact"]
         return ret
@@ -155,21 +155,17 @@ def strip(audio, field_list, reverse=False, leave_exact=False):
     else:
         reverse = False
     if reverse:
-        ret = dict(
-            [
-                (key, audio[key])
-                for key in audio
-                if key not in tags and not key.startswith("#")
-            ]
-        )
+        ret = {
+            key: audio[key]
+            for key in audio
+            if key not in tags and not key.startswith("#")
+        }
     else:
-        ret = dict(
-            [
-                (key, audio[key])
-                for key in field_list
-                if not key.startswith("#") and key in audio
-            ]
-        )
+        ret = {
+            key: audio[key]
+            for key in field_list
+            if not key.startswith("#") and key in audio
+        }
 
     if leave_exact and "#exact" in audio:
         ret["#exact"] = audio["#exact"]
@@ -696,7 +692,8 @@ class MainWin(QWidget):
             if hasattr(ts, "preferences") and not isinstance(ts, QWidget):
                 try:
                     ts.applyPrefs(load_source_prefs(ts.name, ts.preferences))
-                except:
+                except Exception:
+                    logger.exception("Failed to apply prefs for %s", ts.name)
                     continue
 
         status["initialized_tagsources"] = self.__sources
@@ -1004,14 +1001,13 @@ class MainWin(QWidget):
 
         def search():
             try:
-                ret = []
                 if text:
                     return self.curSource.keyword_search(text), None
                 else:
                     return tag_source_search(self.curSource, group, files)
             except RetrievalError as e:
                 return translate("Tag Sources", "An error occured: {}").format(str(e))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 traceback.print_exc()
                 return translate(
                     "Tag Sources", "An unhandled error occurred: {}"
@@ -1047,7 +1043,7 @@ class MainWin(QWidget):
             except SubmissionError as e:
                 traceback.print_exc()
                 return translate("Tag Sources", "An error occured: {}").format(str(e))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 traceback.print_exc()
                 return translate(
                     "Tag Sources", "An unhandled error occurred: {}"
@@ -1094,7 +1090,7 @@ control = ("Tag Sources", MainWin, RIGHTDOCK, False)
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     status = {}
-    status["selectedfiles"] = exampletags.tags
+    status["selectedfiles"] = exampletags.tags  # noqa: F821
     win = MainWin(status)
     win.show()
     app.exec()
