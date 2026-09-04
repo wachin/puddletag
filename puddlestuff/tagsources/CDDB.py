@@ -1,4 +1,4 @@
-# Module for retrieving CDDB v1 data from CDDB servers via HTTP
+# Module for retrieving CDDB v1 data from CDDB servers via HTTP  # noqa: N999
 
 # Written 17 Nov 1999 by Ben Gertzfield <che@debian.org>
 # This work is released under the GNU GPL, version 2 or later.
@@ -38,21 +38,16 @@ def query(
     disc_id = track_info[0]
     num_tracks = track_info[1]
 
-    query_str = ("%08lx %d ") % (disc_id, num_tracks)
+    query_str = f"{disc_id:08x} {num_tracks} "
 
     for i in track_info[2:]:
-        query_str = query_str + ("%d " % i)
+        query_str = query_str + f"{i} "
 
     query_str = urllib.parse.quote_plus(query_str.rstrip())
 
-    url = "%s?cmd=cddb+query+%s&hello=%s+%s+%s+%s&proto=%i" % (
-        server_url,
-        query_str,
-        user,
-        host,
-        client_name,
-        client_version,
-        proto,
+    url = (
+        f"{server_url}?cmd=cddb+query+{query_str}"
+        f"&hello={user}+{host}+{client_name}+{client_version}&proto={proto}"
     )
 
     response = urllib.request.urlopen(url)
@@ -99,15 +94,9 @@ def read(
     client_name=name,
     client_version=version,
 ):
-    url = "%s?cmd=cddb+read+%s+%s&hello=%s+%s+%s+%s&proto=%i" % (
-        server_url,
-        category,
-        disc_id,
-        user,
-        host,
-        client_name,
-        client_version,
-        proto,
+    url = (
+        f"{server_url}?cmd=cddb+read+{category}+{disc_id}"
+        f"&hello={user}+{host}+{client_name}+{client_version}&proto={proto}"
     )
 
     response = urllib.request.urlopen(url)
