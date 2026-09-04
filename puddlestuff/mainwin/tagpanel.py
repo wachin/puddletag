@@ -38,7 +38,6 @@ def loadsettings(filepath=None):
         settings.filename = os.path.join(CONFIGDIR, "tagpanel")
     numrows = settings.get("panel", "numrows", -1, True)
     if numrows > -1:
-        sections = settings.sections()
         d = {}
         for row in range(numrows):
             section = str(row)
@@ -162,9 +161,8 @@ class FrameCombo(QGroupBox):
         self.__indexFuncs = []
 
     def _disablePreview(self):
-        self.__disconnectIndexChanged
         self.__indexFuncs = []
-        for field, combo in self.combos.items():
+        for combo in self.combos.values():
             edit = QLineEdit()
             combo.setLineEdit(edit)
             completer = combo.completer()
@@ -206,14 +204,8 @@ class FrameCombo(QGroupBox):
 
         if text == BLANK:
             text = ""
-        elif text == KEEP:
-            if self._audios:
-                self.manypreview.emit([{field: a.get(field, "")} for a in self._audios])
-        else:
-            if field in INFOTAGS:
-                value = text
-            else:
-                value = text.split(SEPARATOR)
+        elif text == KEEP and self._audios:
+            self.manypreview.emit([{field: a.get(field, "")} for a in self._audios])
         self.onetomanypreview.emit({field: text})
 
     def fillCombos(self, *args):
@@ -229,17 +221,17 @@ class FrameCombo(QGroupBox):
 
         [combo.blockSignals(True) for combo in combos.values()]
         self.initCombos(True)
-        tags = dict((tag, set()) for tag in combos)
+        tags = {tag: set() for tag in combos}
         for audio in audios:
-            for field in tags:
+            for field, values in tags.items():
                 if field in audio:
                     value = audio[field]
                     if isinstance(value, str):
-                        tags[field].add(value)
+                        values.add(value)
                     else:
-                        tags[field].add(SEPARATOR.join(value))
+                        values.add(SEPARATOR.join(value))
                 else:
-                    tags[field].add("")
+                    values.add("")
 
         for field, values in tags.items():
             combo = combos[field]
@@ -260,9 +252,9 @@ class FrameCombo(QGroupBox):
         elif "genre" in tags:
             combos["genre"].setCurrentIndex(0)
 
-        self._originalValues = dict(
-            [(field, str(combo.currentText())) for field, combo in self.combos.items()]
-        )
+        self._originalValues = {
+            field: str(combo.currentText()) for field, combo in self.combos.items()
+        }
         self._originalValues["__image"] = self._status["images"]
         [combo.blockSignals(False) for combo in combos.values()]
 
@@ -341,7 +333,6 @@ class FrameCombo(QGroupBox):
         self.labels = {}
         self._hboxes = []
 
-        j = 0
         for row, tags in sorted(rowtags.items()):
             labelbox = QHBoxLayout()
             labelbox.setContentsMargins(6, 1, 1, 1)
@@ -468,7 +459,7 @@ class PuddleTable(QTableWidget):
         return str(self.item(row, column).text())
 
     def selectedRows(self):
-        return sorted(set(i.row() for i in self.selectedIndexes()))
+        return sorted({i.row() for i in self.selectedIndexes()})
 
 
 TABLEWIDGETBG = QTableWidgetItem().background()
@@ -543,7 +534,7 @@ class SettingsWin(QWidget):
                 d[l[2]].append(l[:-1])
             except KeyError:
                 d[l[2]] = [l[:-1]]
-        d = dict([(i, d[v]) for i, v in enumerate(sorted(d))])  # consecutive rows
+        d = {i: d[v] for i, v in enumerate(sorted(d))}  # consecutive rows
         if self._old == d:
             return
         savesettings(d)
