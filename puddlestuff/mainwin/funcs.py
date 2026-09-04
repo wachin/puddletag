@@ -6,8 +6,7 @@ from collections import OrderedDict
 from PyQt6.QtCore import QMimeData, QObject, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
-from .. import about as about
-from .. import actiondlg, findfunc, functions, helperwin, musiclib
+from .. import about, actiondlg, findfunc, functions, helperwin, musiclib
 from ..audioinfo import (
     DIRPATH,
     FILETAGS,
@@ -124,7 +123,6 @@ def copy():
 def copy_whole():
     """Save all tags of the selected files to the clipboard."""
     tags = []
-    mime = QMimeData()
 
     def usertags(f, images=True):
         ret = f.usertags
@@ -152,7 +150,7 @@ def cut():
 
     emit(
         "writeselected",
-        (dict([(z, "") for z in s if z not in FILETAGS]) for s in selected),
+        ({z: "" for z in s if z not in FILETAGS} for s in selected),
     )
 
 
@@ -240,7 +238,6 @@ def export_tags(parent=None):
 
 
 def extended_tags(parent=None):
-    rows = status["selectedrows"]
     win = helperwin.ExTags(files=status["selectedfiles"], parent=parent)
     win.setModal(True)
     win.rowChanged.connect(status["table"].selectRow)
@@ -271,7 +268,7 @@ def format(parent=None, preview=None):
     for i, (audio, s) in enumerate(zip(files, selected)):
         state["__counter"] = str(i + 1)
         val = tf(pattern, audio, state=state)
-        ret.append(dict([(tag, val) for tag in s]))
+        ret.append({tag: val for tag in s})
     emit("writeselected", ret)
 
 
@@ -388,14 +385,14 @@ def number_tracks(
         folders = {"fol": [i for i, t in enumerate(tags)]}
 
     taglist = {}
-    for group_num, tags in enumerate(folders.values()):
+    for group_num, indices in enumerate(folders.values()):
         if numtracks == -2:
-            total = len(tags)
+            total = len(indices)
         elif numtracks == -1:
             total = None
         elif numtracks >= 0:
             total = numtracks
-        for trknum, index in enumerate(tags):
+        for trknum, index in enumerate(indices):
             if by_group:
                 trknum = group_num + offset
             else:
@@ -404,7 +401,7 @@ def number_tracks(
             text = _pad(trknum, total, padlength)
             taglist[index] = {output_field: text}
 
-    taglist = [v for k, v in sorted(list(taglist.items()), key=lambda x: x[0])]
+    taglist = [v for k, v in sorted(taglist.items(), key=lambda x: x[0])]
 
     emit("writeselected", taglist)
 
@@ -455,7 +452,7 @@ def rename_dirs(parent=None):
     """Changes the directory of the currently selected files, to
     one as per the pattern in self.patterncombo."""
     selectedfiles = status["selectedfiles"]
-    audio, selected = status["firstselection"]
+    _audio, _selected = status["firstselection"]
     pattern = status["patterntext"]
     if not pattern:
         return
@@ -561,7 +558,7 @@ def search_replace(parent=None):
     audio, selected = status["firstselection"]
 
     try:
-        text = to_string(list(selected.values())[0])
+        text = to_string(next(iter(selected.values())))
     except IndexError:
         text = translate("Defaults", "")
 
@@ -605,8 +602,6 @@ def tag_to_file():
 
 
 def text_file_to_tag(parent=None):
-    dirpath = status["selectedfiles"][0].dirpath
-
     win = helperwin.ImportTextFile(parent)
     cparser = PuddleConfig()
     last_dir = cparser.get("importwindow", "lastdir", HOMEDIR)
@@ -677,7 +672,7 @@ def update_status(enable=True):
         selected = selected[0]
     try:
         val = tf(pattern, tag, state=state.copy())
-        newtag = dict([(key, val) for key in selected])
+        newtag = {key: val for key in selected}
         emit("formatstatus", display_tag(newtag))
     except findfunc.ParseError as e:
         emit("formatstatus", bold_error.format(e.message))
