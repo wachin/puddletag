@@ -14,10 +14,12 @@ from PyQt6.QtCore import QMimeDatabase
 
 from .constants import *
 
+logger = logging.getLogger(__name__)
+
 try:
     from .. import version_string
 
-    app_name = "puddletag v%s" % version_string
+    app_name = f"puddletag v{version_string}"
 except ImportError:
     app_name = "puddletag"
 
@@ -234,8 +236,8 @@ def getinfo(filename):
         "__size": str(size),
         "__file_size": str_filesize(size),
         "__file_size_bytes": str(size),
-        "__file_size_kb": "%d KB" % int(size / 1024),
-        "__file_size_mb": "%.2f MB" % (size / 1024.0**2),
+        "__file_size_kb": f"{int(size / 1024)} KB",
+        "__file_size_mb": f"{size / 1024.0**2:.2f} MB",
         "__created": strtime(created),
         "__file_create_date": get_time("%Y-%m-%d", created),
         "__file_create_datetime": get_time("%Y-%m-%d %H:%M:%S", created),
@@ -298,7 +300,6 @@ def info_to_dict(info):
     Ef. info.channels will become '__channels' in the returned
     dictionary. Info.length becomes '__length' and so on.
     """
-    attrs = dir(info)
     tags = {}
     try:
         tags["__frequency"] = strfrequency(info.sample_rate)
@@ -464,11 +465,11 @@ def parse_image(image, keys=None):
     """Get default values for the image if they don't exist."""
     if keys is None:
         keys = [DATA, MIMETYPE, DESCRIPTION, IMAGETYPE]
-    return dict((k, _image_defaults[k](image)) for k in keys)
+    return {k: _image_defaults[k](image) for k in keys}
 
 
 def reversedict(d):
-    return dict((v, k) for k, v in d.items())
+    return {v: k for k, v in d.items()}
 
 
 def setdeco(func):
@@ -534,14 +535,14 @@ def str_filesize(size):
     valid = [z for z in _sizes if size / (1024.0**z) > 1]
     val = max(valid)
     if val < 2:
-        return "%d %s" % (size / (1024**val), _sizes[val])
+        return f"{int(size / (1024**val))} {_sizes[val]}"
     else:
-        return "%.2f %s" % (size / (1024.0**val), _sizes[val])
+        return f"{size / (1024.0**val):.2f} {_sizes[val]}"
 
 
 def strfrequency(value):
     """Converts the frequency Hz to a string in kHz."""
-    return "%.1f kHz" % (value / 1000.0)
+    return f"{value / 1000.0:.1f} kHz"
 
 
 def stringtags(tag, leaveNone=False):
@@ -593,9 +594,9 @@ def strlength(value):
     minutes = (value % 3600) // 60
     hours = value // 3600
     if hours > 0:
-        return "%02d:%02d:%02d" % (hours, minutes, seconds)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     else:
-        return "%02d:%02d" % (minutes, seconds)
+        return f"{minutes:02d}:{seconds:02d}"
 
 
 def strtime(seconds):
@@ -609,15 +610,15 @@ def tag_to_json(audio, fields=None):
     if isinstance(audio, str):
         try:
             audio = audioinfo.Tag(audio)
-        except:
-            logging.exception("Invalid File: " + audio)
+        except Exception:
+            logger.exception(f"Invalid File: {audio}")
             return
 
     if audio is None:
         return
     try:
         if fields:
-            tags = dict((k, audio[k]) for k in fields if k in audio)
+            tags = {k: audio[k] for k in fields if k in audio}
         else:
             fields = []
             tags = audio.tags.copy()
@@ -631,9 +632,8 @@ def tag_to_json(audio, fields=None):
             elif "__image" in tags:
                 tags["__image"] = list(map(img_to_b64, tags["__image"]))
     except AttributeError:
-        if not fields or "__image" in fields:
-            if "__image" in tags:
-                tags["__image"] = list(map(img_to_b64, tags["__image"]))
+        if (not fields or "__image" in fields) and "__image" in tags:
+            tags["__image"] = list(map(img_to_b64, tags["__image"]))
 
     return tags
 
@@ -654,9 +654,9 @@ def to_string(value, errors="strict"):
 
 def usertags(tag):
     """Return dictionary of all editable key, value pairs found in tag."""
-    ret = dict(
-        (z, v) for z, v in tag.items() if isinstance(z, str) and not z.startswith("__")
-    )
+    ret = {
+        z: v for z, v in tag.items() if isinstance(z, str) and not z.startswith("__")
+    }
     return ret
 
 
@@ -773,11 +773,7 @@ class MockTag:
     def ext(self, val):
         if val:
             val = path_to_string(val)
-            self.filepath = "%s%s%s" % (
-                path.splitext(self.filepath)[0],
-                path.extsep,
-                val,
-            )
+            self.filepath = f"{path.splitext(self.filepath)[0]}{path.extsep}{val}"
         else:
             self.filepath = path.splitext(self.filepath)[0]
 
@@ -843,7 +839,7 @@ class MockTag:
             del self[key]
 
     def get(self, key, default=None):
-        return self[key] if key in self else default
+        return self[key] if key in self else default  # noqa: SIM401
 
     def items(self):
         return [(key, self[key]) for key in self]
@@ -873,7 +869,7 @@ class MockTag:
     def set_attrs(self, attrs, tags=None):
         if tags is None:
             tags = self
-        [setattr(self, z, tags["__%s" % z]) for z in attrs if "__%s" % z in tags]
+        [setattr(self, z, tags[f"__{z}"]) for z in attrs if f"__{z}" in tags]
 
     def stringtags(self):
         return stringtags(self)
