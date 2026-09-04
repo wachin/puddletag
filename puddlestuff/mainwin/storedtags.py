@@ -1,3 +1,4 @@
+import logging
 import os
 
 from PyQt6.QtCore import QMutex, Qt
@@ -13,6 +14,8 @@ from PyQt6.QtWidgets import (
 
 from .. import audioinfo
 from ..audioinfo import tag_versions
+
+logger = logging.getLogger(__name__)
 from ..constants import LEFTDOCK, SELECTIONCHANGED
 from ..puddleobjects import PuddleThread, natural_sort_key
 
@@ -90,12 +93,13 @@ class StoredTags(QScrollArea):
             ret = [(audio["__tag_read"], sort_dict(audio.usertags))]
 
             for tag in tags:
-                if not tag == audio["__tag_read"]:
+                if tag != audio["__tag_read"]:
                     try:
                         ret.append(
                             (tag, sort_dict(tag_versions.tag_values(filepath, tag)))
                         )
-                    except:
+                    except Exception:
+                        logger.exception("Failed to load stored tag for %s", tag)
                         continue
             return ret
 
@@ -119,7 +123,7 @@ class StoredTags(QScrollArea):
                     t_label.setFont(self._boldfont)
                     grid.addWidget(t_label, offset - 1, 0)
                     for row, (tag, value) in enumerate(values):
-                        field = QLabel("%s:" % tag)
+                        field = QLabel(f"{tag}:")
                         field.setAlignment(
                             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
                         )
