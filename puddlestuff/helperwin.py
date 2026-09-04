@@ -346,7 +346,8 @@ class ImportTextFile(QDialog):
             return True
 
         try:
-            f = open(filename, "r")
+            with open(filename, "r") as f:
+                pass
         except OSError as detail:
             errormsg = translate(
                 "Text File -> Tag",
@@ -520,9 +521,7 @@ class StatusWidgetItem(QTableWidgetItem):
             self._status = None
 
     def __lt__(self, item):
-        if self.text().upper() < item.text().upper():
-            return True
-        return False
+        return self.text().upper() < item.text().upper()
 
     def reset(self):
         self.setText(self._original[0])
@@ -600,7 +599,7 @@ class StatusWidgetCombo(QComboBox):
             color = QLineEdit().palette().color(QPalette.ColorRole.Base).name()
         else:
             color = brush.color().name()
-        self.setStyleSheet("QComboBox { background-color: %s; }" % color)
+        self.setStyleSheet(f"QComboBox {{ background-color: {color}; }}")
 
     def background(self):
         brush = QBrush()
@@ -881,7 +880,6 @@ class ExTags(QDialog):
 
         self._colors = {ADD: QBrush(add), EDIT: QBrush(edit), REMOVE: QBrush(remove)}
 
-        item = self.table.item
         for row in range(self.table.rowCount()):
             field_item = self.get_item(row, 0)
             field_item.statusColors = self._colors
@@ -930,9 +928,6 @@ class ExTags(QDialog):
         else:
             self.setWindowTitle(translate("Extended Tags", "Different files."))
 
-            from .tagmodel import status
-
-            k = status["table"].model().taginfo[0]
             common, numvalues, imagetags = commontags(audios)
             images = common["__image"]
             del common["__image"]
@@ -1151,8 +1146,8 @@ class ExTags(QDialog):
 
         if check:
             lowered_tag = field.lower()
-            for row in range(tb.rowCount()):
-                item = tb.item(row, 0)
+            for current_row in range(tb.rowCount()):
+                item = tb.item(current_row, 0)
                 text = str(item.text())
                 if text != field and text.lower() == lowered_tag:
                     item.setText(field)
