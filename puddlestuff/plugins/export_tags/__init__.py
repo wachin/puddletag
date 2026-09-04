@@ -6,10 +6,13 @@ Data is stored as json."""
 import json
 import logging
 import os
+import sys
 from optparse import OptionParser
 
 from ... import audioinfo
 from ...audioinfo import tag_to_json
+
+logger = logging.getLogger(__name__)
 
 
 def tags_to_json(dirpath, fields=None):
@@ -26,9 +29,8 @@ def tags_to_json(dirpath, fields=None):
 
 
 def backup_dir(dirpath, fn, fields=None):
-    fo = open(fn, "w")
-    fo.write(json.dumps(tags_to_json(dirpath, fields)))
-    fo.close()
+    with open(fn, "w") as fo:
+        fo.write(json.dumps(tags_to_json(dirpath, fields)))
 
 
 def main():
@@ -66,19 +68,18 @@ def main():
 
     options, filenames = parser.parse_args()
     if not (options.backup or options.restore):
-        "Backs ups and restores audio metadata in directories."
         parser.print_help()
-        exit()
+        sys.exit()
 
     if not filenames:
-        logging.error("Fatal Error: Require filename to write backup to!")
-        exit(1)
+        logger.error("Fatal Error: Require filename to write backup to!")
+        sys.exit(1)
 
     filename = filenames[0]
 
     if os.path.exists(filename) and options.backup:
-        logging.error("Fatal Error: Backup file, %s already exists" % filename)
-        exit(2)
+        logger.error(f"Fatal Error: Backup file, {filename} already exists")
+        sys.exit(2)
 
     fields = options.fields if options.fields else None
     if fields:
@@ -91,24 +92,22 @@ def main():
 
 
 def restore_backup(fn):
-    for i, tag in enumerate(json.loads(open(fn, "r").read())):
+    with open(fn) as f:
+        tags = json.loads(f.read())
+    for tag in tags:
         try:
-            fn = tag["__path"]
+            path = tag["__path"]
         except KeyError:
-            "Error: A file was backed up without a file path."
-        try:
-            audio = audioinfo.Tag(fn)
-        except OSError as e:
-            "Error: Couldn't restore", fn, str(e)
+            logger.error("A file was backed up without a file path")
             continue
-        except Exception as e:
-            "Error: Couldn't restore", fn, str(e)
+        try:
+            audio = audioinfo.Tag(path)
+        except Exception:
+            logger.exception("Couldn't restore %s", path)
             continue
 
         if "__image" in tag:
-            images = tag["__image"]
             del tag["__image"]
-            audio.images = list(map(b64_to_img, images))
 
         audio.clear()
         audio.update(tag)
