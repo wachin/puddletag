@@ -18,7 +18,7 @@ from glob import glob
 from io import StringIO
 from itertools import groupby  # for unique function.
 from operator import or_
-from typing import Any
+from typing import Any, ClassVar
 
 from configobj import ConfigObjError
 from PyQt6.QtCore import (
@@ -85,6 +85,8 @@ from .audioinfo import (
 from .constants import ACTIONDIR, CONFIGDIR, SAVEDIR
 from .translations import translate
 
+logger = logging.getLogger(__name__)
+
 path = os.path
 
 # Parameters for string distance function.
@@ -132,7 +134,7 @@ for i in range(1, len(mod_keys)):
             mod_keys[key] for key in sorted(keys, key=keycmp) if mod_keys[key]
         )
 
-mod_keys = set((Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Meta, Qt.Key.Key_Alt))
+mod_keys = {Qt.Key.Key_Shift, Qt.Key.Key_Control, Qt.Key.Key_Meta, Qt.Key.Key_Alt}
 
 imagetypes = [
     (translate("Cover Type", "Other"), translate("Cover Type", "O")),
@@ -218,7 +220,7 @@ class CoverButton(QPushButton):
         menu = QMenu(self)
 
         def create(title, short, index):
-            text = "[%s] %s" % (short, title)
+            text = f"[{short}] {title}"
             action = QAction(text, self)
             action.triggered.connect(lambda: self.setCurrentIndex(index))
             return action
@@ -263,16 +265,13 @@ class PuddleConfig:
         self.load = self.get
 
     def get(self, section, key, default, getint=False):
-        settings = self.data
         try:
             value = self.data[section][key]
         except KeyError:
             return default
 
         if isinstance(default, bool):
-            if value is True or value == "True":
-                return True
-            return False
+            return value is True or value == "True"
         elif getint or isinstance(default, int):
             try:
                 return int(value)
@@ -284,14 +283,13 @@ class PuddleConfig:
             return value
 
     def set(self, section=None, key=None, value=None):
-        settings = self.data
         if isinstance(value, (str, bytes)):
             value = str(value)
         if section in self.data:
-            settings[section][key] = value
+            self.data[section][key] = value
         else:
-            settings[section] = {}
-            settings[section][key] = value
+            self.data[section] = {}
+            self.data[section][key] = value
         self.save()
 
     def reload(self):
@@ -301,20 +299,19 @@ class PuddleConfig:
                 with open(self.filename, "r", encoding="utf-8") as config_file:
                     self.data.update(json.load(config_file))
             except json.JSONDecodeError as e:
-                print(f"Error parsing config file {self.filename}: {e}")
-            except Exception as e:
-                print(
-                    f"Unexpected error while reading config file {self.filename}: {e}"
+                logger.error("Error parsing config file %s: %s", self.filename, e)
+            except Exception:
+                logger.exception(
+                    "Unexpected error while reading config file %s", self.filename
                 )
 
     def save(self):
-        actions = self.data.get("puddleactions")
         filename = self.filename
         if not os.path.exists(filename):
             dirname = os.path.dirname(filename)
             try:
                 os.makedirs(dirname)
-            except:
+            except OSError:
                 pass
 
         with open(filename, "w") as fo:
@@ -326,7 +323,7 @@ class PuddleConfig:
 
     @filename.setter
     def filename(self, filename):
-        logging.debug(f"reading config file {filename}")
+        logger.debug("reading config file %s", filename)
         self._filename = filename
         self.savedir = os.path.dirname(filename)
         self.reload()
@@ -340,11 +337,15 @@ def _getSettings():
     return QSettings(filename, QSettings.Format.IniFormat)
 
 
-def savewinsize(name, dialog, settings=_getSettings()):
+def savewinsize(name, dialog, settings=None):
+    if settings is None:
+        settings = _getSettings()
     settings.setValue(name, dialog.saveGeometry())
 
 
-def winsettings(name, dialog, settings=_getSettings()):
+def winsettings(name, dialog, settings=None):
+    if settings is None:
+        settings = _getSettings()
     if settings.value(name):
         dialog.restoreGeometry(settings.value(name))
     cevent = dialog.closeEvent
@@ -408,10 +409,10 @@ def ratio(str1, str2):
     # example, "the something" should be considered equal to
     # "something, the".
     for word in SD_END_WORDS:
-        if str1.endswith(", %s" % word):
-            str1 = "%s %s" % (word, str1[: -len(word) - 2])
-        if str2.endswith(", %s" % word):
-            str2 = "%s %s" % (word, str2[: -len(word) - 2])
+        if str1.endswith(f", {word}"):
+            str1 = f"{word} {str1[: -len(word) - 2]}"
+        if str2.endswith(f", {word}"):
+            str2 = f"{word} {str2[: -len(word) - 2]}"
 
     # Change the weight for certain string portions matched by a set
     # of regular expressions. We gradually change the strings and build
@@ -507,15 +508,11 @@ def issubfolder(parent, child, level=1):
     else:
         sep = os.path.sep
     if level is not None:
-        if child.startswith(parent + sep) and dirlevels(parent) + level == dirlevels(
-            child
-        ):
-            return True
-        return False
+        return child.startswith(parent + sep) and dirlevels(parent) + level == (
+            dirlevels(child)
+        )
     else:
-        if child.startswith(parent + sep) and dirlevels(parent) < dirlevels(child):
-            return True
-        return False
+        return child.startswith(parent + sep) and dirlevels(parent) < dirlevels(child)
 
 
 HORIZONTAL = 1
@@ -720,7 +717,7 @@ def dupes(l, method=None):
     if method is None:
         method = lambda a, b: int(a == b)
     l = [{"key": z, "index": i} for i, z in enumerate(l)]
-    chars = chars = r'/\*?;"|:\''
+    chars = r'/\*?;"|:\''
     strings = sorted(
         [
             (safe_name(z["key"].lower(), chars, ""), z["index"])
@@ -778,8 +775,8 @@ def gettags(files):
 def gettag(f):
     try:
         return audioinfo.Tag(f)
-    except:
-        logging.exception("Error loading file %s", f)
+    except Exception:
+        logger.exception("Error loading file %s", f)
         return
 
 
@@ -816,7 +813,7 @@ def translate_filename_pattern(pat):
                     stuff = "^" + stuff[1:]
                 elif stuff[0] == "^":
                     stuff = "\\" + stuff
-                res = "%s[%s]" % (res, stuff)
+                res = f"{res}[{stuff}]"
         else:
             res = res + re.escape(c)
     # return res + '\Z(?ms)'
@@ -838,9 +835,8 @@ def gettaglist():
     cparser = PuddleConfig()
     filename = os.path.join(cparser.savedir, "usertags")
     try:
-        lines = sorted(
-            set([z.strip() for z in open(filename, "rt").read().split("\n")])
-        )
+        with open(filename, "rt") as f:
+            lines = sorted({z.strip() for z in f.read().split("\n")})
     except OSError:
         lines = audioinfo.FIELDS[::]
     return lines
@@ -849,10 +845,9 @@ def gettaglist():
 def settaglist(tags):
     cparser = PuddleConfig()
     filename = os.path.join(cparser.savedir, "usertags")
-    f = open(filename, "w")
-    text = "\n".join(sorted([z for z in tags if not z.startswith("__")]))
-    f.write(text)
-    f.close()
+    text = "\n".join(sorted(z for z in tags if not z.startswith("__")))
+    with open(filename, "w") as f:
+        f.write(text)
 
 
 def load_actions():
@@ -874,7 +869,7 @@ def load_actions():
         set_value("convert", False)
         findfunc.convert_actions(SAVEDIR, ACTIONDIR)
         if order:
-            old_order = dict([(basename(z), i) for i, z in enumerate(order)])
+            old_order = {basename(z): i for i, z in enumerate(order)}
             files = glob(os.path.join(ACTIONDIR, "*.action"))
             order = {}
             for f in files:
@@ -893,9 +888,8 @@ def load_actions():
 
         for fileobj, filename in zip(files, filenames):
             filename = os.path.join(ACTIONDIR, filename[2:])
-            f = open(filename, "w")
-            f.write(fileobj.read())
-            f.close()
+            with open(filename, "w") as f:
+                f.write(fileobj.read())
         files = glob(os.path.join(ACTIONDIR, "*.action"))
 
     files = [z for z in order if z in files] + [z for z in files if z not in order]
@@ -1317,11 +1311,11 @@ class ListBox(QListWidget):
                 lastrow = row
             lastindex = row
 
-        for group in groups:
-            item = self.takeItem(group + len(groups[group]))
+        for group, indices in groups.items():
+            item = self.takeItem(group + len(indices))
             if yourlist:
-                temp = copy(yourlist[group + len(groups[group])])
-                for index in reversed(groups[group]):
+                temp = copy(yourlist[group + len(indices)])
+                for index in reversed(indices):
                     yourlist[index + 1] = copy(yourlist[index])
                 yourlist[group] = temp
             self.insertItem(group, item)
@@ -1415,13 +1409,11 @@ class ListButtons(QVBoxLayout):
             l.append("movedown")
         if duplicate:
             l.append("duplicate")
-        connections = dict(
-            [
-                (z, v)
-                for z, v in zip(l, [add, edit, remove, moveup, movedown, duplicate])
-                if v
-            ]
-        )
+        connections = {
+            z: v
+            for z, v in zip(l, [add, edit, remove, moveup, movedown, duplicate])
+            if v
+        }
         connect = lambda a: getattr(self, a).connect(
             connections[a] if a in connections else getattr(widget, a)
         )
@@ -2221,7 +2213,8 @@ class PicWidget(QWidget):
                     data = urlopen(filename)
                 except (ValueError, RetrievalError):
                     try:
-                        data = open(filename, "rb").read()
+                        with open(filename, "rb") as f:
+                            data = f.read()
                     except OSError:
                         continue
 
@@ -2314,7 +2307,7 @@ class PicWin(QDialog):
         self.label.setPixmap(pixmap)
         if hasattr(pixmap, "size"):
             size = pixmap.size()
-            res = ": %sx%s" % (size.width(), size.height())
+            res = f": {size.width()}x{size.height()}"
             self.setWindowTitle(self.windowTitle() + res)
             if size.height() < maxsize.height() and size.width() < maxsize.width():
                 self.setMinimumSize(size)
@@ -2491,7 +2484,7 @@ class PuddleDock(QDockWidget):
     """A normal QDockWidget that emits a 'visibilitychanged' signal
     when...uhm...it changes visibility."""
 
-    _controls = {}
+    _controls: ClassVar[dict[str, Any]] = {}
     visibilitychanged = pyqtSignal(bool, name="visibilitychanged")
 
     def __init__(self, title, control=None, parent=None, status=None):
@@ -2557,7 +2550,7 @@ class PuddleHeader(QHeaderView):
 
 
 class PuddleStatus:
-    _status = {}
+    _status: ClassVar[dict[str, Any]] = {}
 
     def __init__(self):
         object.__init__(self)
