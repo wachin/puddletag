@@ -33,6 +33,7 @@ This line is further split into three parts
     The third contains the default arguments as shown to the user."""
 
 import decimal
+import logging
 import math
 import os
 import re
@@ -46,6 +47,8 @@ from unidecode import unidecode
 from . import audioinfo
 from .audioinfo import encode_fn
 from .puddleobjects import fnmatch, natural_sort_key, safe_name
+
+logger = logging.getLogger(__name__)
 
 PATH = audioinfo.PATH
 DIRPATH = audioinfo.DIRPATH
@@ -116,7 +119,7 @@ def caps(text):
 def caps2(text):
     # Capitalizes the first letter of each word in string and
     # leaves all other characters unchanged.
-    upcase = set(i for i, char in enumerate(text) if char.upper() == char)
+    upcase = {i for i, char in enumerate(text) if char.upper() == char}
     return "".join(
         ch.upper() if i in upcase else ch for i, ch in enumerate(text.title())
     )
@@ -299,7 +302,7 @@ def left(text, n):
     try:
         n = int(n)
     except (TypeError, ValueError):
-        raise FuncError('Integer expected, got "%s"' % str(n))
+        raise FuncError(f'Integer expected, got "{n}"')
     return text[:n]
 
 
@@ -426,12 +429,12 @@ def mid(text, n_start, n_len):
     try:
         n_start = int(n_start)
     except (TypeError, ValueError):
-        raise FuncError('Integer expected, got "%s"' % str(n_start))
+        raise FuncError(f'Integer expected, got "{n_start}"')
 
     try:
         n_len = int(n_len)
     except (TypeError, ValueError):
-        raise FuncError('Integer expected, got "%s"' % str(n_len))
+        raise FuncError(f'Integer expected, got "{n_len}"')
 
     return str(text)[n_start : n_start + n_len]
 
@@ -520,9 +523,6 @@ def move(m_tags, p_pattern, r_tags, ext=True, state=None):
     """Tag to filename, Tag->File: $1
     &Pattern, text"""
 
-    tags = m_tags
-    tf = findfunc.tagtofilename
-
     fn = tag_to_filename(p_pattern, m_tags, r_tags, ext, state)
 
     if fn:
@@ -565,7 +565,7 @@ def num(text, n_len, add_sep=false):
     tracknum = tracknum.lstrip("0")
 
     if total and check_truth(add_sep):
-        return "%s/%s" % (tracknum.zfill(n_len), total)
+        return f"{tracknum.zfill(n_len)}/{total}"
     else:
         return tracknum.zfill(n_len)
 
@@ -611,13 +611,9 @@ def remove_except(tags, fields):
     """Remove all fields except, "Remove fields except: $1"
     &Field list (; separated):, text,"""
     fields = [field for field in fields.split(";")]
-    ret = dict(
-        [
-            (field.strip(), "")
-            for field in audioinfo.usertags(tags)
-            if field not in fields
-        ]
-    )
+    ret = {
+        field.strip(): "" for field in audioinfo.usertags(tags) if field not in fields
+    }
     if "__image" not in fields:
         ret["__image"] = []
     if ret:
@@ -673,7 +669,7 @@ def replace(text, word, replaceword, matchcase=False, whole=False, chars=None):
     replaceword = replaceword.replace("\\", "\\\\")
 
     if whole:
-        pat = re.compile(r"(^|[%s])%s([%s]|$)" % (chars, word, chars), matchcase)
+        pat = re.compile(rf"(^|[{chars}]){word}([{chars}]|$)", matchcase)
     else:
         pat = re.compile(word, matchcase)
 
@@ -695,7 +691,7 @@ def replace(text, word, replaceword, matchcase=False, whole=False, chars=None):
     else:
         try:
             text = pat.sub(replaceword, text)
-        except Exception as e:
+        except re.error as e:
             raise findfunc.FuncError(str(e))
     return text
 
@@ -741,7 +737,7 @@ def replaceWithReg(
         if not group:
             d = {}
         elif groups:
-            d = dict([(i, z if z is not None else "") for i, z in enumerate(groups, 1)])
+            d = {i: z if z is not None else "" for i, z in enumerate(groups, 1)}
             d[0] = group
         else:
             d = {1: group, 0: group}
@@ -795,7 +791,7 @@ def right(text, n):
     try:
         n = int(n)
     except (TypeError, ValueError):
-        raise FuncError('Integer expected, got "%s"' % str(n))
+        raise FuncError(f'Integer expected, got "{n}"')
     if n == 0:
         return ""
     return text[-int(n) :]
@@ -807,7 +803,7 @@ def gain_to_watts(gain):
 
 def to_hexstring(x):
     # leading space required; blame Apple
-    return " %08X" % int(x)
+    return f" {int(x):08X}"
 
 
 def rg2sc(gain, peak=None):
@@ -890,9 +886,8 @@ def save_artwork(m_tags, pattern, r_tags, state=None, write=True):
             i += 1
 
         if write:
-            fobj = open(fn, "w+b")
-            fobj.write(data)
-            fobj.close()
+            with open(fn, "w+b") as fobj:
+                fobj.write(data)
         else:
             return fn
 
@@ -955,7 +950,6 @@ def tag_dir(m_tags, pattern, r_tags, state=None):
     if r_tags.dirpath in state["tag_dir"]:
         return
 
-    dirpath = r_tags.dirpath
     if pattern.endswith("/") and len(pattern) > 1:
         pattern = pattern[:-1]
 
@@ -966,7 +960,7 @@ def tag_dir(m_tags, pattern, r_tags, state=None):
 
 
 def testfunction(tags, t_text, p_pattern, n_number):
-    text = "%s - %s" % (tags["artist"], tags["title"])
+    text = f"{tags['artist']} - {tags['title']}"
     assert t_text == text
     assert p_pattern == "%artist% - %title%"
     assert n_number == 23
@@ -1035,9 +1029,9 @@ def update_from_tag(r_tags, fields, tag="APEv2"):
         return tag.usertags
     else:
         if fields[0].startswith("~"):
-            return dict([(k, v) for k, v in tag.usertags.items() if k not in fields])
+            return {k: v for k, v in tag.usertags.items() if k not in fields}
         else:
-            return dict([(k, v) for k, v in tag.usertags.items() if k in fields])
+            return {k: v for k, v in tag.usertags.items() if k in fields}
 
 
 def upper(text):
