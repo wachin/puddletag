@@ -1,5 +1,6 @@
 import glob
 import os
+from typing import ClassVar
 
 from ..audioinfo import encode_fn
 from ..constants import CONFIGDIR
@@ -21,7 +22,7 @@ REPLACE_FIELDS = "replace_fields"
 
 
 class DummyTS:
-    group_by = []
+    group_by: ClassVar[list] = []
 
 
 def convert_mtps(dirpath=PROFILEDIR):
@@ -46,8 +47,8 @@ def convert_mtp(filename):
 
     ts_profiles = []
     for num in range(numsources):
-        section = "config%s" % num
-        get = lambda key, default: cparser.get(section, key, default)
+        section = f"config{num}"
+        get = lambda key, default, _section=section: cparser.get(_section, key, default)
 
         source = DummyTS()
         source.name = get("source", "")
@@ -76,15 +77,14 @@ def load_all_mtps(dirpath=PROFILEDIR, tag_sources=None):
         tag_sources = {}
     mtps = [mtp_from_file(fn, tag_sources) for fn in glob.glob(dirpath + "/*.mtp")]
     try:
-        order = open(os.path.join(dirpath, "order"), "r").read().split("\n")
+        with open(os.path.join(dirpath, "order")) as f:
+            order = f.read().split("\n")
     except OSError:
         return mtps
 
     order = [z.strip() for z in order]
-    first = []
-    last = []
 
-    names = dict([(mtp.name, mtp) for mtp in mtps])
+    names = {mtp.name: mtp for mtp in mtps}
     mtps = [names[name] for name in order if name in names]
     mtps.extend([names[name] for name in names if name not in order])
 
@@ -95,7 +95,7 @@ def mtp_from_file(filename=CONFIG, tag_sources=None):
     if tag_sources is None:
         tag_sources = {}
     else:
-        tag_sources = dict((z.name, z) for z in tag_sources)
+        tag_sources = {z.name: z for z in tag_sources}
 
     cparser = PuddleConfig(filename)
     info_section = "info"
@@ -113,8 +113,8 @@ def mtp_from_file(filename=CONFIG, tag_sources=None):
 
     ts_profiles = []
     for num in range(numsources):
-        section = "config%s" % num
-        get = lambda key, default: cparser.get(section, key, default)
+        section = f"config{num}"
+        get = lambda key, default, _section=section: cparser.get(_section, key, default)
 
         source = tag_sources.get(get("source", ""), None)
         no_result = get("no_match", 0)
@@ -155,7 +155,7 @@ def save_mtp(mtp, filename=CONFIG):
 
     cparser.set(info_section, "numsources", len(mtp.profiles))
     for num, tsp in enumerate(mtp.profiles):
-        section = "config%s" % num
+        section = f"config{num}"
         name = tsp.tag_source.name if tsp.tag_source else ""
         cparser.set(section, "source", name)
         cparser.set(section, "if_no_result", tsp.if_no_result)
