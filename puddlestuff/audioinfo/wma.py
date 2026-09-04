@@ -1,4 +1,5 @@
 import struct
+from typing import ClassVar
 
 from mutagen.asf import ASF, ASFByteArrayAttribute, ASFUnicodeAttribute
 
@@ -77,11 +78,16 @@ def pic_to_bin(image):
 
 
 class Tag(util.MockTag):
-    IMAGETAGS = (util.MIMETYPE, util.DATA, util.IMAGETYPE, util.DESCRIPTION)
-    mapping = {}
-    revmapping = {}
+    IMAGETAGS: ClassVar[tuple] = (
+        util.MIMETYPE,
+        util.DATA,
+        util.IMAGETYPE,
+        util.DESCRIPTION,
+    )
+    mapping: ClassVar[dict] = {}
+    revmapping: ClassVar[dict] = {}
 
-    __rtranslate = {
+    __rtranslate: ClassVar[dict] = {
         "album": "WM/AlbumTitle",
         "album_subtitle": "WM/SetSubTitle",
         "albumartist": "WM/AlbumArtist",
@@ -135,7 +141,7 @@ class Tag(util.MockTag):
         "wwwcopyright": "CopyrightURL",
         "year": "WM/Year",
     }
-    __translate = dict([(v, k) for k, v in __rtranslate.items()])
+    __translate: ClassVar[dict] = {v: k for k, v in __rtranslate.items()}
 
     def __init__(self, filename=None):
         self.__images = []
@@ -192,9 +198,8 @@ class Tag(util.MockTag):
                 self.images = value
             elif key in fn_hash:
                 setattr(self, fn_hash[key], value)
-            elif key == "__total" and "track" in self:
-                if set_total(self, value):
-                    return
+            elif key == "__total" and "track" in self and set_total(self, value):
+                return
             return
         elif isempty(value):
             del self[key]
@@ -252,9 +257,12 @@ class Tag(util.MockTag):
             try:
                 self.__tags[self.__translate[name]] = list(map(str, values))
             except KeyError:
-                if isinstance(values[0], ASFUnicodeAttribute):
-                    if not "/" in name and name not in self.__tags:
-                        self.__tags[name] = list(map(str, values))
+                if (
+                    isinstance(values[0], ASFUnicodeAttribute)
+                    and "/" not in name
+                    and name not in self.__tags
+                ):
+                    self.__tags[name] = list(map(str, values))
 
         if "WM/Picture" in audio:
             self.images = list(map(bin_to_pic, audio["WM/Picture"]))
