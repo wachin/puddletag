@@ -7,7 +7,7 @@ from . import apev2, id3
 
 APEv2_Tag = apev2.Tag
 
-_v2_nums = set([2, 3, 4])
+_v2_nums = {2, 3, 4}
 
 ID3_V1 = "id3_v1"
 ID3_V2 = "id3_v2"
@@ -24,9 +24,7 @@ def apev2_values(fn):
 
 def convert_id3_frames(frames):
     mapping = id3.Tag.mapping
-    return dict(
-        (mapping.get(k, k), v.get_value()) for k, v in id3.handle(frames)
-    ).items()
+    return {mapping.get(k, k): v.get_value() for k, v in id3.handle(frames)}
 
 
 def fullread(fileobj, size):
@@ -37,8 +35,13 @@ def fullread(fileobj, size):
 
 
 def has_apev2(fn):
-    fileobj = open(fn, "rb") if isinstance(fn, str) else fn
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            return _has_apev2(fileobj)
+    return _has_apev2(fn)
 
+
+def _has_apev2(fileobj):
     try:
         fileobj.seek(-160, 2)
     except OSError:
@@ -49,31 +52,33 @@ def has_apev2(fn):
 
 
 def has_v1(fn):
-    close_file = isinstance(fn, str)
-    fileobj = open(fn, "rb") if close_file else fn
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            return _has_v1(fileobj)
+    return _has_v1(fn)
 
+
+def _has_v1(fileobj):
     try:
         fileobj.seek(-128, 2)
         return "TAG" == struct.unpack("3s", fullread(fileobj, 3))[0]
     except (OSError, struct.error, EOFError):
         return False
-    finally:
-        if close_file:
-            fileobj.close()
 
 
 def get_v2(fn):
-    close_file = isinstance(fn, str)
-    fileobj = open(fn, "rb") if close_file else fn
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            return _get_v2(fileobj)
+    return _get_v2(fn)
 
+
+def _get_v2(fileobj):
     size = 5
     try:
         id3, vmaj, vrev = struct.unpack(">3sBB", fullread(fileobj, size))
     except EOFError:
         return
-    finally:
-        if close_file:
-            fileobj.close()
 
     if id3 == "ID3" and vmaj in _v2_nums:
         return (2, vmaj, vrev) if vrev != 0 else (2, vmaj)
@@ -81,13 +86,14 @@ def get_v2(fn):
 
 
 def id3v1_values(fn):
-    close_file = isinstance(fn, str)
-    fileobj = open(fn, "rb") if close_file else fn
-
-    fileobj.seek(-128, 2)
-    frames = ParseID3v1(fileobj.read(128))
-    if close_file:
-        fileobj.close()
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            fileobj.seek(-128, 2)
+            frames = ParseID3v1(fileobj.read(128))
+    else:
+        fileobj = fn
+        fileobj.seek(-128, 2)
+        frames = ParseID3v1(fileobj.read(128))
     if frames:
         return convert_id3_frames(frames)
 
@@ -97,35 +103,55 @@ def id3v2_values(fn):
 
     try:
         frames = mutagen.id3.ID3(fn)
-    except:
+    except Exception:  # noqa: BLE001
         return None
     if frames:
         return convert_id3_frames(frames)
 
 
 def id3_tags(fn):
-    close_file = isinstance(fn, str)
-    fileobj = open(fn, "rb") if close_file else fn
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            return _id3_tags(fileobj)
+    return _id3_tags(fn)
+
+
+def _id3_tags(fileobj):
     version = []
 
     try:
         version = [(1, 1)] if has_v1(fileobj) else []
     except EOFError:
-        if close_file:
-            fileobj.close()
         return []
 
     fileobj.seek(0)
     v2 = get_v2(fileobj)
     if v2:
         version.append(v2)
-    if close_file:
-        fileobj.close()
     return version
 
 
 def tags_in_file(fn, to_check=(ID3_V1, ID3_V2, APEv2)):
-    fileobj = open(fn, "rb") if isinstance(fn, str) else fn
+    if isinstance(fn, str):
+        with open(fn, "rb") as fileobj:
+            return _tags_in_file(fileobj, fn, to_check)
+    return _tags_in_file(fn, fn, to_check)
+
+
+def _tags_in_file(fileobj, fn, to_check):
+    if ID3_V1 in to_check and ID3_V2 in to_check:
+        tags = ["ID3v" + ".".join(map(str, z)) for z in id3_tags(fileobj)]
+    elif ID3_V1 in to_check:
+        tags = ["ID3v1.1"] if has_v1(fileobj) else []
+    elif ID3_V2 in to_check:
+        tags = get_v2(fileobj)
+        tags = ["ID3v" + ".".join(map(str, tags))] if tags else []
+    else:
+        tags = []
+
+    if APEv2 in to_check and has_apev2(fn):
+        tags.append("APEv2")
+    return tags
 
     if ID3_V1 in to_check and ID3_V2 in to_check:
         tags = ["ID3v" + ".".join(map(str, z)) for z in id3_tags(fileobj)]
