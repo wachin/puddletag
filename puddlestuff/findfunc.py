@@ -46,7 +46,7 @@ FUNC_NAME = "func_name"
 FIELDS = "fields"
 FUNC_MODULE = "module"
 ARGS = "arguments"
-KEYWORD_ARGS = set(["tags", "m_tags", "r_tags", "state"])
+KEYWORD_ARGS = {"tags", "m_tags", "r_tags", "state"}
 
 
 ParserElement.enable_packrat()
@@ -147,7 +147,8 @@ def filenametotag(pattern, filename, checkext=False, split_dirs=True):
     else:
         filenames = [filename]
     mydict = {}
-    for pattern, filename in zip(patterns, filenames):
+    for cur_pattern, filename in zip(patterns, filenames):
+        pattern = cur_pattern
         new_fields = tagtotag(pattern, filename, e)
         if not new_fields:
             continue
@@ -171,12 +172,12 @@ def get_old_action(filename):
 
     Returns [list of Function objects, action name]."""
     if isinstance(filename, str):
-        f = open(filename, "rb")
+        with open(filename, "rb") as f:
+            name = pickle.load(f)
+            funcs = pickle.load(f)
     else:
-        f = filename
-    name = pickle.load(f)
-    funcs = pickle.load(f)
-    f.close()
+        name = pickle.load(filename)
+        funcs = pickle.load(filename)
     return [funcs, name]
 
 
@@ -666,7 +667,7 @@ def apply_actions(actions, audio, state=None, ovr_fields=None):
         if ret:
             [changed.add(z) for z in ret]
             audio.update(ret)
-    return dict([(z, audio[z]) for z in changed])
+    return {z: audio[z] for z in changed}
 
 
 def apply_macros(macros, audio, state, fields=None):
@@ -687,11 +688,11 @@ def runQuickAction(funcs, audio, state, tag):
 
 
 def save_macro(filename, name, funcs):
-    f = open(filename, "w")
-    f.close()
+    with open(filename, "w"):
+        pass
     cparser = PuddleConfig(filename)
     cparser.set("info", "name", name)
-    set_value = lambda i, key, value: cparser.set("Func%d" % i, key, value)
+    set_value = lambda i, key, value: cparser.set(f"Func{i}", key, value)
     for i, func in enumerate(funcs):
         set_value(i, FIELDS, func.tag)
         set_value(i, FUNC_NAME, func.function.__name__)
@@ -704,7 +705,7 @@ def saveAction(filename, actionname, funcs):
 
     funcs is a list of funcs, and actionname is...er...the name of the action."""
     if isinstance(filename, str):
-        fileobj = open(filename, "wb")
+        fileobj = open(filename, "wb")  # noqa: SIM115
     else:
         fileobj = filename
     pickle.dump(actionname, fileobj)
@@ -833,7 +834,7 @@ class Function:
             self.function = functions[funcname]
         elif isinstance(funcname, PluginFunction):
             self.function = funcname.function
-            self.doc = [",".join([funcname.name, funcname.print_string])] + [
+            self.doc = [f"{funcname.name},{funcname.print_string}"] + [
                 ",".join(z) for z in funcname.args
             ]
             self.info = [funcname.name, funcname.print_string]
@@ -918,8 +919,8 @@ class Function:
             )
 
         try:
-            first_arg = [z for z in varnames if z not in reserved][0]
-        except IndexError:
+            first_arg = next(z for z in varnames if z not in reserved)
+        except StopIteration:
             return
 
         if not first_arg.startswith("m_"):
