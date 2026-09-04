@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import os
+from typing import ClassVar
 
 from puddlestuff.constants import HOMEDIR, TAGSOURCE, TEXT
 from puddlestuff.puddleobjects import PuddleConfig, getfiles, gettags
@@ -28,8 +29,9 @@ properties = {"type": TAGSOURCE}
 # musicdir = '/mnt/variable/Music'
 # dirs = [unicode(z, 'utf8') for z in os.listdir(musicdir)]
 try:
-    image = [{"data": open(os.path.join(HOMEDIR, "flux/image.jpg"), "rb").read()}]
-except:
+    with open(os.path.join(HOMEDIR, "flux/image.jpg"), "rb") as f:
+        image = [{"data": f.read()}]
+except Exception:
     image = {}
     raise
 
@@ -41,14 +43,12 @@ def equal(audio1, audio2, play=False, tags=("artist", "album")):
                 return False
         else:
             return False
-    if play and "play" not in audio2:
-        return False
-    return True
+    return not (play and "play" not in audio2)
 
 
 class Example:
     name = "Old"
-    group_by = ["artist", "album"]
+    group_by: ClassVar[list[str]] = ["artist", "album"]
     counter = 0
 
     def __init__(self):
@@ -59,8 +59,6 @@ class Example:
         self.applyPrefs([musicdir])
 
     def search(self, artist, albums):
-        ret = []
-        matches = {}
         # set_status('Searching %s - %s' % (artist, albums[0]))
         # #write_log('Retrieving %s %s' % (artist, albums[0]))
         albumtuple = [
@@ -76,14 +74,12 @@ class Example:
         # write_log('No releases found for %s' % artist)
         # else:
         # write_log('Found albums <b>%s</b>' % ', '.join(releases))
-        matched = []
         low_releases = [z.lower() for z in releases]
         for album in albums:
             info = {"album": album, "artist": artist}
             info["#extrainfo"] = ("Home Folder", "file://" + HOMEDIR)
             if album.lower() in low_releases:
-                if album.lower() in low_releases:
-                    return [(info, [])]
+                return [(info, [])]
         get_info = lambda album: {
             "artist": artist,
             "album": album,
@@ -95,7 +91,7 @@ class Example:
         artist = info["artist"]
         album = info["album"]
         self.counter += 1
-        dirpath = "%s/%s - %s" % (self.musicdir, artist, album)
+        dirpath = f"{self.musicdir}/{artist} - {album}"
         files = []
         for f in gettags(getfiles(dirpath)):
             if f:
