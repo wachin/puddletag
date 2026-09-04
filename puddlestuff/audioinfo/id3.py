@@ -1,6 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 from functools import partial
+from typing import ClassVar
 
 import mutagen.mp3
 from mutagen import id3
@@ -11,7 +12,7 @@ except ImportError:
     AIFF = None
 
 try:
-    from mutagen.dsf import _DSFID3, DSF
+    from mutagen.dsf import DSF
 except ImportError:
     DSF = None
 
@@ -235,8 +236,8 @@ try:
 except AttributeError:
     pass
 
-revtext_frames = dict((key, frame) for frame, key in text_frames.items())
-write_frames = dict((key, partial(create_text, key)) for key in text_frames.values())
+revtext_frames = {key: frame for frame, key in text_frames.items()}
+write_frames = {key: partial(create_text, key) for key in text_frames.values()}
 write_frames["genre"] = create_genre
 
 
@@ -276,8 +277,8 @@ time_frames = {
     id3.TDTG: "taggingtime",
 }
 
-revtime_frames = dict([(key, frame) for frame, key in time_frames.items()])
-write_frames.update([(key, partial(create_time, key)) for key in revtime_frames])
+revtime_frames = {key: frame for frame, key in time_frames.items()}
+write_frames.update({key: partial(create_time, key) for key in revtime_frames})
 
 
 def create_usertext(title, value):
@@ -335,8 +336,8 @@ def url_handler(title):
     return func
 
 
-revurl_frames = dict([(key, frame) for frame, key in url_frames.items()])
-write_frames.update([(key, partial(create_url, key)) for key in revurl_frames])
+revurl_frames = {key: frame for frame, key in url_frames.items()}
+write_frames.update({key: partial(create_url, key) for key in revurl_frames})
 
 uurl_frames = {id3.WCOM: "wwwcommercialinfo", id3.WOAR: "wwwartist"}
 
@@ -367,8 +368,8 @@ def uurl_handler(title):
     return func
 
 
-revuurl_frames = dict([(key, frame) for frame, key in uurl_frames.items()])
-write_frames.update([(key, partial(create_uurl, key)) for key in revuurl_frames])
+revuurl_frames = {key: frame for frame, key in uurl_frames.items()}
+write_frames.update({key: partial(create_uurl, key) for key in revuurl_frames})
 
 
 def create_userurl(title, value):
@@ -434,8 +435,8 @@ def paired_handler(title):
     return func
 
 
-revpaired_frames = dict([(key, frame) for frame, key in paired_textframes.items()])
-write_frames.update([(key, partial(create_paired, key)) for key in revpaired_frames])
+revpaired_frames = {key: frame for frame, key in paired_textframes.items()}
+write_frames.update({key: partial(create_paired, key) for key in revpaired_frames})
 
 
 def create_comment(desc, value):
@@ -690,7 +691,6 @@ def set_uslt(f, value):
 
     if not frames:
         f.frames = []
-        f.get_value
         return {}
 
     f.frames = frames
@@ -703,7 +703,7 @@ def get_uslt(frames):
         return ret if isinstance(ret, str) else str(ret, "utf8", "replace")
 
     ret = [
-        "%s|%s|%s" % (text(frame, "lang"), text(frame, "desc"), text(frame, "text"))
+        f"{text(frame, 'lang')}|{text(frame, 'desc')}|{text(frame, 'text')}"
         for frame in frames
     ]
     return lambda: ret
@@ -730,11 +730,11 @@ write_frames.update(
 
 # Dictionary contaning classes from mutagen.id3 and it's associated
 # handler.
-frames = dict([(key, text_handler(title)) for key, title in text_frames.items()])
+frames = {key: text_handler(title) for key, title in text_frames.items()}
 
-frames.update([(key, time_handler(title)) for key, title in time_frames.items()])
+frames.update({key: time_handler(title) for key, title in time_frames.items()})
 
-frames.update([(key, url_handler(title)) for key, title in url_frames.items()])
+frames.update({key: url_handler(title) for key, title in url_frames.items()})
 
 frames.update([(key, uurl_handler(title)) for key, title in uurl_frames.items()])
 
@@ -756,7 +756,7 @@ frames.update(
     }
 )
 
-revframes = dict((v, k) for k, v in frames.items())
+revframes = {v: k for k, v in frames.items()}
 
 
 def bin_to_pic(image):
@@ -860,9 +860,14 @@ if AAC is not None:
 
 def tag_factory(id3_filetype):
     class Tag(TagBase):
-        IMAGETAGS = (util.MIMETYPE, util.DESCRIPTION, util.DATA, util.IMAGETYPE)
-        mapping = {}
-        revmapping = {}
+        IMAGETAGS: ClassVar[tuple] = (
+            util.MIMETYPE,
+            util.DESCRIPTION,
+            util.DATA,
+            util.IMAGETYPE,
+        )
+        mapping: ClassVar[dict] = {}
+        revmapping: ClassVar[dict] = {}
 
         def __init__(self, filename=None):
             self.__images = []
@@ -922,7 +927,7 @@ def tag_factory(id3_filetype):
             elif isinstance(self.mut_obj, AIFFFileType):
                 mpginfo = [("Type", "AIFF")]
             elif isinstance(self.mut_obj, ID3FileType):
-                mpginfo = [("Version", "MPEG %i Layer %i" % (info.version, info.layer))]
+                mpginfo = [("Version", f"MPEG {info.version} Layer {info.layer}")]
             else:
                 mpginfo = []
 
@@ -988,7 +993,7 @@ def tag_factory(id3_filetype):
                 if hasattr(frame, "set_value"):
                     delattr(frame, "set_value")
                 frames_copy.append(deepcopy(frame))
-            tags = handle(dict([(frame.HashKey, frame) for frame in frames_copy]))
+            tags = handle({frame.HashKey: frame for frame in frames_copy})
             for frame, (get_value, set_value) in zip(frames, funcs):
                 if get_value is not None:
                     frame.get_value = get_value
@@ -1108,7 +1113,7 @@ def tag_factory(id3_filetype):
             self.set_attrs(ATTRIBUTES, self.__tags)
 
             try:
-                self.__tags["__tag_read"] = "ID3v%s.%s" % audio.tags.version[:2]
+                self.__tags["__tag_read"] = "ID3v{}.{}".format(*audio.tags.version[:2])
             except AttributeError:
                 self.__tags["__tag_read"] = ""
             self.mut_obj = audio
@@ -1138,7 +1143,7 @@ def tag_factory(id3_filetype):
                 for key, frame in self.__tags.items()
                 if key in userkeys
             ]
-            hashes = dict([(frame.HashKey, frame) for frame in frames])
+            hashes = {frame.HashKey: frame for frame in frames}
             toremove = [
                 z
                 for z in self._originaltags
@@ -1207,7 +1212,6 @@ def tag_factory(id3_filetype):
 
         def to_encoding(self, encoding=UTF8):
             frames = []
-            saved = []
             for frame in self.__tags.values():
                 if hasattr(frame, "encoding"):
                     frames.append((frame, frame.encoding))
