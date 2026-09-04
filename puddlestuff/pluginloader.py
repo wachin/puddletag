@@ -38,6 +38,8 @@ MODULE_NAME = "module"
 
 PLUGIN_DIRS = [PLUGINDIR, os.path.join(os.path.dirname(__file__), "plugins")]
 
+logger = logging.getLogger(__name__)
+
 PROPERTIES = [NAME, AUTHOR, DESC, PT_VERSION, VERSION]
 
 
@@ -83,7 +85,6 @@ def load_plugins(plugins=None, parent=None):
     modules = []
     functions_no_preview = []
 
-    join = os.path.join
     if plugins is None:
         plugins = []
         [plugins.extend(get_plugins(d)) for d in PLUGIN_DIRS]
@@ -106,8 +107,8 @@ def load_plugins(plugins=None, parent=None):
                     if hasattr(module, attribute):
                         action(getattr(module, attribute))
                 modules.append(module)
-            except Exception as e:
-                logging.exception(f"Failed to load plugin {plugin[NAME]}; error={e}")
+            except Exception:
+                logger.exception("Failed to load plugin %s", plugin[NAME])
 
     for d in PLUGIN_DIRS:
         del sys.path[0]
@@ -140,10 +141,7 @@ class InfoWidget(QLabel):
         properties = [NAME, AUTHOR, DESC, VERSION]
 
         text = "<br />".join(
-            [
-                "<b>%s:</b> %s" % (disp, info[prop])
-                for disp, prop in zip(labels, properties)
-            ]
+            f"<b>{disp}:</b> {info[prop]}" for disp, prop in zip(labels, properties)
         )
         self.setText(text)
 
