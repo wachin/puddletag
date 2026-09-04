@@ -64,9 +64,7 @@ class MusicLibError(Exception):
 
 class TreeWidgetItem(QTreeWidgetItem):
     def __lt__(self, item):
-        if self.text(0).upper() < item.text(0).upper():
-            return True
-        return False
+        return self.text(0).upper() < item.text(0).upper()
 
 
 class ParentItem(TreeWidgetItem):
@@ -138,12 +136,12 @@ class LibChooseDialog(QDialog):
         for libname in libraries.__all__:
             try:
                 lib = __import__(
-                    "puddlestuff.libraries.%s" % libname,
+                    f"puddlestuff.libraries.{libname}",
                     fromlist=["puddlestuff", "libraries"],
                 )
                 if not hasattr(lib, "InitWidget"):
-                    raise Exception(translate("MusicLib", "Invalid library"))
-            except Exception as detail:
+                    raise MusicLibError(translate("MusicLib", "Invalid library"))
+            except Exception as detail:  # noqa: BLE001
                 msg = translate("MusicLib", "Error loading {}: {}\n").format(
                     libname, str(detail)
                 )
@@ -428,7 +426,7 @@ class LibraryTree(QTreeWidget):
         if self.__searchResults:
             return
         if tracks:
-            data = set([to_string(track.get["artist"], "") for track in tracks])
+            data = {to_string(track.get["artist"], "") for track in tracks}
         else:
             data = set(artists)
 
