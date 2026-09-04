@@ -12,6 +12,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import ClassVar
 from xml.dom import minidom
 
 from puddlestuff.audioinfo import DATA
@@ -78,10 +79,7 @@ def create_aws_url(aws_access_key_id, secret, query_dictionary):
         raise RetrievalError(translate("Amazon", "Invalid Access or Secret Key"))
     signature = urllib.parse.quote(base64.b64encode(hm.digest()))
 
-    query = "http://webservices.amazon.com/onca/xml?%s&Signature=%s" % (
-        query,
-        signature,
-    )
+    query = f"http://webservices.amazon.com/onca/xml?{query}&Signature={signature}"
     return query
 
 
@@ -160,9 +158,7 @@ def parse_album_xml(text, album=None):
         write_log(text)
         return None
     tracks = []
-    discs = [
-        disc for disc in tracklist.childNodes if not disc.nodeType == disc.TEXT_NODE
-    ]
+    discs = [disc for disc in tracklist.childNodes if disc.nodeType != disc.TEXT_NODE]
     if not (len(discs) > 1 and album):
         album = None
     for discnum, disc in enumerate(discs):
@@ -176,7 +172,7 @@ def parse_album_xml(text, album=None):
                     {
                         "track": tracknumber,
                         "title": title,
-                        "album": "%s (Disc %s)" % (album, discnum + 1),
+                        "album": f"{album} (Disc {discnum + 1})",
                     }
                 )
             else:
@@ -206,10 +202,10 @@ def parse_search_xml(text):
                         info[XMLKEYS[child.tagName]] = text_node.data
         if not info:
             continue
-        for key in IMAGEKEYS:
+        for key, mapped in IMAGEKEYS.items():
             image_items = item.getElementsByTagName(key)
             if image_items:
-                info[IMAGEKEYS[key]] = get_image_url(image_items[0])
+                info[mapped] = get_image_url(image_items[0])
         info["#extrainfo"] = (
             translate("Amazon", "{} at Amazon.com").format(info.get("album", "")),
             get_site_url(item),
@@ -267,7 +263,7 @@ def retrieve_cover(url):
 
 def search(artist=None, album=None):
     if artist and album:
-        keywords = "+".join([artist, album])
+        keywords = f"{artist}+{album}"
     elif artist:
         keywords = artist
     else:
@@ -304,7 +300,7 @@ class Amazon:
     # The values passed to Object.search will be album (a string)
     # and dictionary containing the different artists as keys and
     # a list of tags (dictionaries) as the values.
-    group_by = ["album", "artist"]
+    group_by: ClassVar[list[str]] = ["album", "artist"]
 
     # So for these values the values passed to Object.search may be
     # ("Give Up", artist={'The Postal Service': [track listing...]})
@@ -453,7 +449,7 @@ class Amazon:
                 artist = "Various Artists"
             else:
                 try:
-                    artist = list(artists.keys())[0]
+                    artist = next(iter(artists))
                 except AttributeError:
                     artist = artists[0]
         else:
