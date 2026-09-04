@@ -27,6 +27,8 @@ from .audioinfo import (
     isempty,
     setmodtime,
 )
+
+logger = logging.getLogger(__name__)
 from .constants import BLANK, LOG_FILENAME, SEPARATOR
 from .puddleobjects import PuddleStatus, issubfolder, safe_name
 
@@ -98,7 +100,7 @@ def rename(oldpath, newpath):
             e.strerror = translate(
                 "Errors", "Couldn't create intermediate directory: {}"
             ).format(decode_fn(os.path.dirname(newpath)))
-            logging.exception(e.strerror)
+            logger.exception(e.strerror)
             raise RenameError(e, oldpath, newpath)
     try:
         os.rename(oldpath, newpath)
@@ -317,25 +319,19 @@ def write(audio, tags, save_mtime=True, justrename=False):
     """
     tags = deepcopy(tags)
     renamed = False
-    if audio.library and (ARTIST in tags or ALBUM in tags):
-        artist = audio.get(ARTIST, "")
-    else:
-        artist = None
 
     preview = {}
     if audio.preview:
         preview = audio.preview
         audio.preview = {}
 
-    fn_fields = dict((key, tags[key]) for key in FILETAGS if key in tags)
+    fn_fields = {key: tags[key] for key in FILETAGS if key in tags}
 
-    undo = dict(
-        [
-            (field, copy(audio.get(field, [])))
-            for field in tags
-            if (field not in fn_fields and tags.get(field, "") != audio.get(field, ""))
-        ]
-    )
+    undo = {
+        field: copy(audio.get(field, []))
+        for field in tags
+        if (field not in fn_fields and tags.get(field, "") != audio.get(field, ""))
+    }
 
     if "__image" in tags:
         artwork_option = PuddleStatus()._status.get("artwork_option", 2)
@@ -380,7 +376,7 @@ def write(audio, tags, save_mtime=True, justrename=False):
     except MutagenError as e:
         if isinstance(e.args[0], PermissionError):
             audio.update(undo)
-            logging.exception(e)
+            logger.exception("Permission error writing tag")
             raise e.args[0]
         else:
             raise
@@ -390,9 +386,9 @@ def write(audio, tags, save_mtime=True, justrename=False):
             setmodtime(audio.filepath, audio.accessed, audio.modified)
         else:
             os.utime(audio.dirpath, None)
-    except OSError as ex:
-        logging.error("Could not set modification time for file or directory.")
-        logging.exception(ex)
+    except OSError:
+        logger.error("Could not set modification time for file or directory.")
+        logger.exception("Failed to set modification time")
     return undo
 
 
@@ -418,9 +414,7 @@ def dict_diff(d1, d2):
 
 def real_filetags(mapping, revmapping, tags):
     filefields = [mapping.get(key, key) for key in FILETAGS]
-    return dict(
-        [(revmapping.get(key, key), tags[key]) for key in filefields if key in tags]
-    )
+    return {revmapping.get(key, key): tags[key] for key in filefields if key in tags}
 
 
 def separator(parent=None):
@@ -430,7 +424,7 @@ def separator(parent=None):
 
 
 def without_file(tags):
-    return dict([(key, tags[key]) for key in tags if key not in FILETAGS])
+    return {key: tags[key] for key in tags if key not in FILETAGS}
 
 
 class PluginFunction:
