@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import ClassVar
 
 from mutagen.oggvorbis import OggVorbis
 
@@ -92,8 +93,8 @@ def image_to_bin(image):
 def vorbis_tag(base, name):
     class Tag(util.MockTag):
         IMAGETAGS = (util.MIMETYPE, util.DESCRIPTION, util.DATA, util.IMAGETYPE)
-        mapping = {}
-        revmapping = {}
+        mapping: ClassVar[dict] = {}
+        revmapping: ClassVar[dict] = {}
 
         def __init__(self, filename=None):
             self.__images = []
@@ -241,9 +242,8 @@ def vorbis_tag(base, name):
             if self.__images:
                 if base == FLAC:
                     audio.clear_pictures()
-                    list(
-                        map(lambda p: audio.add_picture(image_to_bin(p)), self.__images)
-                    )
+                    for p in self.__images:
+                        audio.add_picture(image_to_bin(p))
                 else:
                     newtag[COVER_KEY] = [
                         _f for _f in map(image_to_base64, self.__images) if _f
