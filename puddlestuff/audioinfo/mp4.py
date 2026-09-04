@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import ClassVar
 
 from mutagen.mp4 import MP4, MP4Cover
 
@@ -107,10 +108,7 @@ def getbool(value):
 def setbool(value):
     if value == "No":
         return False
-    elif value:
-        return True
-    else:
-        return False
+    return bool(value)
 
 
 def settext(text):
@@ -237,8 +235,8 @@ def pic_to_bin(image):
 class Tag(util.MockTag):
     """Class for AAC tags."""
 
-    mapping = {}
-    revmapping = {}
+    mapping: ClassVar[dict] = {}
+    revmapping: ClassVar[dict] = {}
     IMAGETAGS = (util.MIMETYPE, util.DATA)
 
     def __init__(self, filename=None):
@@ -332,7 +330,7 @@ class Tag(util.MockTag):
                     self.__tags[key] = new_val
             except KeyError:
                 # User defined tags.
-                self.__freeform[key] = "----:com.apple.iTunes:%s" % key
+                self.__freeform[key] = f"----:com.apple.iTunes:{key}"
                 self.__tags[key] = settext(value)
             except ValueError:
                 pass
@@ -495,9 +493,7 @@ class Tag(util.MockTag):
         if self.images:
             newtag["covr"] = [_f for _f in map(pic_to_bin, self.images) if _f]
 
-        toremove = [
-            z for z in audio.keys() if z not in newtag and z not in self.__errors
-        ]
+        toremove = [z for z in audio if z not in newtag and z not in self.__errors]
         for key in toremove:
             del audio[key]
         audio.update(newtag)
