@@ -64,9 +64,7 @@ MTAG_KEYS = {
 
 def convert_entities(s):
     s = re.sub(r"&#(\d+);", lambda m: chr(int(m.groups(0)[0])), s)
-    return re.sub(
-        r"&(\w)+;", lambda m: n2cp.get(m.groups(0), "&%s;" % m.groups(0)[0]), s
-    )
+    return re.sub(r"&(\w)+;", lambda m: n2cp.get(m.groups(0), f"&{m.groups(0)[0]};"), s)
 
 
 def convert_value(value):
@@ -78,9 +76,7 @@ def convert_value(value):
 
 
 def convert_dict(d, keys=MTAG_KEYS):
-    d = dict(
-        (i, z) for i, z in ((k.lower(), convert_value(v)) for k, v in d.items()) if z
-    )
+    d = {i: z for i, z in ((k.lower(), convert_value(v)) for k, v in d.items()) if z}
     return _convert_dict(d, keys)
 
 
@@ -129,8 +125,8 @@ def find_idents(lines):
 
 
 def open_script(filename):
-    f = codecs.open(filename, "r", encoding="utf8")
-    idents, search, album = find_idents(f.readlines())
+    with codecs.open(filename, "r", encoding="utf8") as f:
+        idents, search, album = find_idents(f.readlines())
     return idents, search, album
 
 
@@ -189,11 +185,8 @@ def parse_search_page(indexformat, page, search_source, url=None):
         cursor.output = {"CurrentUrl": url}
     cursor.parse_page()
 
-    i = 0
     values = cursor.cache.split("\n")
     albums = []
-    exit_loop = False
-    max_i = len(values) - 1
     for cached in values:
         values = [z.strip() for z in cached.split("|")]
         album = dict(list(zip(fields, values)))
@@ -217,7 +210,7 @@ class Cursor:
         self.num_loop = 0
         self.output = self.album
         self.stop = False
-        self.track_fields = set(["track"])
+        self.track_fields = {"track"}
 
     @property
     def char(self):
@@ -232,8 +225,7 @@ class Cursor:
         if not filename:
             self._debug_file = None
             return
-        f = open(filename, "w")
-        self._debug_file = f
+        self._debug_file = open(filename, "w")  # noqa: SIM115
 
     @property
     def field(self):
@@ -275,12 +267,9 @@ class Cursor:
     def parse_page(self, debug=False):
         self.next_cmd = 0
         self.cmd_index = 0
-        i = 1
 
-        ret = []
         debug_info = []
 
-        i = 0
         while (not self.stop) and (self.next_cmd < len(self.source)):
             self.log(str(self.output))
             cmd, lineno, args = self.source[self.cmd_index]
@@ -343,9 +332,9 @@ class Mp3TagSource:
         self.name = idents["name"] + " [M]"
         self.indexformat = idents["indexformat"] if search_source else ""
         self.album_url = idents.get("albumurl", "")
-        self.tooltip = tooltip = """<p>Enter search keywords here. If empty,
+        self.tooltip = f"""<p>Enter search keywords here. If empty,
         the selected files are used.<br /><br />
-        Searches are done by <b>%s</b></p>""" % self.group_by[0]
+        Searches are done by <b>{self.group_by[0]}</b></p>"""
 
         self.html = None
 
@@ -399,13 +388,13 @@ class Mp3TagSource:
             write_log(translate("Mp3tag", "Retrieving album page: {}").format(url))
             set_status(translate("Mp3tag", "Retrieving album page..."))
             page = get_encoding(urlopen(url), True, "utf8")[1]
-        except:
+        except Exception:  # noqa: BLE001
             page = ""
 
         write_log(translate("Mp3tag", "Parsing album page."))
         set_status(translate("Mp3tag", "Parsing album page..."))
         new_info, tracks = parse_album_page(page, self.album_source, url)
-        info.update(dict((k, v) for k, v in new_info.items() if v))
+        info.update({k: v for k, v in new_info.items() if v})
 
         if self._get_cover and COVER in info:
             cover_url = new_info[COVER]
@@ -428,13 +417,13 @@ def load_mp3tag_sources(dirpath="."):
         try:
             idents, search, album = open_script(f)
             classes.append(Mp3TagSource(idents, search, album))
-        except:
+        except Exception:  # noqa: BLE001
             traceback.print_exc()
             continue
     return classes
 
 
-from ..discogs import urlopen
+from ..discogs import urlopen  # noqa: F811
 
 if __name__ == "__main__":
     # text = open(sys.argv[1], 'r').read()
