@@ -136,7 +136,6 @@ class MassTagEdit(QDialog):
         win.show()
 
     def addProfile(self, profile):
-        row = self.listbox.count()
         self.listbox.addItem(profile.name)
         self._profiles.append(profile)
 
@@ -201,7 +200,7 @@ class MassTagEdit(QDialog):
             filename = profile.name + ".mtp"
             i = 0
             while filename in filenames:
-                filename = "%s_%d%s" % (profile.name, i, ".mtp")
+                filename = f"{profile.name}_{i}.mtp"
                 i += 1
             filenames[filename] = profile
             order.append(profile.name)
@@ -214,9 +213,8 @@ class MassTagEdit(QDialog):
                     pass
         for filename, profile in filenames.items():
             save_mtp(profile, os.path.join(dirpath, filename))
-        f = open(os.path.join(dirpath, "order"), "w")
-        f.write("\n".join(order))
-        f.close()
+        with open(os.path.join(dirpath, "order"), "w") as f:
+            f.write("\n".join(order))
 
     def setProfiles(self, profiles):
         self._profiles = profiles
@@ -396,7 +394,6 @@ class MTProfileEdit(QDialog):
         win.show()
 
     def addTSProfile(self, profile):
-        row = self.listbox.count()
         self.listbox.addItem(profile.tag_source.name)
         self._tsps.append(profile)
 
@@ -694,7 +691,6 @@ class MassTagWindow(QWidget):
         win.show()
 
     def lookup(self):
-        button = self.sender()
         if self._startButton.text() != translate("Masstagging", "&Stop"):
             self.__flag.stop = False
             self._log.clear()
@@ -758,7 +754,6 @@ class MassTagWindow(QWidget):
             thread.statusChanged.emit(retrieve_msg.format(str(error)))
 
         def run_masstag():
-            replace_fields = []
             for files in tag_groups:
                 mtp.clear()
 
