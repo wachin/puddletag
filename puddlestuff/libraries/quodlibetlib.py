@@ -60,8 +60,8 @@ def strtime(seconds):
 
 
 time_fields = ["~#added", "~#lastplayed", "~#laststarted"]
-timefunc = lambda key: lambda value: {"__%s" % key[2:]: strtime(value)}
-mapping = dict([(key, timefunc(key)) for key in time_fields])
+timefunc = lambda key: lambda value: {f"__{key[2:]}": strtime(value)}
+mapping = {key: timefunc(key) for key in time_fields}
 
 mapping.update(
     {
@@ -82,8 +82,8 @@ time_fields = [
     "__lastplayed",
     "__laststarted",
 ]
-timefunc = lambda key: lambda value: {"~#%s" % key[2:]: lngtime(value)}
-revmapping = dict([(key, timefunc(key)) for key in time_fields])
+timefunc = lambda key: lambda value: {f"~#{key[2:]}": lngtime(value)}
+revmapping = {key: timefunc(key) for key in time_fields}
 revmapping.update(
     {
         "track": lambda value: {"tracknumber": value},
@@ -131,7 +131,7 @@ class Tag(MockTag):
                     except (TypeError, ValueError):
                         try:
                             value = str(value)  # Usually numbers
-                        except:
+                        except Exception:  # noqa: BLE001
                             traceback.print_exc()
                             continue
                 tags[key] = [value]
@@ -244,7 +244,8 @@ Tag = audioinfo.model_tag(Tag)
 class QuodLibet:
     def __init__(self, filepath):
         self.edited = False
-        self._tracks = pickle.load(open(filepath, "rb"))
+        with open(filepath, "rb") as f:
+            self._tracks = pickle.load(f)
 
         try:
             quodlibet.config.init()
@@ -289,16 +290,14 @@ class QuodLibet:
         return list(filter(getvalue, self._tracks))
 
     def distinct_values(self, field):
-        return set([track.get(field, "") for track in self._tracks])
+        return {track.get(field, "") for track in self._tracks}
 
     def distinct_children(self, parent, value, child):
-        return set(
-            [
-                track.get(child, "")
-                for track in self._tracks
-                if track.get(parent, "") == value
-            ]
-        )
+        return {
+            track.get(child, "")
+            for track in self._tracks
+            if track.get(parent, "") == value
+        }
 
     @property
     def artists(self):
@@ -311,7 +310,8 @@ class QuodLibet:
         if not self.edited:
             return
         filepath = self._filepath + ".puddletag"
-        pickle.dump(self._tracks, open(filepath, "wb"))
+        with open(filepath, "wb") as f:
+            pickle.dump(self._tracks, f)
         os.rename(self._filepath, self._filepath + ".bak")
         os.rename(filepath, self._filepath)
 
