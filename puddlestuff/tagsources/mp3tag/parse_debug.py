@@ -1,5 +1,6 @@
 import codecs
-import pdb
+import pdb  # noqa: T100
+import sys
 
 from . import Cursor, open_script
 
@@ -68,14 +69,13 @@ def parse_debug(text):
 
 
 def parse_file(fn):
-    fo = codecs.open(fn, "rU", "utf16")
-    text = fo.read().replace("\r\n", "\n").replace("\r", "\n")
-    fo.close()
+    with codecs.open(fn, "rU", "utf16") as fo:
+        text = fo.read().replace("\r\n", "\n").replace("\r", "\n")
     return parse_debug(text)
 
 
 def compare_retrieval(srcfn, html, debug, album=True):
-    idents, search_source, album_source = open_script(srcfn)
+    _idents, search_source, album_source = open_script(srcfn)
     cursor = Cursor(html, album_source if album else search_source)
     source_parsed = cursor.parse_page(debug=True)
     debug_parsed = parse_debug(debug)[0]
@@ -86,31 +86,29 @@ def compare_retrieval(srcfn, html, debug, album=True):
         try:
             while source_parsed[i]["cmd"] in src_skip:
                 del source_parsed[i]
-        except:
-            pdb.set_trace()
+        except Exception:  # noqa: BLE001
+            pdb.set_trace()  # noqa: T100
         src = source_parsed[i]
         # print src['cmd'], src['lineno']
         src["params"] = [str(z) if not isinstance(z, str) else z for z in src["params"]]
         if "params" not in dbg and src["params"] == []:
             dbg["params"] = []
-        if dbg != src:
-            if dbg.get("params") != src.get("params"):
-                src = src.copy()
-                src["params"] = [_f for _f in src["params"] if _f]
-                if dbg != src:
-                    pdb.set_trace()
-                    print(i, [z for z in src if src[z] != dbg[z]])
-                    pdb.set_trace()
-                    exit()
+        if dbg != src and dbg.get("params") != src.get("params"):
+            src = src.copy()
+            src["params"] = [_f for _f in src["params"] if _f]
+            if dbg != src:
+                pdb.set_trace()  # noqa: T100
+                print(i, [z for z in src if src[z] != dbg[z]])
+                pdb.set_trace()  # noqa: T100
+                sys.exit()
         i += 1
 
 
 if __name__ == "__main__":
     doc_path = "~/Documents/python/puddletag-hg/source/tests"
     fn = doc_path + "discogs_xml_all.src"
-    compare_retrieval(
-        fn,
-        codecs.open(doc_path + "w", "rU", "utf8").read().replace("\r", "\n"),
-        codecs.open(doc_path + "debug.txt", "rU", "utf16").read(),
-        True,
-    )
+    with codecs.open(doc_path + "w", "rU", "utf8") as f:
+        html = f.read().replace("\r", "\n")
+    with codecs.open(doc_path + "debug.txt", "rU", "utf16") as f:
+        debug = f.read()
+    compare_retrieval(fn, html, debug, True)
