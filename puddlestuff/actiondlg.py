@@ -2,6 +2,7 @@ import os
 import sys
 from copy import copy, deepcopy
 from functools import partial
+from typing import ClassVar
 
 from pyparsing import Combine, QuotedString, Word, alphanums, delimited_list
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -201,9 +202,13 @@ class ScrollLabel(QScrollArea):
 class FunctionDialog(QWidget):
     "A dialog that allows you to edit or create a Function class."
 
-    _controls = {"text": PuddleCombo, "combo": QComboBox, "check": QCheckBox}
+    _controls: ClassVar[dict] = {
+        "text": PuddleCombo,
+        "combo": QComboBox,
+        "check": QCheckBox,
+    }
 
-    signals = {
+    signals: ClassVar[dict] = {
         TEXT: "editTextChanged",
         COMBO: "currentIndexChanged",
         CHECKBOX: "stateChanged",
@@ -368,7 +373,7 @@ class FunctionDialog(QWidget):
             filename = FUNC_SETTINGS
         cparser = PuddleConfig(filename)
         function = self.func.function
-        section = "%s_%s" % (function.__module__, function.__name__)
+        section = f"{function.__module__}_{function.__name__}"
         arguments = cparser.get(section, "arguments", [])
         fields = cparser.get(section, "fields", [])
         if not fields:
@@ -379,10 +384,9 @@ class FunctionDialog(QWidget):
         if not filename:
             filename = FUNC_SETTINGS
         function = self.func.function
-        section = "%s_%s" % (function.__module__, function.__name__)
+        section = f"{function.__module__}_{function.__name__}"
 
         cparser = PuddleConfig(filename)
-        args = self.argValues()
         cparser.set(section, "arguments", self.func.args)
         cparser.set(section, "fields", self.func.tag)
 
@@ -409,7 +413,7 @@ class FunctionDialog(QWidget):
                 state = {"__counter": "0", "__total_files": files}
                 val = apply_actions([self.func], audio, state, fields)
             except findfunc.ParseError as e:
-                val = "<b>%s</b>" % (e.message)
+                val = f"<b>{e.message}</b>"
             if val is not None:
                 self.updateExample.emit(val)
             else:
@@ -421,10 +425,7 @@ class FunctionDialog(QWidget):
         if ctype in ["combo", "text"]:
             return value
         elif ctype == "check":
-            if value is True or value == "True":
-                return True
-            else:
-                return False
+            return value is True or value == "True"
         elif ctype == "spinbox":
             try:
                 return int(value)
@@ -888,7 +889,6 @@ class ActionWindow(QDialog):
         self.listbox.moveDown(self.macros)
 
     def remove(self):
-        cparser = PuddleConfig()
         listbox = self.listbox
         rows = sorted([listbox.row(item) for item in listbox.selectedItems()])
 
@@ -903,7 +903,7 @@ class ActionWindow(QDialog):
 
         macros = self.macros
 
-        self.macros = dict((i, macros[k]) for i, k in enumerate(sorted(macros)))
+        self.macros = {i: macros[k] for i, k in enumerate(sorted(macros))}
 
     def enableListButtons(self, val):
         if val == -1:
@@ -944,7 +944,6 @@ class ActionWindow(QDialog):
 
         basename = os.path.basename
 
-        funcs = {}
         cparser = PuddleConfig()
         set_value = partial(cparser.set, "puddleactions")
         get_value = partial(cparser.get, "puddleactions")
@@ -958,7 +957,7 @@ class ActionWindow(QDialog):
             set_value("convert", False)
             findfunc.convert_actions(SAVEDIR, ACTIONDIR)
             if order:
-                old_order = dict([(basename(z), i) for i, z in enumerate(order)])
+                old_order = {basename(z): i for i, z in enumerate(order)}
                 files = glob(os.path.join(ACTIONDIR, "*.action"))
                 order = {}
                 for i, action_fn in enumerate(files):
@@ -978,14 +977,13 @@ class ActionWindow(QDialog):
 
             for fileobj, filename in zip(files, filenames):
                 filename = os.path.join(ACTIONDIR, filename.rsplit("/", maxsplit=1)[1])
-                f = open(filename, "w")
-                f.write(fileobj.read())
-                f.close()
+                with open(filename, "w") as f:
+                    f.write(fileobj.read())
             files = glob(os.path.join(ACTIONDIR, "*.action"))
 
         files = [z for z in order if z in files] + [z for z in files if z not in order]
 
-        return dict((i, Macro(f)) for i, f in enumerate(files))
+        return {i: Macro(f) for i, f in enumerate(files)}
 
     def updateExample(self, *args):
         if self.example is None:
@@ -1015,7 +1013,6 @@ class ActionWindow(QDialog):
             self._examplelabel.hide()
 
     def saveMacro(self, macro, filename=None):
-        cparser = PuddleConfig()
         if filename is None and macro.filename:
             macro.save()
         elif filename:
@@ -1027,7 +1024,7 @@ class ActionWindow(QDialog):
             base = os.path.splitext(filename)[0]
             i = 0
             while os.path.exists(filename):
-                filename = "%s_%d" % (base, i) + ".action"
+                filename = f"{base}_{i}.action"
                 i += 1
             macro.save(filename)
             macro.filename = filename
@@ -1129,7 +1126,7 @@ class ActionWindow(QDialog):
 
         (text, ok) = QInputDialog.getText(
             self,
-            translate("Actions", "Copy %s action" % oldname),
+            translate("Actions", f"Copy {oldname} action"),
             translate("Actions", "Enter a name for the new action."),
             QLineEdit.EchoMode.Normal,
         )
