@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-import socket
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -30,6 +29,9 @@ class RetrievalError(WebServiceError):
     def __init__(self, msg, code=0):
         WebServiceError.__init__(self, msg)
         self.code = code
+
+
+logger = logging.getLogger(__name__)
 
 
 class SubmissionError(WebServiceError):
@@ -115,11 +117,10 @@ def save_cover(info, data, filetype):
 def save_file(filename, data):
     path = join(filename, COVERDIR)
     if exists(path):
-        save_file("%s0" % filename)
+        save_file(f"{filename}0")
         return
-    f = open(filename, "wb")
-    f.write(data)
-    f.close()
+    with open(filename, "wb") as f:
+        f.write(data)
 
 
 def set_coverdir(dirpath):
@@ -133,8 +134,6 @@ def set_savecovers(value):
 
 
 def set_mapping(m):
-    global mapping
-
     mapping.clear()
     mapping.update(m)
 
@@ -159,13 +158,12 @@ def to_file(data, name):
     if os.path.exists(name):
         return to_file(data, name + "_")
 
-    f = open(name, "w")
-    f.write(data)
-    f.close()
+    with open(name, "w") as f:
+        f.write(data)
 
 
 def url_encode_non_ascii(b):
-    return re.sub("[\x80-\xff]", lambda c: "%%%02x" % ord(c.group(0)), b)
+    return re.sub("[\x80-\xff]", lambda c: f"%{ord(c.group(0)):02x}", b)
 
 
 def urlopen(url, mask=True, code=False):
@@ -184,7 +182,7 @@ def urlopen(url, mask=True, code=False):
             return page.read()
     except urllib.error.URLError as e:
         try:
-            msg = "%s (%s)" % (e.reason.strerror, e.reason.errno)
+            msg = f"{e.reason.strerror} ({e.reason.errno})"
         except AttributeError:
             msg = str(e)
 
@@ -196,10 +194,7 @@ def urlopen(url, mask=True, code=False):
                 translate("Defaults", "Connection Error: {}").format(msg)
             )
     except OSError as e:
-        msg = "%s (%s)" % (e.strerror, e.code)
-        raise RetrievalError(msg)
-    except OSError as e:
-        msg = "%s (%s)" % (e.strerror, e.code)
+        msg = f"{e.strerror} ({e.code})"
         raise RetrievalError(msg)
 
 
@@ -234,4 +229,4 @@ for source in ("acoust_id", "amazon", "amg", "discogs", "freedb", "musicbrainz")
     try:
         tagsources.append(import_module("puddlestuff.tagsources." + source).info)
     except ImportError as ie:
-        logging.debug(f"error loading source '{source}: error={ie}")
+        logger.debug(f"error loading source '{source}: error={ie}")
