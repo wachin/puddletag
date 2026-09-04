@@ -153,7 +153,7 @@ class DBParser(ContentHandler):
                         tag["#" + field] = value.strip()
 
                 f = ((k, v.strip()) for k, v in tag.items())
-                tag = dict((k, v) for k, v in f if v)
+                tag = {k: v for k, v in f if v}
 
                 album = tag.get("album", "")
                 artist = tag.get("artist", "")
@@ -166,7 +166,7 @@ class DBParser(ContentHandler):
                     self.tracks[albums[album]].append(tag)
             else:
                 x = ((k, v.strip()) for k, v in self.values.items())
-                x = dict((k, v) for k, v in x if v)
+                x = {k: v for k, v in x if v}
                 x["name"] = self.extratype
                 self.extratype = ""
                 self.extravalues.append(x)
@@ -187,13 +187,13 @@ class DBParser(ContentHandler):
             parser.parse(filename)
         except ValueError:
             if not os.path.exists(filename):
-                msg = "%s does not exist." % filename
+                msg = f"{filename} does not exist."
             else:
-                msg = "%s is not a valid Rhythmbox XML database." % filename
+                msg = f"{filename} is not a valid Rhythmbox XML database."
             raise musiclib.MusicLibError(0, msg)
         except OSError as detail:
             if not os.path.exists(filename):
-                msg = "%s does not exist." % filename
+                msg = f"{filename} does not exist."
             else:
                 msg = detail.strerror()
             raise musiclib.MusicLibError(0, msg)
@@ -217,7 +217,7 @@ class DBParser(ContentHandler):
             version = attrs.get("version")
             self.head = (
                 '<?xml version="1.0" standalone="yes"?>\n'
-                '  <rhythmdb version="%s">' % str(version)
+                f'  <rhythmdb version="{version}">'
             )
             self.startElement = startelement
 
@@ -248,13 +248,13 @@ class RhythmDB(ContentHandler):
             parser.parse(filename)
         except ValueError:
             if not os.path.exists(filename):
-                msg = "%s does not exist." % filename
+                msg = f"{filename} does not exist."
             else:
-                msg = "%s is not a valid Rhythmbox XML database." % filename
+                msg = f"{filename} is not a valid Rhythmbox XML database."
             raise musiclib.MusicLibError(0, msg)
         except OSError as detail:
             if not os.path.exists(filename):
-                msg = "%s does not exist." % filename
+                msg = f"{filename} does not exist."
             else:
                 msg = detail.strerror()
             raise musiclib.MusicLibError(0, msg)
@@ -277,7 +277,7 @@ class RhythmDB(ContentHandler):
             version = attrs.get("version")
             self.head = (
                 '<?xml version="1.0" standalone="yes"?>\n'
-                '  <rhythmdb version="%s">' % str(version)
+                f'  <rhythmdb version="{version}">'
             )
             self.startElement = startelement
 
@@ -311,7 +311,7 @@ class RhythmDB(ContentHandler):
                     index = albums[audio["album"]]
                     self.tracks[index].append(audio)
             else:
-                x = dict([(z, v.strip()) for z, v in self.values.items()])
+                x = {z: v.strip() for z, v in self.values.items()}
                 x["name"] = self.extratype
                 self.extratype = ""
                 self.extravalues.append(x)
@@ -432,52 +432,40 @@ class RhythmDB(ContentHandler):
 
     def save(self):
         filename = path.join(path.dirname(self.filename), "rhythmbox.xml")
-        f = open(filename, "w")
-        entry = [self.head + "\n"]
-        for album in self.tracks:
-            for track in album:
-                entry.append('  <entry type="song">\n')
-                for key, tagvalue in track.items():
-                    try:
-                        if key.startswith("___"):
-                            tagname = key[len("___") :]
-                        else:
-                            temp = RECONVERSION[key](tagvalue)
-                            tagname = list(temp.keys())[0]
-                            tagvalue = temp[tagname]
-                    except TypeError:
-                        tagname = RECONVERSION[key]
-                    except KeyError:
-                        continue
-                    entry.append(
-                        "    <%s>%s</%s>\n"
-                        % (
-                            self._escapedText(tagname),
-                            self._escapedText(tagvalue),
-                            self._escapedText(tagname),
+        with open(filename, "w") as f:
+            entry = [self.head + "\n"]
+            for album in self.tracks:
+                for track in album:
+                    entry.append('  <entry type="song">\n')
+                    for key, tagvalue in track.items():
+                        try:
+                            if key.startswith("___"):
+                                tagname = key[len("___") :]
+                            else:
+                                temp = RECONVERSION[key](tagvalue)
+                                tagname = next(iter(temp.keys()))
+                                tagvalue = temp[tagname]
+                        except TypeError:
+                            tagname = RECONVERSION[key]
+                        except KeyError:
+                            continue
+                        entry.append(
+                            f"    <{self._escapedText(tagname)}>{self._escapedText(tagvalue)}</{self._escapedText(tagname)}>\n"
                         )
+                    entry.append("  </entry>\n")
+                    f.write("".join(entry))
+                    entry = []
+
+            entry = []
+            for value in self.extravalues:
+                entry.append(f'  <entry type ="{value["name"]}">\n')
+                for val in value:
+                    entry.append(
+                        f"    <{self._escapedText(val)}>{self._escapedText(value[val])}</{self._escapedText(val)}>\n"
                     )
                 entry.append("  </entry>\n")
                 f.write("".join(entry))
                 entry = []
-
-        entry = []
-        for value in self.extravalues:
-            entry.append('  <entry type ="%s">\n' % value["name"])
-            [
-                entry.append(
-                    "    <%s>%s</%s>\n"
-                    % (
-                        self._escapedText(val),
-                        self._escapedText(value[val]),
-                        self._escapedText(val),
-                    )
-                )
-                for val in value
-            ]
-            entry.append("  </entry>\n")
-            f.write("".join(entry))
-            entry = []
         f.write("</rhythmdb>")
         f.close()
         backup = path.join(path.dirname(self.filename), "oldrhythmdb.xml")
@@ -491,7 +479,7 @@ class RhythmDB(ContentHandler):
     def search(self, term):
         term = term.upper()
         ret = []
-        artists = set([z for z in self.albums if term in z.upper()])
+        artists = {z for z in self.albums if term in z.upper()}
         [ret.extend(self.getTracks(z)) for z in artists]
         others = set(self.albums).difference(artists)
 
@@ -567,8 +555,8 @@ class InitWidget(QWidget):
         dbpath = str(self.dbpath.text())
         try:
             return RhythmDB(dbpath)
-        except musiclib.MusicLibError as e:
-            raise e
+        except musiclib.MusicLibError:
+            raise
         except Exception as e:
             raise musiclib.MusicLibError(
                 0,
@@ -584,4 +572,5 @@ if __name__ == "__main__":
     # import pdb
     # pdb.set_trace()
     print([i for i, z in enumerate(y) if len(z) > 1])
-    print(list(x.keys())[0], x[list(x.keys())[0]], y[34])
+    first_key = next(iter(x))
+    print(first_key, x[first_key], y[34])
