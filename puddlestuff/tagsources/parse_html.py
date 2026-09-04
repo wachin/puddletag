@@ -38,17 +38,17 @@ class SoupWrapper:
         regular_items = query_items.get(True, [])
         re_items = query_items.get(False, [])
         xpath_query = " and ".join(
-            "contains(concat(' ',normalize-space(@class),' '),' %s ')" % value
+            f"contains(concat(' ',normalize-space(@class),' '),' {value} ')"
             if key == "class"
-            else "@%s='%s'" % (key, value)
+            else f"@{key}='{value}'"
             for key, value in regular_items
         )
         if xpath_query:
-            xpath_query = "[%s]" % xpath_query
+            xpath_query = f"[{xpath_query}]"
         if len(args) == 1 and not isinstance(args[0], dict):
-            query = ".//%s%s" % (args[0], xpath_query)
+            query = f".//{args[0]}{xpath_query}"
         else:
-            query = ".//*%s" % xpath_query
+            query = f".//*{xpath_query}"
         results = self.element.xpath(query)
         if re_items:
             new_results = []
