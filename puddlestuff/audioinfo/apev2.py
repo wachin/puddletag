@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import ClassVar
 
 from mutagen.apev2 import BINARY, TEXT, APENoHeaderError, APEv2File, APEValue
 from mutagen.monkeysaudio import MonkeysAudio, MonkeysAudioHeaderError
@@ -83,9 +84,14 @@ def get_class(mutagen_file, filetype, attrib_fields, header_error=None):
 
         Tags are used as in ogg.py"""
 
-        IMAGETAGS = (util.MIMETYPE, util.DESCRIPTION, util.DATA, util.IMAGETYPE)
-        mapping = {}
-        revmapping = {}
+        IMAGETAGS: ClassVar[tuple] = (
+            util.MIMETYPE,
+            util.DESCRIPTION,
+            util.DATA,
+            util.IMAGETYPE,
+        )
+        mapping: ClassVar[dict] = {}
+        revmapping: ClassVar[dict] = {}
         apev2 = True
 
         def __init__(self, filename=None):
@@ -199,7 +205,7 @@ def get_class(mutagen_file, filetype, attrib_fields, header_error=None):
                     apeinfo.append([k, str(getattr(info, v))])
                 except AttributeError:
                     continue
-            return [("File", fileinfo), ("%s Info" % self.filetype, apeinfo)]
+            return [("File", fileinfo), (f"{self.filetype} Info", apeinfo)]
 
         @keys_deco
         def keys(self):
