@@ -14,8 +14,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
 )
 
-from . import puddleobjects
-from . import puddletag
+from . import puddleobjects, puddletag
 from .constants import ACTIONDIR
 from .findfunc import load_macro_info as load_action
 from .puddleobjects import (
