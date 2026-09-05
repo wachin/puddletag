@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from . import CDDB
 
 CDDB.proto = 6  # utf8 instead of latin1
@@ -21,7 +23,7 @@ def sort_func(key, default):
         track = to_string(audio.get(key, [default]))
         try:
             return int(track)
-        except:
+        except (TypeError, ValueError):
             return track
 
     return func
@@ -182,7 +184,7 @@ def split_by_tag(tracks, main="artist", secondary="album"):
 class FreeDB:
     name = "FreeDB"
     tooltip = translate("FreeDB", "<b>FreeDB does not support text-based searches.</b>")
-    group_by = ["album", None]
+    group_by: ClassVar[list] = ["album", None]
 
     def __init__(self):
         object.__init__(self)
