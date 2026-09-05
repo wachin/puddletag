@@ -34,7 +34,7 @@ def _remove_tag(f, tag):
             f.link(f.filepath)
         else:
             _delete[tag](f.filepath)
-    except:
+    except Exception:  # noqa: BLE001
         traceback.print_exc()
         return
 
@@ -66,7 +66,7 @@ def remove_tag(tag, parent):
                     yield m, len(rows)
         status["model"].undolevel += 1
 
-    s = progress(func, translate("Tag Tools", "Removing %s tag: " % tag), len(files))
+    s = progress(func, translate("Tag Tools", f"Removing {tag} tag: "), len(files))
     s(parent)
 
 
