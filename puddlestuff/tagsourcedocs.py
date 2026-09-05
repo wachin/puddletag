@@ -1,8 +1,11 @@
 """Helpers for documenting tag sources."""
 
+import logging
 from dataclasses import dataclass
 
 from .constants import CHECKBOX, COMBO, SPINBOX, TAGLIST, TEXT
+
+logger = logging.getLogger(__name__)
 
 PREFERENCE_TYPES = {
     TEXT: "text",
@@ -44,6 +47,7 @@ def iter_tag_source_docs(sources=None):
         try:
             instance = source()
         except Exception:
+            logger.exception("Failed to instantiate tag source %s", source)
             continue
 
         group_by = tuple(
