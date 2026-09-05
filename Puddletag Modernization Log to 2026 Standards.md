@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 15 files (at 2026-09-05)
-**Files completed:** 67 files (this session)
-**Progress:** ~72% by file count, ~98% by error count (634/644 errors fixed)
+**Total files with errors:** 14 files (at 2026-09-05)
+**Files completed:** 68 files (this session)
+**Progress:** ~72% by file count, ~98% by error count (636/644 errors fixed)
 
 ---
 
@@ -294,6 +294,7 @@ Other system modules.
 - [*] `puddlestuff/loadshortcuts.py` - Shortcut loading
 - [*] `puddlestuff/confirmations.py` - Confirmations
 - [*] `puddlestuff/shortcutsettings.py` - Shortcut settings
+- [*] `puddlestuff/about.py` - About dialog
 - [*] `puddlestuff/m3u.py` - Playlist handling
 - [*] `puddlestuff/cli.py` - Command-line interface
 - [*] `puddlestuff/musiclib.py` - Music library
