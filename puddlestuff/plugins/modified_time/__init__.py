@@ -42,7 +42,9 @@ def add_seconds(parent=None):
     def func():
         for row, f in zip(rows, files):
             modified_time = lngtime(f["__modified"])
-            modified_time = datetime.fromtimestamp(modified_time) + timedelta(seconds=2)
+            modified_time = datetime.fromtimestamp(  # noqa: DTZ006
+                modified_time
+            ) + timedelta(seconds=2)
             accessed_time = lngtime(f["__accessed"])
             try:
                 os.utime(
