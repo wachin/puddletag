@@ -80,12 +80,10 @@ class ActionEditorWidget(QLabel):
         elif event.key() == Qt.Key.Key_Control:
             if Qt.Key.Key_Control in self.modifiers:
                 del self.modifiers[Qt.Key.Key_Control]
-        elif event.key() == Qt.Key.Key_Meta:
-            if Qt.Key.Key_Meta in self.modifiers:
-                del self.modifiers[Qt.Key.Key_Meta]
-        elif event.key() == Qt.Key.Key_Alt:
-            if Qt.Key.Key_Alt in self.modifiers:
-                del self.modifiers[Qt.Key.Key_Alt]
+        elif event.key() == Qt.Key.Key_Meta and Qt.Key.Key_Meta in self.modifiers:
+            del self.modifiers[Qt.Key.Key_Meta]
+        elif event.key() == Qt.Key.Key_Alt and Qt.Key.Key_Alt in self.modifiers:
+            del self.modifiers[Qt.Key.Key_Alt]
 
         self.setText("+".join(list(self.modifiers.values())))
 
@@ -324,11 +322,11 @@ class ActionEditorDialog(QWidget):
         thisRow = self.actionTable.row(item)
 
         if shortcutText:
-            for row in range(self.actionTable.rowCount()):
-                if row == thisRow:
+            for current_row in range(self.actionTable.rowCount()):
+                if current_row == thisRow:
                     continue
 
-                other = self.actionTable.item(row, 1)
+                other = self.actionTable.item(current_row, 1)
 
                 if other.text() == shortcutText:
                     other.setText(item.oldShortcutText)
