@@ -146,9 +146,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 20 files (at 2026-09-04)
-**Files completed:** 62 files (this session)
-**Progress:** ~71% by file count, ~97% by error count (624/644 errors fixed)
+**Total files with errors:** 19 files (at 2026-09-04)
+**Files completed:** 63 files (this session)
+**Progress:** ~71% by file count, ~97% by error count (626/644 errors fixed)
 
 ---
 
@@ -254,6 +254,7 @@ Main window components.
 - [*] `puddlestuff/mainwin/logwin.py`
 - [*] `puddlestuff/mainwin/releasewidget.py`
 - [*] `puddlestuff/mainwin/teststuff.py`
+- [*] `puddlestuff/mainwin/action_dialogs.py`
 
 ### Priority 6: Data Model
 Main table model and tag handling.
