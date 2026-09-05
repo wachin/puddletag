@@ -52,7 +52,7 @@ def toggle_preview_mode():
 
 def clear_selected():
     files = status["selectedfiles"]
-    _previews.append(dict([(f, deepcopy(f.preview)) for f in files]))
+    _previews.append({f: deepcopy(f.preview) for f in files})
     emit("setpreview", [{} for f in files])
 
 
@@ -60,11 +60,11 @@ def clear_selected_cells():
     files = status["selectedfiles"]
     selected = status["selectedtags"]
 
-    _previews.append(dict([(f, f.preview) for f in files]))
+    _previews.append({f: f.preview for f in files})
 
     ret = []
     for fields, f in zip(selected, files):
-        ret.append(dict([(k, v) for k, v in f.preview.items() if k not in fields]))
+        ret.append({k: v for k, v in f.preview.items() if k not in fields})
     emit("setpreview", ret)
 
 
