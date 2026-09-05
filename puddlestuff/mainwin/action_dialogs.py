@@ -31,7 +31,7 @@ class ActionDialog(ActionWindow):
 
     def _update(self):
         try:
-            self.example, selected = self._status["firstselection"]
+            self.example, _selected = self._status["firstselection"]
         except IndexError:
             self.example = None
         if self.isVisible():
@@ -101,7 +101,7 @@ class FunctionDialog(CreateFunction):
             widget.updateExample.emit("")
             return
 
-        field = list(selected.keys())[0]
+        field = next(iter(selected))
         self.example = f
         self._text = f.get(field, "")
 
