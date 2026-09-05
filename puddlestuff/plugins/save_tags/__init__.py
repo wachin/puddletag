@@ -17,11 +17,10 @@ def save_tags(files, fn):
     for f in files:
         try:
             tags.append(mutagen.File(f))
-        except:
+        except Exception:  # noqa: BLE001
             traceback.print_exc()
-    output = open(fn, "wb")
-    pickle.dump(tags, output)
-    output.close()
+    with open(fn, "wb") as output:
+        pickle.dump(tags, output)
 
 
 def export_tags():
