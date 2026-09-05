@@ -17,10 +17,7 @@ def sanitize(type_, value, default=None):
         except (TypeError, ValueError):
             return default
     elif type_ is bool:
-        if value is True or value == "True":
-            return True
-        else:
-            return False
+        return value is True or value == "True"
     else:
         return value
 
