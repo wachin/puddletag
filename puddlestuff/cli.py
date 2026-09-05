@@ -1,7 +1,10 @@
+import logging
 import os
 
 from . import findfunc
 from .audioinfo import Tag
+
+logger = logging.getLogger(__name__)
 
 
 def cli_export(paths, template_name, output_file):
@@ -16,15 +19,15 @@ def cli_export(paths, template_name, output_file):
                         t = Tag(os.path.join(root, f))
                         if t:
                             tags.append(t)
-                    except:
-                        pass
+                    except Exception:
+                        logger.exception("Failed to load %s", os.path.join(root, f))
         else:
             try:
                 t = Tag(path)
                 if t:
                     tags.append(t)
-            except:
-                pass
+            except Exception:
+                logger.exception("Failed to load %s", path)
 
     if not tags:
         print("No audio files found.")
@@ -93,7 +96,7 @@ def cli_tag(paths, tags_to_set):
                         t[k] = v
                 t.save()
                 count += 1
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Error tagging {path}: {e}")
 
     print(f"Updated {count} files.")
