@@ -1,6 +1,8 @@
 import logging
 from collections import defaultdict
 
+logger = logging.getLogger(__name__)
+
 status = {}
 
 
@@ -14,7 +16,7 @@ def connect_shortcut(action, enabled, disabled=None, togglecheck=None):
     if enabled in emits:
         [getattr(c, enabled).connect(action.setEnabled) for c in emits[enabled]]
     else:
-        logging.error("No enable signal found for " + action.text())
+        logger.error("No enable signal found for %s", action.text())
         action.setEnabled(False)
 
     if togglecheck and togglecheck in emits:
