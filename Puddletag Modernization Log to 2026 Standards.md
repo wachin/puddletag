@@ -1,5 +1,3 @@
-puddletag-dev/puddletag/MODERNIZACION_2026.md
-
 
 # 📋 Puddletag Modernization Log to 2026 Standards
 
