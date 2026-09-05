@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 14 files (at 2026-09-05)
-**Files completed:** 68 files (this session)
-**Progress:** ~72% by file count, ~98% by error count (636/644 errors fixed)
+**Total files with errors:** 13 files (at 2026-09-05)
+**Files completed:** 69 files (this session)
+**Progress:** ~72% by file count, ~99% by error count (637/644 errors fixed)
 
 ---
 
@@ -237,6 +237,7 @@ Integration with external services.
 - [*] `puddlestuff/tagsources/mp3tag/__init__.py`
 - [*] `puddlestuff/tagsources/mp3tag/funcs.py`
 - [*] `puddlestuff/tagsources/mp3tag/parse_debug.py`
+- [*] `puddlestuff/tagsources/exampletags.py`
 
 ### Priority 5: Main Interface (mainwin)
 Main window components.
