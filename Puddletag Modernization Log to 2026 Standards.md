@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 18 files (at 2026-09-05)
-**Files completed:** 64 files (this session)
-**Progress:** ~71% by file count, ~97% by error count (628/644 errors fixed)
+**Total files with errors:** 17 files (at 2026-09-05)
+**Files completed:** 65 files (this session)
+**Progress:** ~71% by file count, ~97% by error count (630/644 errors fixed)
 
 ---
 
@@ -290,6 +290,7 @@ Bundled plugins.
 Other system modules.
 
 - [*] `puddlestuff/helperwin.py` - Auxiliary windows
+- [*] `puddlestuff/genres.py` - Genre management
 - [*] `puddlestuff/loadshortcuts.py` - Shortcut loading
 - [*] `puddlestuff/shortcutsettings.py` - Shortcut settings
 - [*] `puddlestuff/m3u.py` - Playlist handling
