@@ -20,9 +20,8 @@ def load_genres(filepath=None):
 def save_genres(genres, filepath=None):
     if not filepath:
         filepath = os.path.join(CONFIGDIR, "genres")
-    f = open(filepath, "w")
-    f.write("\n".join(genres))
-    f.close()
+    with open(filepath, "w") as f:
+        f.write("\n".join(genres))
 
 
 class Genres(QWidget):
