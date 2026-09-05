@@ -141,7 +141,7 @@ $loopend()</table>
                 self, "puddletag", translate("Export", "Export completed successfully.")
             )
             self.accept()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             traceback.print_exc()
             QMessageBox.critical(
                 self,
