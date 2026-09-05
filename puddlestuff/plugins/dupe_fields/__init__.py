@@ -28,11 +28,10 @@ def highlight_dupe_field():
     value = prev.get(field)
 
     for f in files[1:]:
-        if f.get(field) == value:
-            if value is not None:
-                if highlight and highlight[-1] != prev or not highlight:
-                    highlight.append(prev)
-                highlight.append(f)
+        if f.get(field) == value and value is not None:
+            if highlight and highlight[-1] != prev or not highlight:
+                highlight.append(prev)
+            highlight.append(f)
         value = f.get(field)
         prev = f
     obj.highlight.emit(highlight)
@@ -57,7 +56,6 @@ def init(parent=None):
     )
     add_shortcuts("&Plugins", [sep(), action, sep()])
 
-    global obj
     obj.receives = []
     obj.emits = ["highlight"]
     connect_control(obj)
