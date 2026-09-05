@@ -2,8 +2,32 @@
 # 📋 Puddletag Modernization Log to 2026 Standards
 
 **Start date:** August 29, 2026
-**Current status:** Phase 1 in progress (Code Hygiene)
+**Current status:** 🎉 MILESTONE COMPLETED — Phase 1 (Code Hygiene) finished
 **Strategy:** Incremental, file-by-file modernization to avoid breaking functionality
+
+---
+
+# 🎉 MILESTONE COMPLETED — 644/644 errors fixed
+
+**(September 5, 2026)** `ruff check puddlestuff/` now reports **ZERO errors** across the entire project.
+
+## 📊 Final project status
+
+| Metric | Status |
+|---|---|
+| `ruff check puddlestuff/` | **0 errors** (down from 644) ✅ |
+| `ruff format --check puddlestuff/` | 95 files formatted ✅ |
+| Tests (`python3 -m pytest tests/`) | **28/28 passed** ✅ |
+| Files modernized | 76 (this session) |
+| Errors fixed | 644/644 (100%) |
+| Commits in this modernization push | ~78 |
+
+Every fix was verified file by file with the full pipeline before each commit:
+`ruff check` (0 errors) → `ruff format --check` → `python3 -m pytest tests/` (28 passed) → module import smoke test (`QT_QPA_PLATFORM=offscreen python3 -c "import ..."`).
+
+The lint-driven pass also uncovered **real latent bugs** (see "Session 3" below for the full list), the most notable being `duplicates/matchfuncs.py`, where `_jaro_winkler()` returned its input tuple instead of calling the actual algorithm — broken since the PyQt6 port and only reachable when `python3-levenshtein` is installed.
+
+What remains is **functional verification**, not code cleanup: manually running the app (`python3 puddletag`), loading real audio files, editing/saving tags, and testing the tag sources (see the Final Verification Checklist below).
 
 ---
 
@@ -438,30 +462,35 @@ git log --oneline | head -20
 
 ## 📅 Next Steps
 
-1. Continue with the remaining 3 files in Priority 1: `puddlestuff/__init__.py`, `puddlestuff/constants.py`, `puddlestuff/translations.py`
-2. Then move through Priorities 4-12 of the remaining files (about 22 errors total in roughly 18 files)
-3. Follow the defined workflow
-4. Update this document after each completed file
-5. Commit after each file
+Code modernization is **complete**. What remains is functional verification and packaging:
 
-### Session 3 (2026-09-04): Major modernization push
+1. Run the app manually (`python3 puddletag`) and confirm it starts correctly
+2. Load a directory with real audio files; edit and save tags
+3. Test tag source retrieval (MusicBrainz, Discogs, etc.)
+4. Test export/import and the bundled plugins
+5. Then the ROADMAP.md extras: AppImage build (requires `python3-pyinstaller`) and Matroska/WebM support (blocked by Mutagen)
 
-- Modernized 61 files across 2 long sessions today
-- 622/644 ruff errors fixed (97%)
+### Session 3 (2026-09-04 → 2026-09-05): Major modernization push — COMPLETED
+
+- Modernized 76 files across the session
+- **644/644 ruff errors fixed (100%)** — `ruff check puddlestuff/` = 0 errors
 - All 28 tests passing throughout
 - Several latent bugs uncovered and fixed:
-  - `export_tags/__init__.py`: silent `try/except/pass` swallowing file load errors
+  - `export_tags/__init__.py`: silent `try/except/pass` swallowing file load errors; undefined `b64_to_img` (images were never restored from backup); bare `exit()` calls
   - `m3u.py`: duplicate `open()` calls and `try/except/str(e)` no-op
   - `m3u.py`: loop variable shadowing imported `dirname`
-  - `tagversions.py` and `findfunc.py`: `QModelIndex()` in default args
+  - `confirmations.py`: lambda in a loop captured `i` by reference (all config sections were saved under the last index)
+  - `tagmodel.py`/`puddlesettings.py`: `QModelIndex()` in default args (B008)
   - `puddletag.py` and `teststuff.py`: undefined `logging` references
   - `action_shortcuts.py`: self-assignment no-op
-  - `duplicates/matchfuncs.py`: _jaro_winkler() returned the input tuple instead of calling jaro_winkler() — the algorithm was broken since the PyQt6 port
+  - `duplicates/matchfuncs.py`: _jaro_winkler() returned the input tuple instead of calling jaro_winkler() — the algorithm was broken since the PyQt6 port (only reachable with python3-levenshtein installed)
+  - `dupefuncs.py`, `loadshortcuts.py`, `releasewidget.py`: undefined names in `__main__` demo blocks
   - Various silent `try/except/continue` patterns that hid errors
 - Marked completed files in this checklist with `[*]`
 - This is the third 'modernization session' for the project
 
 ---
 
-**Last updated:** September 4, 2026 (Session 3)
-**Next file to modernize:** `puddlestuff/__init__.py`
+**Last updated:** September 5, 2026 (Session 3 — COMPLETE)
+**Milestone:** `ruff check puddlestuff/` = 0 errors
+**Next step:** functional verification (`python3 puddletag`)
