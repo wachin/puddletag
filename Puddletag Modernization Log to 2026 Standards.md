@@ -146,9 +146,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 22 files (at 2026-09-04)
-**Files completed:** 61 files (this session)
-**Progress:** ~71% by file count, ~97% by error count (622/644 errors fixed)
+**Total files with errors:** 20 files (at 2026-09-04)
+**Files completed:** 62 files (this session)
+**Progress:** ~71% by file count, ~97% by error count (624/644 errors fixed)
 
 ---
 
@@ -250,6 +250,7 @@ Main window components.
 - [*] `puddlestuff/mainwin/previews.py`
 - [*] `puddlestuff/mainwin/storedtags.py`
 - [*] `puddlestuff/mainwin/tagtools.py`
+- [*] `puddlestuff/mainwin/artwork.py`
 - [*] `puddlestuff/mainwin/logwin.py`
 - [*] `puddlestuff/mainwin/releasewidget.py`
 - [*] `puddlestuff/mainwin/teststuff.py`
