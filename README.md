@@ -3,7 +3,6 @@
 ![Version](https://img.shields.io/badge/version-2.6.0-blue.svg)
 ![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
-![PyPI](https://img.shields.io/pypi/v/puddletag.svg)
 ![Linting](https://img.shields.io/badge/linting-ruff-261230.svg)
 ![Ruff Status](https://img.shields.io/badge/ruff-0%20errors-brightgreen.svg)
 ![Tests](https://img.shields.io/badge/tests-28%20passed-brightgreen.svg)
@@ -103,22 +102,6 @@ This keeps all dependencies inside the repository's `venv` directory without
 touching your system Python.
 
 ## 📦 Installing from a package
-
-### PyPI
-
-Puddletag is available on [PyPI](https://pypi.org/project/puddletag/).
-
-In addition to the full releases, every time we merge a PR or commit a change, we
-automatically release a new version on
-[TestPyPI](https://test.pypi.org/project/puddletag/), so if you want to try a brand
-new feature or a recent bugfix, you can give these pre-releases a try.
-
-There are several tools to install puddletag via PyPI, for example
-[pip](https://packaging.python.org/en/latest/tutorials/installing-packages/#installing-to-the-user-site),
-[pipx](https://pypa.github.io/pipx/installation/),
-[pipenv](https://pipenv.pypa.io/en/latest/), and several others. Choose the one that
-suits best your workflow, but we strongly recommend you create an isolated, local
-environment when installing third-party software.
 
 ### Distributions package
 
