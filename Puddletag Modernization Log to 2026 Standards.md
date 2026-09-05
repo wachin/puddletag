@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 17 files (at 2026-09-05)
-**Files completed:** 65 files (this session)
-**Progress:** ~71% by file count, ~97% by error count (630/644 errors fixed)
+**Total files with errors:** 16 files (at 2026-09-05)
+**Files completed:** 66 files (this session)
+**Progress:** ~72% by file count, ~98% by error count (632/644 errors fixed)
 
 ---
 
@@ -194,7 +194,7 @@ git commit -m "Modernize file_name.py: f-strings, type hints, 2026 syntax"
 These files are used by the entire system; modernize them first.
 
 - [ ] `puddlestuff/__init__.py` - Package initialization
-- [ ] `puddlestuff/constants.py` - Global constants
+- [*] `puddlestuff/constants.py` - Global constants
 - [ ] `puddlestuff/translations.py` - Translation system
 - [*] `puddlestuff/puddleobjects.py` - Base objects (large file, ~2500 lines)
 - [*] `puddlestuff/puddletag.py` - Main application
