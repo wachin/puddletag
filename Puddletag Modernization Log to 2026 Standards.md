@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 19 files (at 2026-09-04)
-**Files completed:** 63 files (this session)
-**Progress:** ~71% by file count, ~97% by error count (626/644 errors fixed)
+**Total files with errors:** 18 files (at 2026-09-05)
+**Files completed:** 64 files (this session)
+**Progress:** ~71% by file count, ~97% by error count (628/644 errors fixed)
 
 ---
 
@@ -264,6 +264,7 @@ Player integration.
 
 - [*] `puddlestuff/libraries/quodlibetlib.py`
 - [*] `puddlestuff/libraries/rhythmbox.py`
+- [*] `puddlestuff/libraries/mpdlib.py`
 
 ### Priority 8: Mass Tagging
 Masstagging functionality.
