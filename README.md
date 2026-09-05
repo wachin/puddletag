@@ -8,6 +8,14 @@
 ![Tests](https://img.shields.io/badge/tests-28%20passed-brightgreen.svg)
 ![Qt](https://img.shields.io/badge/GUI-PyQt6-green.svg)
 
+> [!IMPORTANT]
+> **This repository is a fork that hosts a new, modernized version of puddletag
+> (2.6.0).** It is **not** distributed through your distribution's package
+> manager: installing with `apt`, `dnf`, `pacman`/AUR, `nix` or any of the
+> methods listed under _"Installing from a package"_ below will only get you
+> the **old upstream version**. To run **this** version, use one of the two
+> methods in _[Getting Started](#-getting-started)_ (system packages or venv).
+
 ![Screenshot](docs/_images/5.png)
 
 puddletag is an audio tag editor (primarily created) for GNU/Linux similar to the
@@ -25,7 +33,7 @@ supported.
 
 [Documentation](https://docs.puddletag.net/) ·
 [Changelog](changelog) ·
-[Issue Tracker](https://github.com/puddletag/puddletag/issues) ·
+[Issue Tracker](https://github.com/wachin/puddletag/issues) ·
 [Contributing](#-contributing)
 
 ## ✨ Features
@@ -74,10 +82,10 @@ sudo apt install python3 python3-pyqt6 python3-pyqt6.qtsvg python3-mutagen \
 >   algorithms (without it, puddletag falls back to difflib's SequenceMatcher).
 > - `python3-pytest` — only needed to run the test suite during development.
 
-Then clone the repository and run puddletag:
+Then clone this repository and run puddletag:
 
 ```sh
-git clone https://github.com/puddletag/puddletag.git
+git clone https://github.com/wachin/puddletag.git
 cd puddletag
 python3 puddletag
 ```
@@ -91,7 +99,7 @@ you prefer isolated environments. You only need `python3` and `python3-venv`
 (on Debian/Ubuntu: `sudo apt install python3-venv`).
 
 ```sh
-git clone https://github.com/puddletag/puddletag.git
+git clone https://github.com/wachin/puddletag.git
 cd puddletag
 python3 -m venv .
 bin/pip3 install -r requirements.txt
@@ -102,6 +110,14 @@ This keeps all dependencies inside the repository's `venv` directory without
 touching your system Python.
 
 ## 📦 Installing from a package
+
+> [!WARNING]
+> The instructions in this section install the **old upstream version** of
+> puddletag, packaged by each distribution. **They do not include the new
+> features and fixes of this fork** (PyQt6 migration, 2026 code modernization,
+> expanded format support, etc.). See the
+> [changelog](changelog) for the differences. To run this fork's version,
+> use [Getting Started](#-getting-started) instead.
 
 ### Distributions package
 
@@ -278,7 +294,6 @@ ruff check puddlestuff/ && ruff format --check puddlestuff/ && python3 -m pytest
 
 ## 🙏 Credits
 
-puddletag is maintained by its
-[community of contributors](https://github.com/puddletag/puddletag/graphs/contributors).
-
-Originally created by concentricpuddle.
+puddletag was originally created by concentricpuddle and is maintained upstream by
+its [community of contributors](https://github.com/puddletag/puddletag/graphs/contributors).
+This modernized fork builds on their work.
