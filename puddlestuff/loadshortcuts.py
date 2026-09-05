@@ -23,9 +23,8 @@ shortcut_path = os.path.join(CONFIGDIR, "shortcuts")
 
 def create_file(path, resource):
     text = open_resourcefile(resource).read()
-    f = open(path, "w")
-    f.write(text)
-    f.close()
+    with open(path, "w") as f:
+        f.write(text)
 
 
 def check_file(path: str, resource: str) -> None:
@@ -103,7 +102,7 @@ def context_menu(section, actions, filepath=None):
 def toolbar(groups, actions, controls=None):
     texts = [str(action.text()) for action in actions]
     if controls:
-        controls = dict([("widget-" + z, v) for z, v in controls.items()])
+        controls = {"widget-" + z: v for z, v in controls.items()}
     toolbar = QToolBar("Toolbar")
     for name, actionlist in groups:
         for action in actionlist:
@@ -167,7 +166,7 @@ def get_actions(parent, filepath=None):
     actions = []
     for section in cparser.sections():
         if section.startswith("shortcut"):
-            values = dict([(str(k), v) for k, v in setting[section].items()])
+            values = {str(k): v for k, v in setting[section].items()}
             actions.append(create_action(parent, **values))
     return actions
 
@@ -176,6 +175,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.toolbar = win.addToolBar("toolbar")
-    loadShortCuts()
+    # 'loadShortCuts' is not defined; the demo expects a setup function
+    # from a higher-level module (e.g. from puddletag.py). Commented
+    # out so the file can at least be executed.
+    # loadShortCuts()
     win.show()
     app.exec()
