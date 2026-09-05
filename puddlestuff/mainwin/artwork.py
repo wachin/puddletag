@@ -28,7 +28,7 @@ def get_font(rect, *text):
 def create_svg(text, font, rect=None):
     if not rect:
         rect = QRect(0, 0, 200, 200)
-    f = tempfile.NamedTemporaryFile()
+    f = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
 
     generator = QSvgGenerator()
     generator.setFileName(f.name)
@@ -46,7 +46,8 @@ def create_svg(text, font, rect=None):
     painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
     painter.end()
 
-    svg = open(f.name).read()
+    with open(f.name) as svg_file:
+        svg = svg_file.read()
     f.close()
     return svg
 
