@@ -45,7 +45,7 @@ class LogDialog(QDialog):
                     self.log_edit.verticalScrollBar().setValue(
                         self.log_edit.verticalScrollBar().maximum()
                     )
-            except Exception as e:
+            except OSError as e:
                 self.log_edit.setPlainText(f"Error reading log: {e}")
         else:
             self.log_edit.setPlainText("Log file does not exist.")
@@ -56,7 +56,7 @@ class LogDialog(QDialog):
                 with open(LOG_FILENAME, "w", encoding="utf-8") as f:
                     f.write("")
                 self.refresh_log()
-            except Exception as e:
+            except OSError as e:
                 self.log_edit.setPlainText(f"Error clearing log: {e}")
 
 
