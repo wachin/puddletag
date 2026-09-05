@@ -1,39 +1,33 @@
-<div align="center">
-
 # puddletag
+
+![Version](https://img.shields.io/badge/version-2.6.0-blue.svg)
+![License](https://img.shields.io/badge/license-GPLv3-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)
+![PyPI](https://img.shields.io/pypi/v/puddletag.svg)
+![Linting](https://img.shields.io/badge/linting-ruff-261230.svg)
+![Ruff Status](https://img.shields.io/badge/ruff-0%20errors-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-28%20passed-brightgreen.svg)
+![Qt](https://img.shields.io/badge/GUI-PyQt6-green.svg)
 
 ![Screenshot](docs/_images/5.png)
 
-**A powerful, simple, audio tag editor for GNU/Linux**
-
-puddletag is an audio tag editor similar to the Windows program
-[Mp3tag](https://www.mp3tag.de/en/). Unlike most taggers for GNU/Linux, it uses a
+puddletag is an audio tag editor (primarily created) for GNU/Linux similar to the
+Windows program, Mp3tag. Unlike most taggers for GNU/Linux, it uses a
 **spreadsheet-like layout** so that all the tags you want to edit by hand are visible
 and easily editable.
 
-[Report a Bug](https://github.com/puddletag/puddletag/issues) ·
-[Request a Feature](https://github.com/puddletag/puddletag/issues) ·
+The usual tag editor features are supported like extracting tag information from
+filenames, renaming files based on their tags by using patterns and basic tag editing.
+
+Then there're _Functions_, which can do things like replace text, trim it, do case
+conversions, etc. _Actions_ can automate repetitive tasks. Doing web lookups using
+AcoustID, Amazon, Discogs (does cover art too!), FreeDB and MusicBrainz is also
+supported.
+
 [Documentation](https://docs.puddletag.net/) ·
-[Changelog](changelog)
-
-</div>
-
----
-
-## Badges
-
-| | |
-|---|---|
-| **Version** | [![Version](https://img.shields.io/badge/version-2.6.0-blue.svg)](changelog) |
-| **License** | [![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0.html) |
-| **Python** | [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/) |
-| **PyPI** | [![PyPI](https://img.shields.io/pypi/v/puddletag.svg)](https://pypi.org/project/puddletag/) |
-| **Linting** | [![Code Style: ruff](https://img.shields.io/badge/linting-ruff-261230.svg)](https://github.com/astral-sh/ruff) |
-| **Lint Status** | ![Errors](https://img.shields.io/badge/ruff-0%20errors-brightgreen.svg) |
-| **Tests** | [![Tests](https://img.shields.io/badge/tests-28%20passed-brightgreen.svg)](tests/) |
-| **Qt Toolkit** | [![Qt6](https://img.shields.io/badge/GUI-PyQt6-green.svg)](https://www.riverbankcomputing.com/software/pyqt/) |
-
----
+[Changelog](changelog) ·
+[Issue Tracker](https://github.com/puddletag/puddletag/issues) ·
+[Contributing](#-contributing)
 
 ## ✨ Features
 
@@ -55,7 +49,60 @@ and easily editable.
 **WavPack** (wv) · **OptimFROG** (ofr, ofs) · **TAK** (tak) · **TrueAudio** (tta) ·
 **WMA** (wma) · **Opus** (opus)
 
-## 📦 Installation
+## 🚀 Getting Started
+
+There are two ways to run puddletag from source: using **system packages**
+(recommended on Debian, Ubuntu and derivatives), or using a **Python virtual
+environment** with pip (works on any distribution).
+
+### Option 1: System packages (Debian, Ubuntu and derivatives)
+
+Install all the dependencies as system packages:
+
+```sh
+sudo apt install python3 python3-pyqt6 python3-pyqt6.qtsvg python3-mutagen \
+    python3-configobj python3-pyparsing python3-unidecode python3-lxml \
+    python3-acoustid libchromaprint-tools
+```
+
+> **Note:** `python3-lxml` is required by the Discogs/HTML tag-source parsers, and
+> `python3-acoustid` + `libchromaprint-tools` provide AcoustID (fingerprint
+> recognition) support. Both are optional at runtime but recommended for the full
+> feature set.
+
+> **Optional extras:**
+> - `python3-levenshtein` — enables the Jaro/Jaro-Winkler duplicate-finding
+>   algorithms (without it, puddletag falls back to difflib's SequenceMatcher).
+> - `python3-pytest` — only needed to run the test suite during development.
+
+Then clone the repository and run puddletag:
+
+```sh
+git clone https://github.com/puddletag/puddletag.git
+cd puddletag
+python3 puddletag
+```
+
+No virtual environment, no pip — everything runs with your system's Python.
+
+### Option 2: Virtual environment (venv + pip)
+
+Use this method if your distribution doesn't package all the dependencies, or if
+you prefer isolated environments. You only need `python3` and `python3-venv`
+(on Debian/Ubuntu: `sudo apt install python3-venv`).
+
+```sh
+git clone https://github.com/puddletag/puddletag.git
+cd puddletag
+python3 -m venv .
+bin/pip3 install -r requirements.txt
+bin/python3 puddletag
+```
+
+This keeps all dependencies inside the repository's `venv` directory without
+touching your system Python.
+
+## 📦 Installing from a package
 
 ### PyPI
 
@@ -166,59 +213,21 @@ environment.systemPackages = [
 _Support needed — open an issue if you are interested in working on it_
 </details>
 
-### From Source
-
-If you seek the bleeding edge of puddletag, or want to contribute (we welcome all
-contributions!), you can install and/or run via source code.
-
-First, install the dependencies. This step differs per distribution; on **Debian/Ubuntu**
-you can run:
-
-```sh
-apt install python3 python3-mutagen python3-configobj python3-pyparsing \
-            python3-pyqt6 python3-pyqt6.qtsvg python3-unidecode
-```
-
-For documentation and tests during development on Debian, also install:
-
-```sh
-apt install python3-sphinx python3-sphinx-bootstrap-theme python3-pytest
-```
-
-For translation testing and editing, see
-[TRANSLATION_TESTING.md](TRANSLATION_TESTING.md).
-
-Then, clone the repo and run puddletag:
-
-```sh
-git clone https://github.com/puddletag/puddletag
-cd puddletag
-./puddletag
-```
-
-Alternatively, you can use a
-[virtual environment](https://docs.python.org/3/library/venv.html) to install the
-dependencies, which only requires python and pip:
-
-```sh
-git clone https://github.com/puddletag/puddletag.git
-cd puddletag
-python3 -m venv .
-bin/pip3 install -r requirements.txt
-bin/python3 puddletag
-```
-
 ## 🧰 Dependencies
 
-| Dependency | Purpose |
-|---|---|
-| [Python 3](https://www.python.org/) | Runtime |
-| [PyQt6](https://pypi.org/project/PyQt6/) | GUI framework |
-| [Mutagen](https://pypi.org/project/mutagen/) | Audio tagging library |
-| [pyparsing](https://pypi.org/project/pyparsing/) | Pattern parsing |
-| [configobj](https://pypi.org/project/configobj/) | Configuration files |
-| [unidecode](https://pypi.org/project/Unidecode/) | Unicode transliteration |
-| [Chromaprint](http://acoustid.org/chromaprint) *(recommended)* | AcoustID support |
+| Dependency | Purpose | Debian/Ubuntu package |
+|---|---|---|
+| [Python 3](https://www.python.org/) | Runtime | `python3` |
+| [PyQt6](https://pypi.org/project/PyQt6/) | GUI framework | `python3-pyqt6` |
+| Qt6 SVG | SVG icon rendering | `python3-pyqt6.qtsvg` |
+| [Mutagen](https://pypi.org/project/mutagen/) | Audio tagging library | `python3-mutagen` |
+| [pyparsing](https://pypi.org/project/pyparsing/) | Pattern parsing | `python3-pyparsing` |
+| [configobj](https://pypi.org/project/configobj/) | Configuration files | `python3-configobj` |
+| [unidecode](https://pypi.org/project/Unidecode/) | Unicode transliteration | `python3-unidecode` |
+| [lxml](https://pypi.org/project/lxml/) | HTML tag-source parsing | `python3-lxml` |
+| [pyacoustid](https://pypi.org/project/pyacoustid/) | AcoustID lookups | `python3-acoustid` |
+| [Chromaprint](http://acoustid.org/chromaprint) | Audio fingerprinting (`fpcalc`) | `libchromaprint-tools` |
+| [Levenshtein](https://pypi.org/project/Levenshtein/) *(optional)* | Jaro/Jaro-Winkler dupe search | `python3-levenshtein` |
 
 ## 🧪 Development
 
@@ -237,7 +246,8 @@ ruff check puddlestuff/
 ruff format --check puddlestuff/
 ```
 
-See [Puddletag Modernization Log to 2026 Standards.md](Puddletag%20Modernization%20Log%20to%202026%20Standards.md)
+See
+[Puddletag Modernization Log to 2026 Standards.md](Puddletag%20Modernization%20Log%20to%202026%20Standards.md)
 for the full modernization history.
 
 ### Recent development highlights
@@ -258,6 +268,9 @@ This repository has recently received renewed maintenance work, including:
 - **AppImage packaging** — `create_appimage.sh` build script and AppStream metainfo
 - **Comprehensive plugin API reference** for plugin developers, and a fix so user
   plugins in `~/.puddletag/plugins` load again
+
+For translation testing and editing, see
+[TRANSLATION_TESTING.md](TRANSLATION_TESTING.md).
 
 ## 🤝 Contributing
 
