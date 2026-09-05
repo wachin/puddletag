@@ -1,3 +1,29 @@
+05 September 2026 2.6.0
+   Changed: Complete codebase modernization to 2026 Python standards — all 644 ruff
+            lint errors fixed across 76 files; the entire codebase (95 files) is now
+            formatted and passes 'ruff check' with zero errors.
+   Changed: Modernized syntax throughout: f-strings instead of %-formatting, dict/set
+            comprehensions, context managers for all file access, dedicated module
+            loggers instead of the root logger, and ClassVar annotations for
+            intentional mutable class defaults.
+   Fixed: Jaro-Winkler duplicate-finding algorithm returned its input tuple instead of
+          the similarity score — broken since the PyQt6 port, now calls
+          jaro_winkler() correctly (requires python3-levenshtein to be active).
+   Fixed: Confirmation settings were all saved under the last section index due to a
+          late-binding lambda inside a loop.
+   Fixed: M3U playlist reader opened the file twice without closing either handle,
+          and a loop variable shadowed the imported os.path.dirname.
+   Fixed: Export Tags plugin silently ignored restore errors, used the bare exit()
+          global, and referenced an undefined b64_to_img — cover art was never
+          restored from backups.
+   Fixed: Several silent try/except/pass blocks that swallowed file load errors now
+          log the failures (export tags, CLI export, tag source docs).
+   Changed: Overly broad except clauses narrowed to specific exceptions where the
+            failure modes are known; intentional catch-alls are documented with
+            explicit noqa comments.
+   Added: Comprehensive modernization log (Puddletag Modernization Log to 2026
+          Standards.md) tracking every fixed file and the latent bugs uncovered.
+
 21 May 2026
    Added: Support for new audio formats (WAV, AAC, AIFF, DSF, OptimFROG, TAK, TTA).
    Added: Enhanced export templates for HTML, CSV, and RTF with loop support.

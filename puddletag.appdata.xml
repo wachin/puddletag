@@ -54,6 +54,15 @@
   </provides>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.6.0" date="2026-09-05">
+      <description>
+        <p>Codebase modernization to 2026 Python standards: all 644 ruff
+        lint errors fixed, entire codebase formatted, tests pass.</p>
+        <p>Fixed the broken Jaro-Winkler duplicate-finding algorithm, a
+        confirmation-settings saving bug, and several silent error
+        handlers.</p>
+      </description>
+    </release>
     <release version="2.5.0" date="2026-05-21"/>
   </releases>
 </component>
