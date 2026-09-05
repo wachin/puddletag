@@ -144,9 +144,9 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 13 files (at 2026-09-05)
-**Files completed:** 69 files (this session)
-**Progress:** ~72% by file count, ~99% by error count (637/644 errors fixed)
+**Total files with errors:** 10 files (at 2026-09-05)
+**Files completed:** 72 files (this session)
+**Progress:** ~73% by file count, ~99% by error count (640/644 errors fixed)
 
 ---
 
@@ -283,6 +283,9 @@ Duplicate search.
 ### Priority 10: Plugins
 Bundled plugins.
 
+- [*] `puddlestuff/plugins/__init__.py`
+- [*] `puddlestuff/plugins/modified_time/__init__.py`
+- [*] `puddlestuff/plugins/extended_tags/__init__.py`
 - [*] `puddlestuff/plugins/dupe_fields/__init__.py`
 - [*] `puddlestuff/plugins/save_tags/__init__.py`
 - [*] `puddlestuff/plugins/export_tags/__init__.py`
