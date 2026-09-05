@@ -17,7 +17,7 @@ try:
         """Jaro-Winkler
 
         The Jaro-Winkler string similarity metric is a modification of Jaro metric giving more weight to common prefix, as spelling mistakes are more likely to occur near ends of words."""
-        return a, b
+        return jaro_winkler(a, b)
 
     funcs = [_ratio, _jaro, _jaro_winkler]
 except ImportError:
