@@ -144,9 +144,10 @@ Found 644 errors
 
 ### Files with Pending Errors
 
-**Total files with errors:** 10 files (at 2026-09-05)
-**Files completed:** 72 files (this session)
-**Progress:** ~73% by file count, ~99% by error count (640/644 errors fixed)
+**Total files with errors:** 0 files (at 2026-09-05)
+**Files completed:** 76 files (this session)
+**Progress:** 100% by error count (644/644 errors fixed)
+**MILESTONE:** `ruff check puddlestuff/` now reports ZERO errors. All 95 files formatted. 28/28 tests pass.
 
 ---
 
@@ -219,6 +220,7 @@ Business logic of the tagging functions.
 - [*] `puddlestuff/findfunc.py` - Search and processing
 - [*] `puddlestuff/actiondlg.py` - Action dialogs
 - [*] `puddlestuff/action_shortcuts.py` - Action shortcuts
+- [*] `puddlestuff/functions_dialogs.py` - Function dialogs
 
 ### Priority 4: Tag Sources
 Integration with external services.
@@ -279,6 +281,7 @@ Duplicate search.
 
 - [*] `puddlestuff/duplicates/algwin.py`
 - [*] `puddlestuff/duplicates/dupefuncs.py`
+- [*] `puddlestuff/duplicates/matchfuncs.py` (fixed latent bug: jaro_winkler returned input tuple)
 
 ### Priority 10: Plugins
 Bundled plugins.
@@ -299,7 +302,9 @@ Other system modules.
 - [*] `puddlestuff/confirmations.py` - Confirmations
 - [*] `puddlestuff/shortcutsettings.py` - Shortcut settings
 - [*] `puddlestuff/about.py` - About dialog
+- [*] `puddlestuff/funcprint.py` - Function printing
 - [*] `puddlestuff/m3u.py` - Playlist handling
+- [*] `puddlestuff/export.py` - Export
 - [*] `puddlestuff/cli.py` - Command-line interface
 - [*] `puddlestuff/musiclib.py` - Music library
 - [*] `puddlestuff/pluginloader.py` - Plugin loader
@@ -366,7 +371,7 @@ Executable scripts.
 
 When all files are modernized:
 
-- [*] `ruff check puddlestuff/` shows 0 errors (622/644 fixed, 22 errors remain in 3-5 remaining files)
+- [*] `ruff check puddlestuff/` shows 0 errors (644/644 fixed as of 2026-09-05)
 - [*] `ruff format --check puddlestuff/` shows all files formatted
 - [*] `python3 -m pytest tests/ -v` all tests pass (28 passed throughout this session)
 - [ ] `python3 puddletag` the application starts correctly
@@ -451,6 +456,7 @@ git log --oneline | head -20
   - `tagversions.py` and `findfunc.py`: `QModelIndex()` in default args
   - `puddletag.py` and `teststuff.py`: undefined `logging` references
   - `action_shortcuts.py`: self-assignment no-op
+  - `duplicates/matchfuncs.py`: _jaro_winkler() returned the input tuple instead of calling jaro_winkler() — the algorithm was broken since the PyQt6 port
   - Various silent `try/except/continue` patterns that hid errors
 - Marked completed files in this checklist with `[*]`
 - This is the third 'modernization session' for the project
