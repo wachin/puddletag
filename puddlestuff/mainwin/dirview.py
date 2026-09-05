@@ -150,11 +150,10 @@ class DirView(QTreeView):
             return
         self._load = False
         model = self.model()
-        selectindex = self.selectionModel().select
         getindex = model.index
         exists = os.path.exists
 
-        parents = set([os.path.dirname(z[0]) for z in dirs])
+        parents = {os.path.dirname(z[0]) for z in dirs}
 
         def get_str(f):
             return model.filePath(f)
@@ -297,8 +296,8 @@ class DirView(QTreeView):
             return
 
         getfilename = self.model().filePath
-        dirs = list(set([getfilename(i) for i in selected.indexes()]))
-        old = list(set([getfilename(i) for i in deselected.indexes()]))
+        dirs = list({getfilename(i) for i in selected.indexes()})
+        old = list({getfilename(i) for i in deselected.indexes()})
         if self._lastselection:
             if len(old) == self._lastselection:
                 append = False
