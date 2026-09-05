@@ -74,7 +74,7 @@ class ExTagsPlugin(ExTags):
         self.table.clearContents()
         self.table.setRowCount(0)
 
-        common, numvalues, imagetags = commontags(audios)
+        common, numvalues, _imagetags = commontags(audios)
         if "__image" in common:
             del common["__image"]
         previews = set(audios[0].preview)
