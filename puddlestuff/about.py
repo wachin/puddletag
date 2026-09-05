@@ -108,7 +108,7 @@ class AboutPuddletag(QDialog):
         icon = QLabel()
         icon.setPixmap(QPixmap("icons:appicon.svg").scaled(48, 48))
         lib_versions = "<br />".join(
-            ["%s: %s" % (lib, version) for (lib, version) in versions().items()]
+            f"{lib}: {version}" for lib, version in versions().items()
         )
 
         if changeset:
