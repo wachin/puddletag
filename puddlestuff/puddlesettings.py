@@ -92,10 +92,10 @@ def update_settings():
             "MusicBrainz Album ID": "MusicBrainz Album Id",
             "MusicBrainz Artist ID": "MusicBrainz Artist Id",
         }
-        for k in keys:
-            if k in id3:
-                id3[keys[k]] = id3[k]
-                del id3[k]
+        for old, new in keys.items():
+            if old in id3:
+                id3[new] = id3[old]
+                del id3[old]
 
         audioinfo.setmapping(mapping)
 
@@ -335,7 +335,6 @@ class Playlist(QWidget):
 
 class TagMappings(QWidget):
     def __init__(self, parent=None):
-        filename = os.path.join(PuddleConfig().savedir, "mappings")
         self._edited = deepcopy(audioinfo.mapping)
         self._mappings = audioinfo.mapping
 
@@ -451,9 +450,8 @@ class TagMappings(QWidget):
                 mappings[tag] = {other: original}
         self._mappings = mappings
         filename = os.path.join(PuddleConfig().savedir, "mappings")
-        f = open(filename, "w")
-        f.write("\n".join([",".join(z) for z in text]))
-        f.close()
+        with open(filename, "w") as f:
+            f.write("\n".join([",".join(z) for z in text]))
 
     def duplicate(self):
         table = self._table
@@ -627,7 +625,9 @@ class ListModel(QAbstractListModel):
     def widget(self, row):
         return self.options[row][1]
 
-    def rowCount(self, index=QModelIndex()):
+    def rowCount(self, index=None):
+        if index is None:
+            index = QModelIndex()
         return len(self.options)
 
     def flags(self, index):
