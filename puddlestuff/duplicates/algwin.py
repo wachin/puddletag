@@ -222,13 +222,12 @@ class AlgWin(QWidget):
 
         x = [funcinfo(z) for z in funcs]
         names = [z[0] for z in x]
-        ds = [z[1] for z in x]
 
         self.alcombo.clear()
         self.alcombo.addItems(names)
         self.alcombo.setCurrentIndex(0)
-        tooltip = "<dl>%s</dl>" % "".join(
-            ["<dt><b>%s<b></dt> <dd>%s</dd>" % z for z in x]
+        tooltip = (
+            f"<dl>{''.join(f'<dt><b>{z[0]}<b></dt> <dd>{z[1]}</dd>' for z in x)}</dl>"
         )
         self.alcombo.setToolTip(tooltip)
         if alg:
