@@ -12,7 +12,8 @@ revmapping = {}
 
 def loadmapping(filepath, default=None):
     try:
-        lines = open(filepath, "r").read().split("\n")
+        with open(filepath, "r") as f:
+            lines = f.read().split("\n")
     except OSError:
         if default:
             return default
@@ -40,14 +41,12 @@ def register_tag(mut_obj, tag, tag_name, tag_exts=None):
 
 
 def setmapping(m):
-    global revmapping
+    global revmapping  # noqa: PLW0602
     global mapping
 
     mapping = m
     for z in mapping:
-        revmapping[z] = CaselessDict(
-            [(value, key) for key, value in mapping[z].items()]
-        )
+        revmapping[z] = CaselessDict({value: key for key, value in mapping[z].items()})
     for z in extensions.values():
         try:
             if z[2] in mapping:
@@ -86,7 +85,7 @@ def Tag(filename):
     There are caveats associated with each module, so check out their docstrings
     for more info."""
 
-    fileobj = open(filename, "rb")
+    fileobj = open(filename, "rb")  # noqa: SIM115
     ext = splitext(filename)
     try:
         return extensions[ext][1](filename)
@@ -115,7 +114,7 @@ for m in tag_modules:
     if hasattr(m, "filetype"):
         register_tag(*m.filetype)
     if hasattr(m, "filetypes"):
-        list(map(lambda x: register_tag(*x), m.filetypes))
+        [register_tag(*x) for x in m.filetypes]
 
 setmapping(
     {
