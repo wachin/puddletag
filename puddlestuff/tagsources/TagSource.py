@@ -1,8 +1,10 @@
-# An interface specification for Tag Sources
+# An interface specification for Tag Sources  # noqa: N999
 #
 # A Tag Source should define a class that derives from TagSOurce, and sets
 # a module attribue "info" to an instance of that class in order to interface
 # with puddletag
+from typing import ClassVar
+
 from puddlestuff.constants import CHECKBOX, COMBO, SPINBOX, TAGLIST, TEXT
 from puddlestuff.util import translate
 
@@ -16,7 +18,7 @@ class TagSource:
     name = "Generic Tag Source"
 
     # A list of tags to group album releases by.
-    group_by = ["album", "artist"]
+    group_by: ClassVar[list[str]] = ["album", "artist"]
 
     # A ToolTip that displays when hovering above the Search box
     # Set to None to disable ToolTip
@@ -24,7 +26,7 @@ class TagSource:
 
     # A Set of preferences to display on the preference dialog box
     # Set to None to disable Preferences for this Tag Source
-    preferences = [
+    preferences: ClassVar[list] = [
         [translate("Discogs", "A Text Option"), TEXT, "Default Value"],
         [
             translate("Discogs", "A Checkbox Option"),
