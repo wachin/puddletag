@@ -29,7 +29,7 @@ class MPDLibrary:
                 self.client.password(self.password)
         except ImportError:
             raise MusicLibError(0, translate("MPD", "python-mpd2 module not found."))
-        except Exception as e:
+        except OSError as e:
             raise MusicLibError(0, str(e))
 
     def load(self):
@@ -77,7 +77,7 @@ class MPDLibrary:
                     self.tracks[self.albums[artist][album]].append(tag)
 
             return self.albums, self.tracks
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             raise MusicLibError(0, str(e))
         finally:
             if self.client:
