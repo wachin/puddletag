@@ -590,9 +590,11 @@ def strlength(value):
     """Converts the value in seconds to HH:MM:SS format.
 
     If HH = 00: returns the value in MM:SS format"""
-    seconds = value % 60
-    minutes = (value % 3600) // 60
-    hours = value // 3600
+    # value can be a float (mutagen returns float lengths); int() keeps
+    # the truncation semantics of the original printf %02d formatting.
+    seconds = int(value % 60)
+    minutes = int((value % 3600) // 60)
+    hours = int(value // 3600)
     if hours > 0:
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     else:
