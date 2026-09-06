@@ -4,7 +4,7 @@
     <name>About</name>
     <message>
       <location filename="../about.py" line="22" />
-      <source>puddletag es un editor de etiquetas de audio para GNU/Linux similar al programa de Windows Mp3tag.
+      <source>puddletag es un editor de etiquetas de audio para GNU/Linux similar al editor Mp3tag.
 
 &lt;br /&gt;&lt;br /&gt;Incluye: edición de etiquetas por lotes, renombrar archivos usando etiquetas, extraer etiquetas desde el nombre de archivo, usar Acciones para automatizar tareas repetitivas, importar tu biblioteca musical y muchas cosas más. &lt;br /&gt;&lt;br /&gt;
 
@@ -12,10 +12,10 @@ Formatos soportados: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m
 
 Visita el sitio web de puddletag (&lt;a href="https://docs.puddletag.net/"&gt;https://docs.puddletag.net/&lt;/a&gt;) para ayuda y novedades.&lt;br /&gt;&lt;br /&gt;
 &amp;copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) &lt;br /&gt;
-Fork modernizado y mantenido por Washington Indacochea Delgado (linuxfrontier@proton.me), 2026. &lt;br /&gt;
+Fork modernizado y mantenido por Washington Indacochea (&lt;a href="mailto:linuxfrontier@proton.me"&gt;linuxfrontier@proton.me&lt;/a&gt;), 2026. &lt;br /&gt;
 Licencia GPLv3 (&lt;a href="www.gnu.org/licenses/gpl-3.0.html"&gt;www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;).
 </source>
-      <translation>puddletag es un editor de etiquetas de audio para GNU/Linux similar al programa de Windows Mp3tag.
+      <translation>puddletag es un editor de etiquetas de audio para GNU/Linux similar al editor Mp3tag.
 
 &lt;br /&gt;&lt;br /&gt;Incluye: edición de etiquetas por lotes, renombrar archivos usando etiquetas, extraer etiquetas desde el nombre de archivo, usar Acciones para automatizar tareas repetitivas, importar tu biblioteca musical y muchas cosas más. &lt;br /&gt;&lt;br /&gt;
 
@@ -23,13 +23,13 @@ Formatos soportados: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m
 
 Visita el sitio web de puddletag (&lt;a href="https://docs.puddletag.net/"&gt;https://docs.puddletag.net/&lt;/a&gt;) para ayuda y novedades.&lt;br /&gt;&lt;br /&gt;
 &amp;copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) &lt;br /&gt;
-Fork modernizado y mantenido por Washington Indacochea Delgado (linuxfrontier@proton.me), 2026. &lt;br /&gt;
+Fork modernizado y mantenido por Washington Indacochea (&lt;a href="mailto:linuxfrontier@proton.me"&gt;linuxfrontier@proton.me&lt;/a&gt;), 2026. &lt;br /&gt;
 Licencia GPLv3 (&lt;a href="www.gnu.org/licenses/gpl-3.0.html"&gt;www.gnu.org/licenses/gpl-3.0.html&lt;/a&gt;).
 </translation>
     </message>
     <message>
       <location filename="../about.py" line="37" />
-      <source>&lt;b&gt;Washington Indacochea Delgado&lt;/b&gt; (linuxfrontier@proton.me) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.&lt;br /&gt;&lt;br /&gt;
+      <source>&lt;b&gt;Washington Indacochea&lt;/b&gt; (&lt;a href="mailto:linuxfrontier@proton.me"&gt;linuxfrontier@proton.me&lt;/a&gt;) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.&lt;br /&gt;&lt;br /&gt;
 
 &lt;b&gt;Evan Devetzis&lt;/b&gt; por sus muchísimas ideas excelentes y por soportar más errores de los humanamente posible.&lt;br /&gt;&lt;br /&gt;
 
@@ -46,7 +46,7 @@ A los autores de las bibliotecas de las que depende puddletag (sin ellas probabl
 El &lt;b&gt;equipo Oxygen&lt;/b&gt; por los iconos Oxygen.
 
 </source>
-      <translation>&lt;b&gt;Washington Indacochea Delgado&lt;/b&gt; (linuxfrontier@proton.me) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.&lt;br /&gt;&lt;br /&gt;
+      <translation>&lt;b&gt;Washington Indacochea&lt;/b&gt; (&lt;a href="mailto:linuxfrontier@proton.me"&gt;linuxfrontier@proton.me&lt;/a&gt;) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.&lt;br /&gt;&lt;br /&gt;
 
 &lt;b&gt;Evan Devetzis&lt;/b&gt; por sus muchísimas ideas excelentes y por soportar más errores de los humanamente posible.&lt;br /&gt;&lt;br /&gt;
 

@@ -21,7 +21,7 @@ from .translations import translate
 
 desc = translate(
     "About",
-    """puddletag es un editor de etiquetas de audio para GNU/Linux similar al programa de Windows Mp3tag.
+    """puddletag es un editor de etiquetas de audio para GNU/Linux similar al editor Mp3tag.
 
 <br /><br />Incluye: edición de etiquetas por lotes, renombrar archivos usando etiquetas, extraer etiquetas desde el nombre de archivo, usar Acciones para automatizar tareas repetitivas, importar tu biblioteca musical y muchas cosas más. <br /><br />
 
@@ -29,14 +29,14 @@ Formatos soportados: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m
 
 Visita el sitio web de puddletag (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) para ayuda y novedades.<br /><br />
 &copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) <br />
-Fork modernizado y mantenido por Washington Indacochea Delgado (linuxfrontier@proton.me), 2026. <br />
+Fork modernizado y mantenido por Washington Indacochea (<a href="mailto:linuxfrontier@proton.me">linuxfrontier@proton.me</a>), 2026. <br />
 Licencia GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
 """,
 )
 
 thanks = translate(
     "About",
-    """<b>Washington Indacochea Delgado</b> (linuxfrontier@proton.me) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.<br /><br />
+    """<b>Washington Indacochea</b> (<a href="mailto:linuxfrontier@proton.me">linuxfrontier@proton.me</a>) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.<br /><br />
 
 <b>Evan Devetzis</b> por sus muchísimas ideas excelentes y por soportar más errores de los humanamente posible.<br /><br />
 
