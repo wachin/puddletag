@@ -21,36 +21,36 @@ from .translations import translate
 
 desc = translate(
     "About",
-    """puddletag is an audio tag editor for GNU/Linux similar to the Windows program Mp3tag.
+    """puddletag es un editor de etiquetas de audio para GNU/Linux similar al programa de Windows Mp3tag.
 
-<br /><br />Features include: Batch editing of tags, renaming files using tags, retrieving tags from filenames, using Actions to automate repetitive tasks, importing your music library and loads of other awesome stuff. <br /><br />
+<br /><br />Incluye: edición de etiquetas por lotes, renombrar archivos usando etiquetas, extraer etiquetas desde el nombre de archivo, usar Acciones para automatizar tareas repetitivas, importar tu biblioteca musical y muchas cosas más. <br /><br />
 
-Supported formats: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m4a), VorbisComments (.ogg, .flac) and APEv2 (.ape, .ofr, .ofs, .tak, .tta) <br />< br />
+Formatos soportados: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m4a), VorbisComments (.ogg, .flac) y APEv2 (.ape, .ofr, .ofs, .tak, .tta) <br /><br />
 
-Visit the puddletag website (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) for help and updates.<br /><br />
+Visita el sitio web de puddletag (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) para ayuda y novedades.<br /><br />
 &copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) <br />
-Modernized fork maintained by wachin (linuxfrontier@proton.me), 2026. <br />
-Licensed under GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
+Fork modernizado y mantenido por Washington Indacochea Delgado (linuxfrontier@proton.me), 2026. <br />
+Licencia GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
 """,
 )
 
 thanks = translate(
     "About",
-    """<b>wachin</b> (linuxfrontier@proton.me) for developing and maintaining this modernized fork: the PyQt6 migration, the complete 2026 codebase modernization (644 lint errors fixed, zero-error codebase), support for new audio formats (WAV, AAC, AIFF, DSF, OptimFROG, TAK, TTA), enhanced export templates, native MPD support, the Library Statistics tool, the enhanced Duplicate Finder, Dark Mode, centralized logging with a built-in viewer, the modernized CLI, automatic playlist updates, the unit test suite, Spanish translation fixes, and Wayland/HiDPI improvements.<br /><br />
+    """<b>Washington Indacochea Delgado</b> (linuxfrontier@proton.me) por desarrollar y mantener este fork modernizado: la migración a PyQt6, la modernización completa del código a estándares 2026, el soporte de nuevos formatos de audio y el modo oscuro, entre otras mejoras.<br /><br />
 
-<b>Evan Devetzis</b> for his many, many awesome ideas and putting up with more bugs than humanly possible.<br /><br />
+<b>Evan Devetzis</b> por sus muchísimas ideas excelentes y por soportar más errores de los humanamente posible.<br /><br />
 
-First off, a big thanks to <b>Evan Devetzis</b> for working tirelessly in helping me make puddletag better by contributing many, many awesome ideas and for being a great bug hunter.
+Ante todo, un gran agradecimiento a <b>Evan Devetzis</b> por trabajar incansablemente para ayudarme a mejorar puddletag aportando muchísimas ideas excelentes y por ser un gran cazador de errores.
 
-Thanks to <b>Raphaël Rochet</b>, <b>Fabian Bakkum</b>, <b>Alan Gomes</b> and others for contributing translations.
+Gracias a <b>Raphaël Rochet</b>, <b>Fabian Bakkum</b>, <b>Alan Gomes</b> y otros por contribuir traducciones.
 
-To the writers of the libraries puddletag depends on (without which I'll probably still be writing an id3 reader).<br /><br />
+A los autores de las bibliotecas de las que depende puddletag (sin ellas probablemente seguiría escribiendo un lector id3).<br /><br />
 
-<b>Paul McGuire</b> for PyParsing.<br />
-<b>Michael Urman</b> and <b>Joe Wreschnig</b> for Mutagen (It. Is. Awesome).<br />
-<b>Phil Thomson</b> and everyone responsible for PyQt (PyQt4 and PyQt6).<br />
-<b>Michael Foord</b> and <b>Nicola Larosa</b> for ConfigObj (seriously, they should replace ConfigParser with this).<br />
-The <b>Oxygen team</b> for the Oxygen icons.
+<b>Paul McGuire</b> por PyParsing.<br />
+<b>Michael Urman</b> y <b>Joe Wreschnig</b> por Mutagen (es increíble).<br />
+<b>Phil Thomson</b> y todos los responsables de PyQt (PyQt4 y PyQt6).<br />
+<b>Michael Foord</b> y <b>Nicola Larosa</b> por ConfigObj (en serio, deberían reemplazar ConfigParser con esto).<br />
+El <b>equipo Oxygen</b> por los iconos Oxygen.
 
 """,
 )
