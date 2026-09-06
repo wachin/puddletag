@@ -29,15 +29,18 @@ Supported formats: id3v1, id3v2 (.mp3, .wav, .aac, .aiff, .dsf), AAC (.mp4, .m4a
 
 Visit the puddletag website (<a href="https://docs.puddletag.net/">https://docs.puddletag.net/</a>) for help and updates.<br /><br />
 &copy; 2008-2012 concentricpuddle (concentricpuddle@gmail.com) <br />
+Modernized fork maintained by wachin (linuxfrontier@proton.me), 2026. <br />
 Licensed under GPLv3 (<a href="www.gnu.org/licenses/gpl-3.0.html">www.gnu.org/licenses/gpl-3.0.html</a>).
 """,
 )
 
 thanks = translate(
     "About",
-    """<b>Evan Devetzis</b> for his many, many awesome ideas and putting up with more bugs than humanly possible.<br /><br />
+    """<b>wachin</b> (linuxfrontier@proton.me) for developing and maintaining this modernized fork: the PyQt6 migration, the complete 2026 codebase modernization (644 lint errors fixed, zero-error codebase), support for new audio formats (WAV, AAC, AIFF, DSF, OptimFROG, TAK, TTA), enhanced export templates, native MPD support, the Library Statistics tool, the enhanced Duplicate Finder, Dark Mode, centralized logging with a built-in viewer, the modernized CLI, automatic playlist updates, the unit test suite, Spanish translation fixes, and Wayland/HiDPI improvements.<br /><br />
 
-First off, a big thanks to **Evan Devetzis** for working tirelessly in helping me make puddletag better by contributing many, many awesome ideas and for being a great bug hunter.
+<b>Evan Devetzis</b> for his many, many awesome ideas and putting up with more bugs than humanly possible.<br /><br />
+
+First off, a big thanks to <b>Evan Devetzis</b> for working tirelessly in helping me make puddletag better by contributing many, many awesome ideas and for being a great bug hunter.
 
 Thanks to <b>Raphaël Rochet</b>, <b>Fabian Bakkum</b>, <b>Alan Gomes</b> and others for contributing translations.
 
@@ -45,7 +48,7 @@ To the writers of the libraries puddletag depends on (without which I'll probabl
 
 <b>Paul McGuire</b> for PyParsing.<br />
 <b>Michael Urman</b> and <b>Joe Wreschnig</b> for Mutagen (It. Is. Awesome).<br />
-<b>Phil Thomson</b> and everyone responsible for PyQt4.<br />
+<b>Phil Thomson</b> and everyone responsible for PyQt (PyQt4 and PyQt6).<br />
 <b>Michael Foord</b> and <b>Nicola Larosa</b> for ConfigObj (seriously, they should replace ConfigParser with this).<br />
 The <b>Oxygen team</b> for the Oxygen icons.
 
