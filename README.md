@@ -56,13 +56,13 @@ supported.
 **WavPack** (wv) · **OptimFROG** (ofr, ofs) · **TAK** (tak) · **TrueAudio** (tta) ·
 **WMA** (wma) · **Opus** (opus)
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
 There are two ways to run puddletag from source: using **system packages**
 (recommended on Debian, Ubuntu and derivatives), or using a **Python virtual
 environment** with pip (works on any distribution).
 
-### Option 1: System packages (Debian, Ubuntu and derivatives)
+## Option 1: System packages (Debian, Ubuntu and derivatives)
 
 Install all the dependencies as system packages:
 
@@ -82,6 +82,9 @@ sudo apt install python3 python3-pyqt6 python3-pyqt6.qtsvg python3-mutagen \
 >   algorithms (without it, puddletag falls back to difflib's SequenceMatcher).
 > - `python3-pytest` — only needed to run the test suite during development.
 
+
+### Run puddletag
+
 Then clone this repository and run puddletag:
 
 ```sh
@@ -92,7 +95,7 @@ python3 puddletag
 
 No virtual environment, no pip — everything runs with your system's Python.
 
-### Option 2: Virtual environment (venv + pip)
+## Option 2: Virtual environment (venv + pip)
 
 Use this method if your distribution doesn't package all the dependencies, or if
 you prefer isolated environments. You only need `python3` and `python3-venv`
@@ -119,98 +122,6 @@ touching your system Python.
 > [changelog](changelog) for the differences. To run this fork's version,
 > use [Getting Started](#-getting-started) instead.
 
-### Distributions package
-
-<details>
-<summary><b>Debian</b></summary>
-
-```
-apt install puddletag
-```
-
-Contact: @sandrotosi
-</details>
-
-<details>
-<summary><b>Ubuntu</b></summary>
-
-```
-apt install puddletag
-```
-
-Contact: @sandrotosi
-</details>
-
-<details>
-<summary><b>Gentoo</b></summary>
-
-1. overlay: https://github.com/istitov/stuff/
-2. add overlay: `sudo layman -a stuff`
-3. install: `sudo emerge -av puddletag`
-
-Contact: @DolphinStKom
-</details>
-
-<details>
-<summary><b>Arch Linux</b></summary>
-
-puddletag is currently part of the [AUR](https://aur.archlinux.org/packages/puddletag/):
-
-```sh
-git clone https://aur.archlinux.org/puddletag.git
-cd puddletag
-makepkg -si
-```
-
-</details>
-
-<details>
-<summary><b>Fedora</b></summary>
-
-Available since Fedora 32.
-
-```
-dnf install puddletag
-```
-
-</details>
-
-<details>
-<summary><b>Nix / NixOS</b></summary>
-
-Available for channels 24.05 and unstable
-
-On NixOS:
-
-```sh
-nix-env -iA nixos.puddletag
-```
-
-On non-NixOS:
-
-```sh
-# without flakes:
-nix-env -iA nixpkgs.puddletag
-# with flakes:
-nix profile install nixpkgs#puddletag
-```
-
-NixOS configuration — add the following Nix code to your NixOS Configuration, usually
-located in `/etc/nixos/configuration.nix`:
-
-```nix
-environment.systemPackages = [
-  pkgs.puddletag
-];
-```
-
-</details>
-
-<details>
-<summary><b>Brew / macOS</b></summary>
-
-_Support needed — open an issue if you are interested in working on it_
-</details>
 
 ## 🧰 Dependencies
 
