@@ -42,7 +42,7 @@ def _load(filename):
 
 
 def load():
-    # _confirmations.clear()
+    _confirmations.clear()
     _confirmations.update(_load(_filename))
 
 

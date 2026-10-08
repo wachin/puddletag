@@ -77,24 +77,34 @@ def relpath(target, base_path=os.curdir):
 def readm3u(path):
     # From http://forums.fedoraforum.org/showthread.php?p=1224109
     olddir = os.path.abspath(os.curdir)
-    os.chdir(os.path.dirname(path))
+    try:
+        os.chdir(os.path.dirname(path))
+    except OSError:
+        # If we can't change directory, try with absolute path
+        os.chdir(olddir)
 
     # List of mp3files
     mp3Files = []
-    with open(path, "r") as f:
-        reader = csv.reader(f)
-        for row in reader:
-            if len(row) < 1:
-                # Skip blanks
-                continue
-            elif row[0].startswith("#"):
-                # Ignore comments
-                continue
-            else:
-                # store rule
-                mp3Files.append(normpath(abspath(",".join(row))))
+    try:
+        with open(path, "r") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if len(row) < 1:
+                    # Skip blanks
+                    continue
+                elif row[0].startswith("#"):
+                    # Ignore comments
+                    continue
+                else:
+                    # store rule
+                    mp3Files.append(normpath(abspath(",".join(row))))
+    finally:
+        # Always restore the original directory
+        try:
+            os.chdir(olddir)
+        except OSError:
+            pass
 
-    os.chdir(olddir)
     return mp3Files
 
 

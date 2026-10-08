@@ -6,7 +6,6 @@ from PyQt6.QtCore import (
     QAbstractListModel,
     QItemSelection,
     QItemSelectionModel,
-    QModelIndex,
     Qt,
     pyqtSignal,
 )
@@ -627,6 +626,8 @@ class ListModel(QAbstractListModel):
 
     def rowCount(self, index=None):
         if index is None:
+            from PyQt6.QtCore import QModelIndex
+
             index = QModelIndex()
         return len(self.options)
 

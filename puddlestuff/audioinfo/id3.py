@@ -1218,7 +1218,7 @@ def tag_factory(id3_filetype):
                     frame.encoding = encoding
             try:
                 self.save(v2=4)
-            except:
+            except Exception:
                 for frame, enc in frames:
                     frame.encoding = enc
                 raise

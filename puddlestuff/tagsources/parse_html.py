@@ -141,7 +141,7 @@ def fetch_parsed(url):
     page = fetch_page(url)
     try:
         p = parse(page)
-    except:
+    except Exception:
         print(url)
         raise
     return p
@@ -151,7 +151,7 @@ def fetch_soup(url):
     page = fetch_page(url)
     try:
         p = parse(page)
-    except:
+    except Exception:
         print(url)
         raise
     return SoupWrapper(p, page)
