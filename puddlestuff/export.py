@@ -1,4 +1,5 @@
-import traceback
+import logging
+import re
 
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -15,6 +16,8 @@ from PyQt6.QtWidgets import (
 from . import findfunc
 from .puddleobjects import PuddleConfig
 from .translations import translate
+
+logger = logging.getLogger(__name__)
 
 
 class ExportDialog(QDialog):
@@ -141,12 +144,19 @@ $loopend()</table>
                 self, "puddletag", translate("Export", "Export completed successfully.")
             )
             self.accept()
-        except Exception as e:  # noqa: BLE001
-            traceback.print_exc()
+        except (OSError, ValueError, TypeError) as e:
+            logger.exception("Error during export")
             QMessageBox.critical(
                 self,
                 "puddletag",
                 translate("Export", "Error during export: {}").format(str(e)),
+            )
+        except Exception as e:
+            logger.exception("Unexpected error during export")
+            QMessageBox.critical(
+                self,
+                "puddletag",
+                translate("Export", "Unexpected error during export: {}").format(str(e)),
             )
 
     def process_template(self, template, tracks):
@@ -176,6 +186,3 @@ $loopend()</table>
             for track in tracks:
                 result += findfunc.parsefunc(template, track) + "\n"
             return result
-
-
-import re

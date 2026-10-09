@@ -107,7 +107,10 @@ def restore_backup(fn):
             continue
 
         if "__image" in tag:
+            images = tag["__image"]
             del tag["__image"]
+            if images:
+                audio.images = list(map(audioinfo.b64_to_img, images))
 
         audio.clear()
         audio.update(tag)

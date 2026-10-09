@@ -80,20 +80,22 @@ def restore_backup(fn):
         try:
             fn = tag['__path']
         except KeyError:
-            'Error: A file was backed up without a file path.'
+            logging.error('Error: A file was backed up without a file path.')
+            continue
         try:
             audio = audioinfo.Tag(fn)
         except EnvironmentError as e:
-            "Error: Couldn't restore", fn, str(e)
+            logging.error("Couldn't restore %s: %s", fn, str(e))
             continue
         except Exception as e:
-            "Error: Couldn't restore", fn, str(e)
+            logging.error("Couldn't restore %s: %s", fn, str(e))
             continue
 
         if '__image' in tag:
             images = tag['__image']
             del (tag['__image'])
-            audio.images = list(map(b64_to_img, images))
+            if images:
+                audio.images = list(map(b64_to_img, images))
 
         audio.clear()
         audio.update(tag)
