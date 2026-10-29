@@ -616,7 +616,11 @@ class TagModel(QAbstractTableModel):
 
         with self.reset_context():
             if taginfo is not None:
-                self.taginfo = unique(taginfo)
+                # Use stable=True so duplicates are removed WITHOUT reordering
+                # the file list. The default (stable=False) uses a set which
+                # reorders tags non-deterministically due to hash randomization,
+                # causing files to appear in arbitrary order on every load.
+                self.taginfo = unique(taginfo, stable=True)
                 self.sortByFields(self.sortFields, reverse=self.reverseSort)
             else:
                 self.taginfo = []

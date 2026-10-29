@@ -189,12 +189,14 @@ class TestPreviewUndoRedo(unittest.TestCase):
         return model, table
     
     def _select_row(self, table, row):
-        """Select a specific row in the table."""
+        """Select a specific row in the table (replacing any current selection)."""
         model = table.model()
         index = model.index(row, 0)
-        table.selectionModel().select(
+        sm = table.selectionModel()
+        sm.clear()
+        sm.select(
             index, 
-            table.selectionModel().SelectionFlag.Select | table.selectionModel().SelectionFlag.Rows
+            sm.SelectionFlag.Select | sm.SelectionFlag.Rows
         )
         from PyQt6.QtTest import QTest
         QTest.qWait(50)
