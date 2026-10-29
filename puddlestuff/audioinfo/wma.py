@@ -95,7 +95,7 @@ class Tag(util.MockTag):
         "albumsortorder": "WM/AlbumSortOrder",
         "artist": "Author",
         "bpm": "WM/BeatsPerMinute",
-        "comment:": "Description",
+        "comment": "Description",
         "composer": "WM/Composer",
         "conductor": "WM/Conductor",
         "copyright": "WM/Copyright",

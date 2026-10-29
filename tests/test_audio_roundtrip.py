@@ -30,6 +30,8 @@ TEST_FORMATS = [
     ('m4a', ['-c:a', 'aac'], True),
     ('wav', ['-c:a', 'pcm_s16le'], True),
     ('aiff', ['-c:a', 'pcm_s16be'], True),
+    ('wma', ['-c:a', 'wmav2'], True),
+    ('wv', ['-c:a', 'wavpack'], True),
 ]
 
 
