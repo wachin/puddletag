@@ -114,6 +114,14 @@ class MockAudioFile:
         return self.data.values()
     
     def clear(self):
+    def update(self, other):
+        if hasattr(other, 'items'):
+            self.data.update(other.items())
+        else:
+            for k, v in other:
+                self[k] = v
+    def __del__(self):
+        pass
         self.data.clear()
 
 
