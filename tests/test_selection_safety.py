@@ -341,18 +341,22 @@ class TestSelectionModelSafety(unittest.TestCase):
         # Row 0 should now be TestArtist4 (originally at index 4)
         self.assertEqual(model.taginfo[0].get('artist')[0], 'TestArtist4')
         
+        # Select a single row so modded_setData dispatches to the real setter
+        self._select_row(table, 0)
+        self.assertEqual(len(table.selectedRows), 1)
+
         index = model.index(0, 1)  # Artist column
     
         # Use a new value different from current
         new_value = 'ModifiedAfterSort'
         self.assertNotEqual(model.taginfo[0].get('artist')[0], new_value)
 
-        # Mock setRowData
+        # Mock setRowData so the write layer isn't invoked
         with patch.object(model, 'setRowData', return_value=('TestArtist4', {'artist': 'ModifiedAfterSort'})) as mock_set:
             result = model.setData(index, new_value, Qt.ItemDataRole.EditRole)
             self.assertTrue(result, "setData should return True when setRowData is called")
             
-            # Verify row 0 was edited
+            # Verify the correct underlying row (0) was edited
             mock_set.assert_called_once()
             args, _ = mock_set.call_args
             self.assertEqual(args[0], 0)
@@ -427,18 +431,19 @@ class TestSelectionModelSafety(unittest.TestCase):
         self._select_row(table, 1)
         self.assertEqual(self._get_selected_file(table), selected_file)
         
+        # Save the selection so it can be restored after reload
+        table.saveSelection()
+        
         # Clear all
         table.clearAll()
         QApplication.processEvents()
         self.assertEqual(model.rowCount(), 0)
         
-        # To avoid unpredictable reordering by unique(), 
-        # let's mock it to return the list as is.
-        # We must use the absolute path for patching
-        with patch('puddlestuff.puddleobjects.unique', side_effect=lambda x: x):
-            # Reload with same data
-            table.fillTable(self.audio_tags, append=False)
-            QApplication.processEvents()
+        # Reload with the same tags, preserving the selection.
+        # fillTable(tags, append=None) uses reloadTags() which restores
+        # the previously saved selection.
+        table.fillTable(self.audio_tags, append=None)
+        QApplication.processEvents()
         
         # Selection should be restored (by filepath)
         selected_file_after = self._get_selected_file(table)

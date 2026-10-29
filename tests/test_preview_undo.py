@@ -114,6 +114,7 @@ class MockAudioFile:
         return self.data.values()
     
     def clear(self):
+        self.data.clear()
     def update(self, other):
         if hasattr(other, 'items'):
             self.data.update(other.items())
@@ -362,17 +363,21 @@ class TestPreviewUndoRedo(unittest.TestCase):
         # Enable preview mode
         model.previewMode = True
         
-        # Select first file
-        self._select_row(table, 0)
+        # Locate the rows for the first two files in the model,
+        # since unique() may reorder tags arbitrarily.
+        filepaths = [t.filepath for t in model.taginfo]
+        row0 = filepaths.index(self.files[0])
+        row1 = filepaths.index(self.files[1])
         
-        # Verify selection is valid
+        # Select the first file (by its actual model row)
+        self._select_row(table, row0)
+        
+        # Verify selection points to the intended file
         selected_file = self._get_selected_file(table)
         self.assertEqual(selected_file, self.files[0])
         
-        # Edit a different file while in preview mode
-        # This should work without affecting the selection
-        # Just verify the operation doesn't crash
-        self._select_row(table, 1)
+        # Select a different file while in preview mode
+        self._select_row(table, row1)
         selected_file = self._get_selected_file(table)
         self.assertEqual(selected_file, self.files[1])
     
@@ -383,15 +388,19 @@ class TestPreviewUndoRedo(unittest.TestCase):
         # Enable preview mode
         model.previewMode = True
         
-        # Select first file
-        self._select_row(table, 0)
+        # Locate the actual model row for the first file
+        filepaths = [t.filepath for t in model.taginfo]
+        first_row = filepaths.index(self.files[0])
+        
+        # Select the first file
+        self._select_row(table, first_row)
         
         # Verify the tag has no artwork initially
         selected_tag = self._get_selected_tag(table)
         self.assertIsNotNone(selected_tag)
         
         # Edit a tag field
-        index = model.index(0, 1)
+        index = model.index(first_row, 1)
         model.setData(index, 'ModifiedArtist', Qt.ItemDataRole.EditRole)
         
         # Verify the change is in preview
