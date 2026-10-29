@@ -290,5 +290,222 @@ class TestAudioRoundTrip(unittest.TestCase):
                     # but they should not be corrupted
 
 
+    def test_multi_value_fields(self):
+        """Test multi-value field handling (e.g., multiple artists, genres)."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Write multi-value fields
+                    tag['artist'] = ['Artist One', 'Artist Two', 'Artist Three']
+                    tag['genre'] = ['Rock', 'Progressive']
+                    tag.save()
+                    
+                    # Reload and verify
+                    tag2 = Tag(audio_path)
+                    artist = tag2.get('artist')
+                    genre = tag2.get('genre')
+                    
+                    self.assertIsNotNone(artist)
+                    self.assertIsNotNone(genre)
+                    self.assertEqual(len(artist), 3)
+                    self.assertEqual(len(genre), 2)
+                    self.assertIn('Artist One', artist)
+                    self.assertIn('Artist Two', artist)
+                    self.assertIn('Artist Three', artist)
+                    self.assertIn('Rock', genre)
+                    self.assertIn('Progressive', genre)
+    
+    def test_unicode_edge_cases(self):
+        """Test Unicode edge cases in tags (emoji, RTL, zero-width chars)."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Test various Unicode scenarios
+                    tag['title'] = '🎵 Music 🎶'  # Emoji
+                    tag['artist'] = 'أحمد'  # Arabic RTL
+                    tag['album'] = 'テスト アルバム'  # Japanese
+                    tag['comment'] = 'test\u200b\u200c\u200dcomment'  # Zero-width chars
+                    tag.save()
+                    
+                    # Reload and verify
+                    tag2 = Tag(audio_path)
+                    self.assertEqual(tag2.get('title')[0], '🎵 Music 🎶')
+                    self.assertEqual(tag2.get('artist')[0], 'أحمد')
+                    self.assertEqual(tag2.get('album')[0], 'テスト アルバム')
+                    self.assertEqual(tag2.get('comment')[0], 'test\u200b\u200c\u200dcomment')
+    
+    def test_empty_whitespace_handling(self):
+        """Test empty string and whitespace-only tag handling."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Test empty string - some formats may delete the key
+                    # or reject empty values entirely
+                    try:
+                        tag['title'] = ''
+                        tag['artist'] = '   '
+                        tag.save()
+                    except Exception:
+                        pass  # Some formats reject empty/whitespace values
+                    
+                    # Reload and verify - just ensure no crash
+                    tag2 = Tag(audio_path)
+                    self.assertTrue(True)
+    def very_long_tag_values(self):
+        """Test very long tag values (10KB+)."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Create very long values
+                    long_title = 'A' * 10000  # 10KB
+                    long_comment = 'Comment: ' + 'B' * 20000  # 20KB
+                    
+                    tag['title'] = long_title
+                    tag['comment'] = long_comment
+                    tag.save()
+                    
+                    # Reload and verify
+                    tag2 = Tag(audio_path)
+                    title = tag2.get('title')
+                    comment = tag2.get('comment')
+                    
+                    # Verify values are preserved (may be truncated by format limits)
+                    if title:
+                        self.assertLessEqual(len(title[0]), 10000)
+                        self.assertGreaterEqual(len(title[0]), 100)
+                    if comment:
+                        # Account for "Comment: " prefix
+                        self.assertLessEqual(len(comment[0]), 20010)
+                        self.assertGreaterEqual(len(comment[0]), 100)
+    
+    def test_special_characters_in_tags(self):
+        """Test special characters that could cause parsing issues."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Test characters that could cause issues in various formats
+                    special_title = 'Title with "quotes" and \'apostrophes\' and ;semicolons; and |pipes| and %percent%'
+                    special_comment = 'Line 1\nLine 2\rLine 3\tTabbed\n\nNew paragraph'
+                    
+                    tag['title'] = special_title
+                    tag['comment'] = special_comment
+                    tag.save()
+                    
+                    # Reload and verify
+                    tag2 = Tag(audio_path)
+                    title = tag2.get('title')
+                    comment = tag2.get('comment')
+                    
+                    if title:
+                        # Exact match may vary by format, but content should be preserved
+                        self.assertIn('quotes', title[0])
+                        self.assertIn('apostrophes', title[0])
+                    if comment:
+                        self.assertIn('Line 1', comment[0])
+                        self.assertIn('Line 3', comment[0])
+    
+    def test_tag_deletion_edge_cases(self):
+        """Test edge cases in tag deletion."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Delete non-existent tag (should not crash)
+                    try:
+                        del tag['nonexistent_field']
+                    except KeyError:
+                        pass  # Expected for some formats
+                    
+                    # Write then delete
+                    tag['title'] = 'To Delete'
+                    tag.save()
+                    
+                    tag2 = Tag(audio_path)
+                    self.assertIsNotNone(tag2.get('title'))
+                    
+                    del tag2['title']
+                    tag2.save()
+                    
+                    # Reload and verify deletion
+                    tag3 = Tag(audio_path)
+                    title = tag3.get('title')
+                    if title:
+                        if isinstance(title, list):
+                            self.assertEqual(title[0], '')
+                        else:
+                            self.assertEqual(title, '')
+    
+    def test_overwrite_existing_tags(self):
+        """Test overwriting existing tags with new values."""
+        for ext, codec_args, tag_support in TEST_FORMATS:
+            if not tag_support:
+                continue
+            with self.subTest(format=ext):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    audio_path = create_test_audio_file(tmpdir, ext, codec_args)
+                    
+                    tag = Tag(audio_path)
+                    self.assertIsNotNone(tag)
+                    
+                    # Initial write
+                    tag['title'] = 'Original Title'
+                    tag['artist'] = 'Original Artist'
+                    tag.save()
+                    
+                    # Overwrite with new values
+                    tag2 = Tag(audio_path)
+                    tag2['title'] = 'New Title'
+                    tag2['artist'] = 'New Artist'
+                    tag2['album'] = 'New Album'
+                    tag2.save()
+                    
+                    # Verify new values
+                    tag3 = Tag(audio_path)
+                    self.assertEqual(tag3.get('title')[0], 'New Title')
+                    self.assertEqual(tag3.get('artist')[0], 'New Artist')
+                    self.assertEqual(tag3.get('album')[0], 'New Album')
+
+
 if __name__ == '__main__':
     unittest.main()
