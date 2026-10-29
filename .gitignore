@@ -160,3 +160,6 @@ Thumbs.db
 /puddletag.AppDir/
 /tools/
 *.AppImage
+
+# Personal
+/external/loc.gov_national-jukebox-classical_mp3/
